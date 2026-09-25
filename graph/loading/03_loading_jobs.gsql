@@ -1,0 +1,143 @@
+/* ===========================================================================
+   FraudGraph — loading jobs
+
+   Sources are the staged CSVs written by `python ingest/06_stage_graph_csv.py`,
+   not the raw dataset. Staging first is deliberate: `card_id` has to be
+   recovered before anything can be keyed on it, `TransactionDT` has to become a
+   real timestamp, the device profile string has to be assembled, and vectors
+   have to be written as bare comma-separated floats with the brackets stripped
+   in Python — nested built-in token functions inside SPLIT() will not compile
+   in GSQL, so cleaning them here is not an option.
+
+   Missingness is signal in IEEE-CIS, so nothing is blanket-imputed on the way
+   in; empty strings stay empty and the presence flags travel as their own
+   columns.
+
+   Run:  python graph/install.py --step load
+   =========================================================================== */
+
+USE GRAPH FraudGraph
+
+CREATE LOADING JOB load_entities FOR GRAPH FraudGraph {
+  DEFINE FILENAME f_customer  = "ANY:customers.csv";
+  DEFINE FILENAME f_card      = "ANY:cards.csv";
+  DEFINE FILENAME f_device    = "ANY:devices.csv";
+  DEFINE FILENAME f_region    = "ANY:regions.csv";
+  DEFINE FILENAME f_email     = "ANY:email_domains.csv";
+
+  LOAD f_customer TO VERTEX Customer VALUES
+      ($"customer_id", $"n_cards", $"first_seen", $"last_seen", $"home_region")
+      USING header="true", separator=",";
+
+  LOAD f_card TO VERTEX Card VALUES
+      ($"card_id", $"customer_id", $"brand", $"card_type", $"issuer_code",
+       $"first_seen", $"last_seen", $"n_txns", $"amt_mean", $"amt_median",
+       $"amt_std", $"amt_p95", $"online_share", $"home_region", 0, 0.0)
+      USING header="true", separator=",";
+
+  LOAD f_device TO VERTEX DeviceProfile VALUES
+      ($"device_profile", $"device_info", $"os", $"browser", $"screen",
+       $"device_type", $"n_txns", $"n_cards", $"n_customers",
+       $"first_seen", $"last_seen")
+      USING header="true", separator=",";
+
+  LOAD f_region TO VERTEX BillingRegion VALUES
+      ($"region", $"country", $"n_txns", $"n_cards")
+      USING header="true", separator=",";
+
+  LOAD f_email TO VERTEX EmailDomain VALUES ($"domain", $"is_free")
+      USING header="true", separator=",";
+}
+
+CREATE LOADING JOB load_transactions FOR GRAPH FraudGraph {
+  DEFINE FILENAME f_txn = "ANY:transactions.csv";
+
+  LOAD f_txn TO VERTEX Transaction VALUES
+      ($"txn_id", $"ts", $"amount", $"product_cd", $"channel", $"risk_score",
+       $"card_id", $"customer_id", $"region", $"country", $"dist1", $"dist2",
+       $"device_status", $"proxy", $"match_status", $"m_mismatch_count",
+       $"amt_zscore_card", $"hour", $"dow")
+      USING header="true", separator=",";
+
+  LOAD f_txn TO EDGE MADE_WITH   VALUES ($"txn_id", $"card_id")       USING header="true";
+  LOAD f_txn TO EDGE BILLED_IN   VALUES ($"txn_id", $"region")        WHERE $"region" != ""
+      USING header="true";
+  LOAD f_txn TO EDGE FROM_DEVICE VALUES ($"txn_id", $"device_profile")
+      WHERE $"device_profile" != "" USING header="true";
+  LOAD f_txn TO EDGE PURCHASER_EMAIL VALUES ($"txn_id", $"email_p")
+      WHERE $"email_p" != "" USING header="true";
+  LOAD f_txn TO EDGE RECIPIENT_EMAIL VALUES ($"txn_id", $"email_r")
+      WHERE $"email_r" != "" USING header="true";
+}
+
+CREATE LOADING JOB load_card_ownership FOR GRAPH FraudGraph {
+  DEFINE FILENAME f_card = "ANY:cards.csv";
+  LOAD f_card TO EDGE OWNED_BY VALUES ($"card_id", $"customer_id") USING header="true";
+}
+
+CREATE LOADING JOB load_next_txn FOR GRAPH FraudGraph {
+  /* Transaction -> NEXT_TXN -> Transaction, ordered by ts within a card.
+     Precomputed in Python; doing it in GSQL would need a sort per card. */
+  DEFINE FILENAME f_next = "ANY:next_txn.csv";
+  LOAD f_next TO EDGE NEXT_TXN VALUES ($"from_txn", $"to_txn", $"gap_hours")
+      USING header="true", separator=",";
+}
+
+CREATE LOADING JOB load_closed_cases FOR GRAPH FraudGraph {
+  DEFINE FILENAME f_cc      = "ANY:closed_cases.csv";
+  DEFINE FILENAME f_cc_txn  = "ANY:closed_case_txns.csv";
+  DEFINE FILENAME f_cc_conn = "ANY:closed_case_connected.csv";
+  DEFINE FILENAME f_cc_dev  = "ANY:closed_case_devices.csv";
+
+  LOAD f_cc TO VERTEX ClosedCase VALUES
+      ($"case_id", $"customer_id", $"card_id", $"opened_at", $"closed_at",
+       $"outcome", $"pattern", $"n_txns", $"exposure_usd", $"actions_taken",
+       $"report_filed", $"analyst_notes")
+      USING header="true", separator=",", quote="double";
+
+  /* The narrative vector. Written as bare "0.1,0.2,..." by the staging step —
+     SPLIT() cannot take a nested token function, so the brackets are stripped
+     in Python, not here. */
+  LOAD f_cc TO VECTOR ATTRIBUTE narrative_emb ON VERTEX ClosedCase
+      VALUES ($"case_id", SPLIT($"narrative_emb", ","))
+      USING header="true", separator=",", quote="double";
+
+  LOAD f_cc      TO EDGE CC_ON_CARD      VALUES ($"case_id", $"card_id") USING header="true";
+  LOAD f_cc_txn  TO EDGE CC_INVOLVES     VALUES ($"case_id", $"txn_id")  USING header="true";
+  LOAD f_cc_conn TO EDGE CC_CONNECTED_TO VALUES ($"case_id", $"card_id") USING header="true";
+  LOAD f_cc_dev  TO EDGE CC_ON_DEVICE    VALUES ($"case_id", $"device_profile")
+      USING header="true";
+}
+
+CREATE LOADING JOB load_policy FOR GRAPH FraudGraph {
+  DEFINE FILENAME f_doc     = "ANY:policy_docs.csv";
+  DEFINE FILENAME f_pattern = "ANY:patterns.csv";
+
+  LOAD f_doc TO VERTEX PolicyDoc VALUES
+      ($"doc_id", $"kind", $"section", $"title", $"text", $"url", $"issuer")
+      USING header="true", separator=",", quote="double";
+  LOAD f_doc TO VECTOR ATTRIBUTE text_emb ON VERTEX PolicyDoc
+      VALUES ($"doc_id", SPLIT($"text_emb", ","))
+      USING header="true", separator=",", quote="double";
+
+  LOAD f_pattern TO VERTEX Pattern VALUES
+      ($"pattern_id", $"name", $"description", $"source", $"base_rate",
+       $"historical_precision", $"n_observed")
+      USING header="true", separator=",", quote="double";
+  LOAD f_pattern TO VECTOR ATTRIBUTE desc_emb ON VERTEX Pattern
+      VALUES ($"pattern_id", SPLIT($"desc_emb", ","))
+      USING header="true", separator=",", quote="double";
+}
+
+CREATE LOADING JOB load_behaviour_vectors FOR GRAPH FraudGraph {
+  DEFINE FILENAME f_beh = "ANY:behaviour_emb.csv";
+  LOAD f_beh TO VECTOR ATTRIBUTE behaviour_emb ON VERTEX Transaction
+      VALUES ($"txn_id", SPLIT($"behaviour_emb", ","))
+      USING header="true", separator=",";
+}
+
+CREATE LOADING JOB load_analysts FOR GRAPH FraudGraph {
+  DEFINE FILENAME f_a = "ANY:analysts.csv";
+  LOAD f_a TO VERTEX Analyst VALUES ($"analyst_id", $"role", $"approval_ceiling")
+      USING header="true", separator=",";
+}

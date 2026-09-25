@@ -1,0 +1,48 @@
+/* fraud_proximity — a distance-decayed count of confirmed-fraud closed cases
+   around the entities under investigation.
+
+   This is what turns four months of static case history into a live graph
+   signal. Instead of retrieving prior cases as documents to paste into a
+   prompt, it asks how much confirmed fraud sits structurally *near* this card,
+   this customer and this device, discounted by how far away it is. The result
+   goes into the evidence ledger as a likelihood ratio like any other
+   observation.
+
+   `as_of` is enforced on every case touched, at every hop. A proximity score
+   that can see the future is not a signal, it is a leak.                     */
+
+USE GRAPH FraudGraph
+
+CREATE OR REPLACE QUERY fraud_proximity(SET<STRING> entity_ids, DATETIME as_of,
+                                        INT max_hops = 2)
+FOR GRAPH FraudGraph SYNTAX v2 {
+  SumAccum<DOUBLE> @@proximity;
+  SetAccum<STRING> @@contributing;
+  OrAccum          @visited;
+
+  seeds = {Card.*, Customer.*, Transaction.*, DeviceProfile.*};
+  seeds = SELECT v FROM seeds:v
+          WHERE entity_ids.contains(v.card_id) OR entity_ids.contains(v.customer_id)
+             OR entity_ids.contains(v.txn_id) OR entity_ids.contains(v.device_profile)
+          ACCUM v.@visited += TRUE;
+
+  frontier = seeds;
+  FOREACH hop IN RANGE[1, max_hops] DO
+    cases = SELECT c FROM frontier:f
+                 -((CC_CARD_OF|CC_CONNECTED_FROM|CC_INVOLVED_IN|CC_DEVICE_OF):e)- ClosedCase:c
+            WHERE c.opened_at < as_of AND c.@visited == FALSE
+            ACCUM c.@visited += TRUE
+            POST-ACCUM
+              CASE WHEN c.outcome == "confirmed_fraud"
+                   THEN @@proximity += pow(0.5, hop), @@contributing += c.case_id END;
+
+    frontier = SELECT v FROM cases:c
+                    -((CC_ON_CARD|CC_CONNECTED_TO|CC_INVOLVES|CC_ON_DEVICE):e)- :v
+               WHERE v.@visited == FALSE
+               ACCUM v.@visited += TRUE;
+  END;
+
+  PRINT @@proximity AS proximity_score,
+        @@contributing.size() AS n_confirmed_fraud_cases,
+        @@contributing AS evidence_cases;
+}

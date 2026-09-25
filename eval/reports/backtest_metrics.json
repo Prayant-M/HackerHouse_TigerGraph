@@ -1,0 +1,108 @@
+{
+  "as_seen": {
+    "n": 400,
+    "tp": 239,
+    "fp": 18,
+    "fn": 5,
+    "tn": 138,
+    "precision": 0.93,
+    "recall": 0.98,
+    "f1": 0.954,
+    "brier": 0.0559,
+    "ece": 0.028,
+    "reliability": [
+      {
+        "bin": "0.0\u20130.1",
+        "n": 130,
+        "predicted": 0.035,
+        "observed": 0.038
+      },
+      {
+        "bin": "0.1\u20130.2",
+        "n": 13,
+        "predicted": 0.111,
+        "observed": 0.0
+      },
+      {
+        "bin": "0.7\u20130.8",
+        "n": 25,
+        "predicted": 0.77,
+        "observed": 0.88
+      },
+      {
+        "bin": "0.8\u20130.9",
+        "n": 58,
+        "predicted": 0.867,
+        "observed": 0.948
+      },
+      {
+        "bin": "0.9\u20131.0",
+        "n": 174,
+        "predicted": 0.942,
+        "observed": 0.931
+      }
+    ],
+    "auc": 0.936,
+    "pattern_accuracy": 0.561,
+    "pattern_accuracy_given_fraud_called": 0.573,
+    "n_caught": 239,
+    "txn_overlap": 0.613,
+    "sar_agreement": 0.925,
+    "requests": 0.307,
+    "changed": 0.307,
+    "uncertain": 0
+  },
+  "graph_only": {
+    "n": 400,
+    "tp": 41,
+    "fp": 18,
+    "fn": 203,
+    "tn": 138,
+    "precision": 0.695,
+    "recall": 0.168,
+    "f1": 0.271,
+    "brier": 0.5015,
+    "ece": 0.4984,
+    "reliability": [
+      {
+        "bin": "0.0\u20130.1",
+        "n": 296,
+        "predicted": 0.033,
+        "observed": 0.578
+      },
+      {
+        "bin": "0.1\u20130.2",
+        "n": 45,
+        "predicted": 0.12,
+        "observed": 0.711
+      },
+      {
+        "bin": "0.7\u20130.8",
+        "n": 11,
+        "predicted": 0.76,
+        "observed": 0.727
+      },
+      {
+        "bin": "0.8\u20130.9",
+        "n": 7,
+        "predicted": 0.818,
+        "observed": 0.571
+      },
+      {
+        "bin": "0.9\u20131.0",
+        "n": 41,
+        "predicted": 0.935,
+        "observed": 0.707
+      }
+    ],
+    "auc": 0.531,
+    "pattern_accuracy": 0.094,
+    "pattern_accuracy_given_fraud_called": 0.561,
+    "n_caught": 41,
+    "txn_overlap": 0.117,
+    "sar_agreement": 0.922,
+    "requests": 0.61,
+    "changed": 0.61,
+    "uncertain": 0
+  }
+}

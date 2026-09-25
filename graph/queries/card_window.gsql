@@ -1,0 +1,40 @@
+/* card_window — the card's transactions inside a time window, ordered.
+
+   The plain retrieval primitive the episode builder and the typology matchers
+   sit on. Everything it returns is bounded by `as_of`: in all 5,565 closed
+   investigations the last transaction of the episode precedes the alert, so
+   nothing after the wall can belong to the case and nothing after the wall is
+   allowed to influence it.
+
+   `limit` is a guard rail rather than a filter — a handful of cards in this
+   dataset carry more than ten thousand transactions, and an unbounded fetch on
+   one of those turns a two-second investigation into a stall.              */
+
+USE GRAPH FraudGraph
+
+CREATE OR REPLACE QUERY card_window(STRING card_id, DATETIME as_of, DATETIME since,
+                                    INT limit_n = 5000)
+FOR GRAPH FraudGraph SYNTAX v2 {
+  MaxAccum<STRING> @device_profile;
+
+  start = {Card.*};
+  start = SELECT c FROM start:c WHERE c.card_id == card_id;
+
+  window = SELECT t FROM start:c -(MADE:e)- Transaction:t
+           WHERE t.ts <= as_of AND t.ts >= since
+           ORDER BY t.ts ASC
+           LIMIT limit_n;
+
+  /* The device profile hangs off an edge, not off Transaction, so it is
+     resolved here rather than in a second round trip per row. */
+  devices = SELECT d FROM window:t -(FROM_DEVICE:e)- DeviceProfile:d
+            ACCUM t.@device_profile += d.device_profile;
+
+  PRINT window[
+      window.txn_id, window.ts, window.amount, window.product_cd, window.channel,
+      window.risk_score, window.card_id, window.customer_id, window.region,
+      window.country, window.dist1, window.dist2, window.device_status,
+      window.proxy, window.match_status, window.m_mismatch_count,
+      window.amt_zscore_card, window.@device_profile AS device_profile
+  ] AS window;
+}

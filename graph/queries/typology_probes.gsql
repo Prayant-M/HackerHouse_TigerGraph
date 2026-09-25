@@ -1,0 +1,166 @@
+/* Typology probes — the hard matchers.
+
+   Two documented typologies and one of the two undocumented ones need an
+   ordered scan with carry over a card's recent transactions. GSQL's job here
+   is the selective retrieval, which is what a graph is good at; the sliding
+   window itself is four lines of pandas on the client. Splitting it that way
+   keeps the traversal cheap and the matcher testable.
+
+   card_testing_probe            documented typology 1, policy R5
+   threshold_structuring_probe   UNDOCUMENTED typology U1
+   out_of_region_probe           documented typology 4
+   mixed_channel_probe           documented typology 5 (account takeover)
+   recurring_charge_probe        policy R7 — the disputed-but-legitimate case  */
+
+USE GRAPH FraudGraph
+
+/* --------------------------------------------------------------------------
+   Three or more online authorisations under $5 inside one hour, followed by a
+   larger purchase.
+   -------------------------------------------------------------------------- */
+CREATE OR REPLACE QUERY card_testing_probe(STRING card_id, DATETIME as_of,
+                                           DOUBLE small_amount = 5.0,
+                                           INT lookback_days = 7)
+FOR GRAPH FraudGraph SYNTAX v2 {
+  DATETIME since = epoch_to_datetime(datetime_to_epoch(as_of) - lookback_days * 86400);
+  start = {Card.*};
+  start = SELECT c FROM start:c WHERE c.card_id == card_id;
+
+  small = SELECT t FROM start:c -(MADE:e)- Transaction:t
+          WHERE t.ts > since AND t.ts <= as_of
+            AND t.channel == "online" AND t.amount < small_amount
+          ORDER BY t.ts ASC;
+
+  larger = SELECT t FROM start:c -(MADE:e)- Transaction:t
+           WHERE t.ts > since AND t.ts <= as_of
+             AND t.channel == "online" AND t.amount >= 20.0
+           ORDER BY t.ts ASC;
+
+  PRINT small[small.txn_id, small.ts, small.amount, small.product_cd]
+        AS small_authorisations,
+        larger[larger.txn_id, larger.ts, larger.amount, larger.product_cd]
+        AS larger_purchases;
+}
+
+/* --------------------------------------------------------------------------
+   UNDOCUMENTED typology U1 — sub-threshold authorisation structuring.
+
+   Mined out of closed cases CC-3748, CC-3841, CC-3907, CC-4086 and CC-4124,
+   all confirmed as fraud by the bank's analysts but matched to no documented
+   pattern: four online purchases inside roughly forty minutes, each parked
+   just under a $500 authorisation ceiling, ~$1,900 in aggregate.
+
+   It is invisible to per-transaction scoring because every single leg looks
+   ordinary. It is visible here because the graph can hold the whole burst at
+   once.
+   -------------------------------------------------------------------------- */
+CREATE OR REPLACE QUERY threshold_structuring_probe(STRING card_id, DATETIME as_of,
+                                                    INT lookback_days = 3)
+FOR GRAPH FraudGraph SYNTAX v2 {
+  DATETIME since = epoch_to_datetime(datetime_to_epoch(as_of) - lookback_days * 86400);
+  start = {Card.*};
+  start = SELECT c FROM start:c WHERE c.card_id == card_id;
+
+  online = SELECT t FROM start:c -(MADE:e)- Transaction:t
+           WHERE t.ts > since AND t.ts <= as_of AND t.channel == "online"
+           ORDER BY t.ts ASC;
+
+  PRINT online[online.txn_id, online.ts, online.amount, online.product_cd,
+               online.region, online.device_status] AS online_window;
+}
+
+/* --------------------------------------------------------------------------
+   Documented typology 4 — out-of-region use.
+
+   The discriminator between a cloned card and a holiday is not the unfamiliar
+   region. It is whether the cardholder's ordinary home-region activity
+   *continues* while the out-of-region purchases happen. Several days of
+   purchases in one new region with nothing at home is a trip; interleaved home
+   and away activity means the card was in two places at once.
+   -------------------------------------------------------------------------- */
+CREATE OR REPLACE QUERY out_of_region_probe(STRING card_id, DATETIME as_of,
+                                            STRING region, DATETIME baseline_cutoff)
+FOR GRAPH FraudGraph SYNTAX v2 {
+  MapAccum<STRING, SumAccum<INT>> @@baseline_regions;
+  SumAccum<INT> @@n_in_region_window, @@n_home_window, @@n_card_present_window;
+  MinAccum<DATETIME> @@region_first;
+  MaxAccum<DATETIME> @@region_last;
+  SetAccum<STRING>   @@window_txn_ids;
+
+  start = {Card.*};
+  start = SELECT c FROM start:c WHERE c.card_id == card_id;
+
+  base = SELECT t FROM start:c -(MADE:e)- Transaction:t
+         WHERE t.ts <= baseline_cutoff
+         ACCUM @@baseline_regions += (t.region -> 1);
+
+  win = SELECT t FROM start:c -(MADE:e)- Transaction:t
+        WHERE t.ts > baseline_cutoff AND t.ts <= as_of
+        ACCUM
+          CASE WHEN t.region == region
+               THEN @@n_in_region_window += 1, @@region_first += t.ts,
+                    @@region_last += t.ts, @@window_txn_ids += t.txn_id,
+                    CASE WHEN t.channel == "in_person"
+                         THEN @@n_card_present_window += 1 END
+               ELSE @@n_home_window += 1 END;
+
+  PRINT region, @@baseline_regions AS baseline_region_counts,
+        @@n_in_region_window AS n_in_region_window,
+        @@n_home_window AS n_home_txns_window,
+        @@n_card_present_window AS n_card_present_in_region,
+        @@region_first AS region_first_ts, @@region_last AS region_last_ts,
+        @@window_txn_ids AS in_region_txn_ids;
+}
+
+/* --------------------------------------------------------------------------
+   Documented typology 5 — account takeover. Mixed-channel activity that is
+   inconsistent with this cardholder's own channel mix, plus device and
+   match-flag anomalies.
+   -------------------------------------------------------------------------- */
+CREATE OR REPLACE QUERY mixed_channel_probe(STRING card_id, DATETIME as_of,
+                                            INT window_seconds = 259200)
+FOR GRAPH FraudGraph SYNTAX v2 {
+  DATETIME cutoff = epoch_to_datetime(datetime_to_epoch(as_of) - window_seconds);
+  SumAccum<INT> @@w_online, @@w_in_person, @@b_online, @@b_total, @@mismatches;
+  SetAccum<STRING> @@window_devices, @@baseline_devices;
+
+  start = {Card.*};
+  start = SELECT c FROM start:c WHERE c.card_id == card_id;
+
+  win = SELECT t FROM start:c -(MADE:e)- Transaction:t
+        WHERE t.ts > cutoff AND t.ts <= as_of
+        ACCUM @@mismatches += t.m_mismatch_count,
+              CASE WHEN t.channel == "online"
+                   THEN @@w_online += 1 ELSE @@w_in_person += 1 END,
+              CASE WHEN t.device_status != "" THEN @@window_devices += t.device_status END;
+
+  base = SELECT t FROM start:c -(MADE:e)- Transaction:t
+         WHERE t.ts <= cutoff
+         ACCUM @@b_total += 1,
+               CASE WHEN t.channel == "online" THEN @@b_online += 1 END;
+
+  PRINT @@w_online AS n_online, @@w_in_person AS n_in_person,
+        @@b_online AS baseline_online, @@b_total AS baseline_total,
+        @@mismatches AS match_flag_mismatches;
+}
+
+/* --------------------------------------------------------------------------
+   Policy R7 — a disputed charge that matches the cardholder's own recurring
+   pattern. A subscription bills the *same* amount, not a similar one, so the
+   match is exact to the cent; loose tolerance turns every busy card into a
+   false recurrence and R7 into a licence to ignore real disputes.
+   -------------------------------------------------------------------------- */
+CREATE OR REPLACE QUERY recurring_charge_probe(STRING card_id, DATETIME baseline_cutoff,
+                                               DOUBLE amount, STRING product_cd)
+FOR GRAPH FraudGraph SYNTAX v2 {
+  start = {Card.*};
+  start = SELECT c FROM start:c WHERE c.card_id == card_id;
+
+  same = SELECT t FROM start:c -(MADE:e)- Transaction:t
+         WHERE t.ts <= baseline_cutoff
+           AND t.product_cd == product_cd
+           AND abs(t.amount - amount) <= 0.011
+         ORDER BY t.ts ASC;
+
+  PRINT same[same.txn_id, same.ts, same.amount] AS matching_charges;
+}

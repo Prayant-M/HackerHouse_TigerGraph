@@ -1,0 +1,52 @@
+/* case_write_links — stitch a written case into the graph.
+
+   The vertex payloads themselves go in through the RESTPP upsert endpoint (see
+   `src/fraudagent/graphstore/tigergraph.py`), which is the right tool for bulk
+   attribute writes. This query does the part upserts cannot: resolving the
+   entity ids the investigation touched into real edges, so that `case_chain`
+   can walk them afterwards.
+
+   Upsert semantics throughout — re-running the benchmark overwrites rather
+   than duplicating.                                                          */
+
+USE GRAPH FraudGraph
+
+CREATE OR REPLACE QUERY case_write_links(
+    STRING graph_case_id, STRING card_id, STRING customer_id,
+    SET<STRING> txn_ids, SET<STRING> connected_card_ids,
+    SET<STRING> device_profiles, SET<STRING> prior_case_ids,
+    SET<STRING> policy_doc_ids)
+FOR GRAPH FraudGraph SYNTAX v2 {
+  cards = {Card.*};
+  cards = SELECT k FROM cards:k WHERE k.card_id == card_id
+          ACCUM INSERT INTO INVESTIGATES_CARD VALUES (graph_case_id, k);
+
+  custs = {Customer.*};
+  custs = SELECT u FROM custs:u WHERE u.customer_id == customer_id
+          ACCUM INSERT INTO INVESTIGATES_CUSTOMER VALUES (graph_case_id, u);
+
+  txns = {Transaction.*};
+  txns = SELECT t FROM txns:t WHERE txn_ids.contains(t.txn_id)
+         ACCUM INSERT INTO INVESTIGATES_TXN VALUES (graph_case_id, t);
+
+  conn = {Card.*};
+  conn = SELECT k FROM conn:k WHERE connected_card_ids.contains(k.card_id)
+         ACCUM INSERT INTO CONNECTED_CARD VALUES (graph_case_id, k);
+
+  devs = {DeviceProfile.*};
+  devs = SELECT d FROM devs:d WHERE device_profiles.contains(d.device_profile)
+         ACCUM INSERT INTO INVESTIGATES_DEVICE VALUES (graph_case_id, d);
+
+  priors = {ClosedCase.*};
+  priors = SELECT p FROM priors:p WHERE prior_case_ids.contains(p.case_id)
+           ACCUM INSERT INTO RECALLED_CASE VALUES (graph_case_id, p, 0.0, 0, 0.0);
+
+  pol = {PolicyDoc.*};
+  pol = SELECT d FROM pol:d WHERE policy_doc_ids.contains(d.doc_id)
+        ACCUM INSERT INTO CITES_POLICY VALUES (graph_case_id, d);
+
+  PRINT txns.size() AS linked_transactions,
+        conn.size() AS linked_connected_cards,
+        priors.size() AS linked_prior_cases,
+        pol.size() AS linked_policy_docs;
+}

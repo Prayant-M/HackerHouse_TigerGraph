@@ -1,0 +1,44 @@
+/* behavioural_neighbours — "which confirmed-fraud transactions *behave* like
+   this one", answered by vector search rather than by an LLM reading rows.
+
+   Transaction.behaviour_emb is engineered, not textual: rank-normalised
+   C1..C14, D1..D15 and the M trinary flags, plus a 24-component incremental
+   PCA of V1..V339. The V block carries real Vesta signal and is hopeless as
+   LLM context — 339 unnamed columns is not evidence, it is noise with a
+   schema. Compressed, it becomes a retrieval key.
+
+   The candidate set is restricted to transactions belonging to closed cases
+   that opened before `as_of`, so the neighbourhood cannot contain the future.
+
+   This is the second embedding space in the same database as the graph. Being
+   able to query both alongside a traversal, in one system, is the reason this
+   project is on TigerGraph.                                                  */
+
+USE GRAPH FraudGraph
+
+CREATE OR REPLACE QUERY behavioural_neighbours(STRING txn_id, DATETIME as_of, INT k = 15)
+FOR GRAPH FraudGraph SYNTAX v2 {
+  SumAccum<INT>     @@n_fraud, @@n_cleared;
+  SumAccum<DOUBLE>  @@sim_total;
+  ListAccum<STRING> @@neighbour_ids;
+
+  src = {Transaction.*};
+  src = SELECT t FROM src:t WHERE t.txn_id == txn_id;
+  LIST<DOUBLE> qv = getvalue(src, "behaviour_emb");
+
+  cand = vectorSearch({Transaction.behaviour_emb}, qv, k * 6);
+  scored = SELECT t FROM cand:t -(CC_INVOLVED_IN:e)- ClosedCase:c
+           WHERE c.opened_at < as_of AND t.txn_id != txn_id
+           ACCUM
+             @@sim_total += t.@distance,
+             @@neighbour_ids += t.txn_id,
+             CASE WHEN c.outcome == "confirmed_fraud"
+                  THEN @@n_fraud += 1 ELSE @@n_cleared += 1 END
+           ORDER BY t.@distance DESC
+           LIMIT k;
+
+  PRINT @@n_fraud AS n_fraud, @@n_cleared AS n_cleared,
+        @@neighbour_ids AS neighbours,
+        scored[scored.txn_id, scored.amount, scored.ts,
+               scored.@distance AS similarity];
+}

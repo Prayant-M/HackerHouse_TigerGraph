@@ -1,0 +1,286 @@
+/* ===========================================================================
+   FraudGraph — schema
+   TigerGraph 4.2+ (TigerVector required for 02_vectors.gsql)
+
+   Two subgraphs share one store:
+
+   1. The transaction subgraph, loaded from the HHGOA dataset. It is the
+      evidence surface: cards, customers, transactions, device profiles,
+      billing regions, email domains, and the bank's closed investigations.
+
+   2. The case subgraph, written by the agent. A Case is a first-class vertex
+      with Evidence, Finding, Decision, RecommendedAction, EvidenceRequest and
+      SAR hanging off it, so an investigation can be reconstructed by traversal
+      alone — without reading the JSON answer file. The dataset asks for the
+      case "also written to the graph"; this is the shape that makes that
+      requirement mean something.
+
+   Run:  python graph/install.py --step schema
+   =========================================================================== */
+
+CREATE GRAPH FraudGraph()
+
+USE GRAPH FraudGraph
+
+CREATE SCHEMA_CHANGE JOB fraud_schema FOR GRAPH FraudGraph {
+
+  /* ---------------------------------------------------------- entities -- */
+  ADD VERTEX Customer (
+      PRIMARY_ID customer_id STRING,
+      n_cards INT,
+      first_seen DATETIME,
+      last_seen DATETIME,
+      home_region STRING
+  ) WITH primary_id_as_attribute="true";
+
+  ADD VERTEX Card (
+      PRIMARY_ID card_id STRING,
+      customer_id STRING,
+      brand STRING,               /* card4 */
+      card_type STRING,           /* card6 */
+      issuer_code STRING,         /* card1 */
+      first_seen DATETIME,
+      last_seen DATETIME,
+      n_txns INT,
+      amt_mean DOUBLE,
+      amt_median DOUBLE,
+      amt_std DOUBLE,
+      amt_p95 DOUBLE,
+      online_share DOUBLE,
+      home_region STRING,
+      community_id INT,           /* filled by 04_projections.gsql (tg_wcc)   */
+      hub_rank DOUBLE             /* filled by 04_projections.gsql (pagerank) */
+  ) WITH primary_id_as_attribute="true";
+
+  ADD VERTEX Transaction (
+      PRIMARY_ID txn_id STRING,
+      ts DATETIME,
+      amount DOUBLE,
+      product_cd STRING,
+      channel STRING,             /* in_person | online */
+      risk_score DOUBLE,
+      card_id STRING,
+      customer_id STRING,
+      region STRING,              /* addr1 */
+      country STRING,             /* addr2 */
+      dist1 DOUBLE,
+      dist2 DOUBLE,
+      device_status STRING,       /* id_15: New | Found | Unknown */
+      proxy STRING,               /* id_23: IP_PROXY:ANONYMOUS | TRANSPARENT | HIDDEN */
+      match_status STRING,        /* id_34 */
+      m_mismatch_count INT,
+      amt_zscore_card DOUBLE,
+      hour INT,
+      dow INT
+  ) WITH primary_id_as_attribute="true";
+
+  ADD VERTEX DeviceProfile (
+      PRIMARY_ID device_profile STRING,   /* DeviceInfo | OS | browser | screen */
+      device_info STRING,
+      os STRING,
+      browser STRING,
+      screen STRING,
+      device_type STRING,
+      n_txns INT,
+      n_cards INT,
+      n_customers INT,
+      first_seen DATETIME,
+      last_seen DATETIME
+  ) WITH primary_id_as_attribute="true";
+
+  ADD VERTEX EmailDomain (
+      PRIMARY_ID domain STRING,
+      is_free BOOL
+  ) WITH primary_id_as_attribute="true";
+
+  ADD VERTEX BillingRegion (
+      PRIMARY_ID region STRING,
+      country STRING,
+      n_txns INT,
+      n_cards INT
+  ) WITH primary_id_as_attribute="true";
+
+  /* ------------------------------------------------- memory: prior work -- */
+  ADD VERTEX ClosedCase (
+      PRIMARY_ID case_id STRING,
+      customer_id STRING,
+      card_id STRING,
+      opened_at DATETIME,
+      closed_at DATETIME,
+      outcome STRING,             /* confirmed_fraud | cleared */
+      pattern STRING,
+      n_txns INT,
+      exposure_usd DOUBLE,
+      actions_taken STRING,
+      report_filed STRING,
+      narrative STRING
+  ) WITH primary_id_as_attribute="true";
+
+  ADD VERTEX Pattern (
+      PRIMARY_ID pattern_id STRING,
+      name STRING,
+      description STRING,
+      source STRING,              /* DOCUMENTED | DISCOVERED */
+      base_rate DOUBLE,
+      historical_precision DOUBLE,
+      n_observed INT
+  ) WITH primary_id_as_attribute="true";
+
+  ADD VERTEX PolicyDoc (
+      PRIMARY_ID doc_id STRING,
+      kind STRING,                /* policy_rule | policy_section | typology |
+                                     regulatory_reference | guidance */
+      section STRING,
+      title STRING,
+      text STRING,
+      url STRING,
+      issuer STRING
+  ) WITH primary_id_as_attribute="true";
+
+  /* ------------------------------------------- the agent's own case work -- */
+  ADD VERTEX Case (
+      PRIMARY_ID graph_case_id STRING,
+      source_case_id STRING,      /* HHG-0xx from the case pack */
+      status STRING,              /* open | closed_fraud | closed_legitimate | escalated */
+      verdict STRING,             /* fraud | legitimate | uncertain */
+      trigger_type STRING,
+      opened_at DATETIME,
+      as_of DATETIME,             /* the temporal wall this case reasoned under */
+      fraud_probability DOUBLE,
+      confidence DOUBLE,
+      pattern STRING,
+      pattern_description STRING,
+      exposure_usd DOUBLE,
+      summary STRING,
+      narrative STRING,
+      stop_reason STRING,
+      ledger_head STRING,         /* head of the hash chain */
+      tool_calls INT,
+      latency_s DOUBLE
+  ) WITH primary_id_as_attribute="true";
+
+  ADD VERTEX Evidence (
+      PRIMARY_ID evidence_id STRING,
+      kind STRING,                /* graph | document | customer | external */
+      claim STRING,
+      source_tool STRING,
+      collected_at DATETIME,
+      reliability DOUBLE,
+      delta_fraud_probability DOUBLE
+  ) WITH primary_id_as_attribute="true";
+
+  ADD VERTEX Finding (
+      PRIMARY_ID finding_id STRING,
+      statement STRING,
+      support_score DOUBLE,
+      contradicted_by_count INT
+  ) WITH primary_id_as_attribute="true";
+
+  ADD VERTEX Decision (
+      PRIMARY_ID decision_id STRING,
+      step INT,
+      node STRING,
+      posterior_before DOUBLE,
+      posterior_after DOUBLE,
+      rationale STRING,
+      prev_hash STRING,
+      hash STRING
+  ) WITH primary_id_as_attribute="true";
+
+  ADD VERTEX RecommendedAction (
+      PRIMARY_ID action_id STRING,
+      action_type STRING,
+      phase STRING,               /* initial | final */
+      approval_route STRING,      /* auto | L1 | L2 */
+      reason STRING,
+      policy_rule STRING,
+      executed BOOL,
+      executed_at DATETIME
+  ) WITH primary_id_as_attribute="true";
+
+  ADD VERTEX EvidenceRequest (
+      PRIMARY_ID request_id STRING,
+      request_type STRING,        /* customer_validation | step_up_auth | analyst_info */
+      channel STRING,
+      question STRING,
+      expected_info_gain DOUBLE,
+      cost DOUBLE,
+      asked_after_step INT,
+      simulated BOOL,
+      simulation_seed INT,
+      response STRING,
+      sent_at DATETIME,
+      responded_at DATETIME
+  ) WITH primary_id_as_attribute="true";
+
+  ADD VERTEX SAR (
+      PRIMARY_ID sar_id STRING,
+      filed BOOL,
+      reason STRING,
+      narrative STRING,
+      total_amount_usd DOUBLE,
+      activity_start STRING,
+      activity_end STRING
+  ) WITH primary_id_as_attribute="true";
+
+  ADD VERTEX Analyst (
+      PRIMARY_ID analyst_id STRING,
+      role STRING,                /* L1 | L2 | COMPLIANCE */
+      approval_ceiling DOUBLE
+  ) WITH primary_id_as_attribute="true";
+
+  /* --------------------------------------------- transaction subgraph ---- */
+  ADD DIRECTED EDGE MADE_WITH   (FROM Transaction, TO Card)          WITH REVERSE_EDGE="MADE";
+  ADD DIRECTED EDGE OWNED_BY    (FROM Card, TO Customer)             WITH REVERSE_EDGE="OWNS";
+  ADD DIRECTED EDGE FROM_DEVICE (FROM Transaction, TO DeviceProfile) WITH REVERSE_EDGE="DEVICE_USED_IN";
+  ADD DIRECTED EDGE BILLED_IN   (FROM Transaction, TO BillingRegion) WITH REVERSE_EDGE="REGION_OF";
+  ADD DIRECTED EDGE PURCHASER_EMAIL (FROM Transaction, TO EmailDomain) WITH REVERSE_EDGE="EMAIL_USED_BY";
+  ADD DIRECTED EDGE RECIPIENT_EMAIL (FROM Transaction, TO EmailDomain) WITH REVERSE_EDGE="EMAIL_RECEIVED_BY";
+  ADD DIRECTED EDGE NEXT_TXN    (FROM Transaction, TO Transaction, gap_hours DOUBLE)
+                                                                     WITH REVERSE_EDGE="PREV_TXN";
+
+  /* Derived projection. Collapses Card -> Transaction -> DeviceProfile into a
+     single hop so ring detection and the GDS community algorithms run an order
+     of magnitude faster. Built once by 04_projections.gsql, never at query
+     time — recomputing Louvain inside an investigation destroys the latency
+     budget and it shows on stage. */
+  ADD UNDIRECTED EDGE CO_OCCURS_WITH (FROM Card, TO Card,
+      weight INT, shared_device STRING, first_ts DATETIME, last_ts DATETIME,
+      via_anon_proxy BOOL);
+
+  /* -------------------------------------------------- memory subgraph ---- */
+  ADD DIRECTED EDGE CC_INVOLVES  (FROM ClosedCase, TO Transaction) WITH REVERSE_EDGE="CC_INVOLVED_IN";
+  ADD DIRECTED EDGE CC_ON_CARD   (FROM ClosedCase, TO Card)        WITH REVERSE_EDGE="CC_CARD_OF";
+  ADD DIRECTED EDGE CC_CONNECTED_TO (FROM ClosedCase, TO Card)     WITH REVERSE_EDGE="CC_CONNECTED_FROM";
+  ADD DIRECTED EDGE CC_ON_DEVICE (FROM ClosedCase, TO DeviceProfile) WITH REVERSE_EDGE="CC_DEVICE_OF";
+  ADD DIRECTED EDGE CC_MATCHED_PATTERN (FROM ClosedCase, TO Pattern) WITH REVERSE_EDGE="PATTERN_SEEN_IN";
+
+  /* ---------------------------------------------------- case subgraph ---- */
+  ADD DIRECTED EDGE INVESTIGATES_TXN    (FROM Case, TO Transaction)   WITH REVERSE_EDGE="TXN_IN_CASE";
+  ADD DIRECTED EDGE INVESTIGATES_CARD   (FROM Case, TO Card)          WITH REVERSE_EDGE="CARD_IN_CASE";
+  ADD DIRECTED EDGE INVESTIGATES_CUSTOMER (FROM Case, TO Customer)    WITH REVERSE_EDGE="CUSTOMER_IN_CASE";
+  ADD DIRECTED EDGE INVESTIGATES_DEVICE (FROM Case, TO DeviceProfile) WITH REVERSE_EDGE="DEVICE_IN_CASE";
+  ADD DIRECTED EDGE CONNECTED_CARD      (FROM Case, TO Card)          WITH REVERSE_EDGE="CARD_CONNECTED_TO_CASE";
+  ADD DIRECTED EDGE HAS_EVIDENCE        (FROM Case, TO Evidence)      WITH REVERSE_EDGE="EVIDENCE_OF";
+  ADD DIRECTED EDGE EVIDENCE_ON         (FROM Evidence, TO Transaction) WITH REVERSE_EDGE="EVIDENCE_ABOUT";
+  ADD DIRECTED EDGE SUPPORTS            (FROM Evidence, TO Finding, weight DOUBLE) WITH REVERSE_EDGE="SUPPORTED_BY";
+  ADD DIRECTED EDGE CONTRADICTS         (FROM Evidence, TO Finding, weight DOUBLE) WITH REVERSE_EDGE="CONTRADICTED_BY";
+  ADD DIRECTED EDGE PRODUCED_FINDING    (FROM Case, TO Finding)       WITH REVERSE_EDGE="FINDING_OF";
+  ADD DIRECTED EDGE DECIDED             (FROM Case, TO Decision)      WITH REVERSE_EDGE="DECISION_OF";
+  ADD DIRECTED EDGE RECOMMENDS          (FROM Case, TO RecommendedAction) WITH REVERSE_EDGE="RECOMMENDED_IN";
+  ADD DIRECTED EDGE REQUESTED           (FROM Case, TO EvidenceRequest)   WITH REVERSE_EDGE="REQUESTED_BY";
+  ADD DIRECTED EDGE ANSWERED_BY         (FROM EvidenceRequest, TO Evidence) WITH REVERSE_EDGE="ANSWERS";
+  ADD DIRECTED EDGE MATCHED_PATTERN     (FROM Case, TO Pattern, match_score DOUBLE) WITH REVERSE_EDGE="PATTERN_MATCHED_BY";
+  ADD DIRECTED EDGE CITES_POLICY        (FROM Case, TO PolicyDoc)     WITH REVERSE_EDGE="POLICY_CITED_BY";
+  ADD DIRECTED EDGE ACTION_CITES_POLICY (FROM RecommendedAction, TO PolicyDoc) WITH REVERSE_EDGE="POLICY_CITED_BY_ACTION";
+  ADD DIRECTED EDGE FILED               (FROM Case, TO SAR)           WITH REVERSE_EDGE="SAR_OF";
+  ADD DIRECTED EDGE SAR_CITES_REGULATION (FROM SAR, TO PolicyDoc)     WITH REVERSE_EDGE="REGULATION_CITED_BY";
+  ADD DIRECTED EDGE APPROVED_BY         (FROM RecommendedAction, TO Analyst, approved_at DATETIME, approved BOOL)
+                                                                      WITH REVERSE_EDGE="APPROVED";
+  ADD DIRECTED EDGE RECALLED_CASE       (FROM Case, TO ClosedCase,
+      similarity DOUBLE, shared_entities INT, fused_score DOUBLE)     WITH REVERSE_EDGE="RECALLED_BY";
+  ADD UNDIRECTED EDGE SIMILAR_TO        (FROM Case, TO Case,
+      cosine DOUBLE, shared_entities INT, computed_at DATETIME);
+}
+
+RUN SCHEMA_CHANGE JOB fraud_schema

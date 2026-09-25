@@ -1,0 +1,849 @@
+{
+  "executed_actions": [
+    {
+      "action": "CREATE_CASE",
+      "case_id": "AUTO-055",
+      "card_id": "C11000-K2",
+      "customer_id": "C11000",
+      "route": "auto",
+      "executed": true,
+      "simulated": true,
+      "reference": "SIM-233BFFD9C7",
+      "executed_at": "2026-09-22T19:55:11Z",
+      "effect": "Fraud case opened and written to the graph.",
+      "customer_impact": "none"
+    }
+  ],
+  "pending_approval": [
+    {
+      "action": "BLOCK_CARD",
+      "route": "L1",
+      "awaiting": "team lead"
+    },
+    {
+      "action": "FILE_REPORT",
+      "route": "L2",
+      "awaiting": "fraud manager"
+    }
+  ],
+  "case_id": "AUTO-055",
+  "case": {
+    "status": "closed_fraud",
+    "verdict": "fraud",
+    "fraud_probability": 0.854,
+    "pattern": "account_takeover",
+    "pattern_description": "",
+    "affected_txn_ids": [
+      "3416156",
+      "3416492",
+      "3416520",
+      "3416925",
+      "3416930",
+      "3418313"
+    ],
+    "first_suspicious_txn_id": "3416156",
+    "connected_card_ids": [],
+    "connected_device_profiles": [],
+    "exposure_usd": 2310.89,
+    "evidence": [
+      {
+        "claim": "Activity in the 72 hours before the alert mixes 6 online and 40 card-present transactions, shifting the online share by 0.27 against this card's own baseline",
+        "source": "graph",
+        "ref": "query:mixed_channel_probe(card_id=C11000-K2, window_hours=72)",
+        "entity_ids": [
+          "C11000-K2"
+        ]
+      },
+      {
+        "claim": "5 closely matching closed investigations were retrieved by fusing narrative similarity with shared-entity overlap; 5 of them were confirmed fraud, most often account_takeover",
+        "source": "graph",
+        "ref": "query:hybrid_case_recall(k=5, as_of=2016-11-01 16:26:58)",
+        "entity_ids": [
+          "CC-2483",
+          "CC-3355",
+          "CC-0452",
+          "CC-2945",
+          "CC-0063"
+        ]
+      },
+      {
+        "claim": "Flagged transaction used a device profile and billing region already established on this card",
+        "source": "graph",
+        "ref": "query:device_first_use + region_profile(card_id=C11000-K2)",
+        "entity_ids": [
+          "3418313",
+          "C11000-K2"
+        ]
+      },
+      {
+        "claim": "Flagged amount $111.95 sits inside this card's ordinary spending range (median $108.02, z=-0.16) over 2761 prior transactions",
+        "source": "graph",
+        "ref": "query:card_baseline(card_id=C11000-K2)",
+        "entity_ids": [
+          "3418313",
+          "C11000-K2"
+        ]
+      },
+      {
+        "claim": "21 confirmed-fraud closed cases sit within two hops of this card, device or customer (distance-decayed proximity 10.5)",
+        "source": "graph",
+        "ref": "query:fraud_proximity(entity_ids=..., max_hops=2)",
+        "entity_ids": [
+          "CC-0063",
+          "CC-0452",
+          "CC-0557",
+          "CC-0695",
+          "CC-0932",
+          "CC-1357",
+          "CC-1703",
+          "CC-1865",
+          "CC-2083",
+          "CC-2483"
+        ]
+      },
+      {
+        "claim": "Out-of-region use governs this case: Out-of-region use. Card-present purchases in a billing region the cardholder has no history in, while their normal activity continues at home. Several days of purchases in one new region is a trip, not a clone. Policy R2, R3.",
+        "source": "document",
+        "ref": "policy:PATTERN-out_of_region_use",
+        "entity_ids": []
+      },
+      {
+        "claim": "Account takeover governs this case: Account takeover. Mixed-channel activity inconsistent with the cardholder, often with device and match-flag anomalies, pointing to stolen credentials rather than a stolen number.",
+        "source": "document",
+        "ref": "policy:PATTERN-account_takeover",
+        "entity_ids": []
+      }
+    ],
+    "similar_prior_cases": [
+      "CC-2483",
+      "CC-3355",
+      "CC-0452",
+      "CC-2945",
+      "CC-0063"
+    ],
+    "summary": "The bank's model scored transaction 3418313 at 0.97 ($111.95, in person, billing region 272.0). The investigation found: activity in the 72 hours before the alert mixes 6 online and 40 card-present transactions, shifting the online share by 0.27 against this card's own baseline; 5 closely matching closed investigations were retrieved by fusing narrative similarity with shared-entity overlap; 5 of them were confirmed fraud, most often account_takeover; flagged transaction used a device profile and billing region already established on this card. The activity is assessed as account takeover at probability 0.85, covering 6 transaction(s) worth $2,310.89. Closed case CC-2483 (confirmed fraud, account takeover) is the closest prior investigation.",
+    "written_to_graph": true,
+    "graph_case_id": "CASE-AUTO-055"
+  },
+  "evidence_requests": [],
+  "next_best_actions": {
+    "initial": [
+      {
+        "action": "BLOCK_CARD",
+        "route": "L1",
+        "reason": "R2: unauthorised use established"
+      },
+      {
+        "action": "CREATE_CASE",
+        "route": "auto",
+        "reason": "3a: fraud probability 0.85 reaches the 0.30 case threshold"
+      },
+      {
+        "action": "FILE_REPORT",
+        "route": "L2",
+        "reason": "§3a: exposure $2,310.89 exceeds the $1,000 threshold."
+      }
+    ],
+    "final": [
+      {
+        "action": "BLOCK_CARD",
+        "route": "L1",
+        "reason": "R2: unauthorised use established"
+      },
+      {
+        "action": "CREATE_CASE",
+        "route": "auto",
+        "reason": "3a: fraud probability 0.85 reaches the 0.30 case threshold"
+      },
+      {
+        "action": "FILE_REPORT",
+        "route": "L2",
+        "reason": "§3a: exposure $2,310.89 exceeds the $1,000 threshold."
+      }
+    ],
+    "what_changed": "nothing"
+  },
+  "sar": {
+    "file": true,
+    "reason": "§3a: exposure $2,310.89 exceeds the $1,000 threshold.",
+    "narrative": "Customer C11000, holder of card C11000-K2, is the subject of this report. Between 2016-10-31 and 2016-11-01, 6 transaction(s) totalling $2,310.89 were identified as unauthorised on that card, the earliest being transaction 3416156 and the transaction that triggered review being 3418313 for $111.95. The activity was conducted through the card-present channel in billing region 272.0. Activity mixed channels in a way inconsistent with the cardholder's own pattern and coincided with device and identity match-flag anomalies, indicating compromised credentials rather than a stolen card number. Closed investigation CC-2483 recorded confirmed fraud on comparable activity. The issuer assesses the probability of fraud at 0.85 on the evidence set out above. Total suspicious amount: $2,310.89.",
+    "subjects": [
+      "C11000",
+      "C11000-K2"
+    ],
+    "total_amount_usd": 2310.89,
+    "activity_dates": [
+      "2016-10-31",
+      "2016-11-01"
+    ]
+  },
+  "stop_reason": "Fraud probability 0.85 is at or above the 0.85 ceiling in policy §6, supported by 7 independent pieces of evidence, with account_takeover leading none by 0.62.",
+  "tool_calls": 29,
+  "tokens": 0,
+  "latency_s": 0.77,
+  "agent_record": {
+    "trigger": {
+      "type": "risk_score",
+      "text": "Autonomous monitor: model scored transaction 3418313 ($111.95, in_person) at 0.97.",
+      "flagged_txn_id": "3418313",
+      "card_id": "C11000-K2",
+      "customer_id": "C11000",
+      "opened_at": "2016-11-01 16:26:58",
+      "risk_score": 0.9700000286102295
+    },
+    "as_of": "2016-11-01 16:26:58",
+    "posterior": {
+      "none": 0.146,
+      "card_testing": 0.0003,
+      "card_not_present_fraud": 0.017,
+      "card_not_present_new_device": 0.0047,
+      "out_of_region_use": 0.0621,
+      "account_takeover": 0.7699,
+      "undocumented": 0.0
+    },
+    "hypothesis_labels": {
+      "none": "Legitimate — unusual but genuine cardholder behaviour",
+      "card_testing": "Card testing — small probing authorisations before a larger hit",
+      "card_not_present_fraud": "Card-not-present fraud — card data used online without the instrument",
+      "card_not_present_new_device": "Card-not-present fraud from a device new to this account",
+      "out_of_region_use": "Out-of-region use — card-present activity in an unfamiliar billing region",
+      "account_takeover": "Account takeover — credentials compromised, mixed-channel abuse",
+      "undocumented": "Undocumented typology — coordinated abuse matching no known pattern"
+    },
+    "prior": {
+      "none": 0.62,
+      "card_testing": 0.0012,
+      "card_not_present_fraud": 0.1189,
+      "card_not_present_new_device": 0.0963,
+      "out_of_region_use": 0.0675,
+      "account_takeover": 0.0949,
+      "undocumented": 0.0012
+    },
+    "rounds": 0,
+    "signals_fired": [
+      "mixed_channel_shift",
+      "amount_typical",
+      "known_device_and_region",
+      "fraud_proximity",
+      "risk_score_high"
+    ],
+    "evidence_with_impact": [
+      {
+        "claim": "Activity in the 72 hours before the alert mixes 6 online and 40 card-present transactions, shifting the online share by 0.27 against this card's own baseline",
+        "source": "graph",
+        "ref": "query:mixed_channel_probe(card_id=C11000-K2, window_hours=72)",
+        "entity_ids": [
+          "C11000-K2"
+        ],
+        "delta_fraud_probability": 0.2073,
+        "reliability": 1.0
+      },
+      {
+        "claim": "5 closely matching closed investigations were retrieved by fusing narrative similarity with shared-entity overlap; 5 of them were confirmed fraud, most often account_takeover",
+        "source": "graph",
+        "ref": "query:hybrid_case_recall(k=5, as_of=2016-11-01 16:26:58)",
+        "entity_ids": [
+          "CC-2483",
+          "CC-3355",
+          "CC-0452",
+          "CC-2945",
+          "CC-0063"
+        ],
+        "delta_fraud_probability": 0.1432,
+        "reliability": 0.8
+      },
+      {
+        "claim": "Flagged transaction used a device profile and billing region already established on this card",
+        "source": "graph",
+        "ref": "query:device_first_use + region_profile(card_id=C11000-K2)",
+        "entity_ids": [
+          "3418313",
+          "C11000-K2"
+        ],
+        "delta_fraud_probability": 0.0547,
+        "reliability": 1.0
+      },
+      {
+        "claim": "Flagged amount $111.95 sits inside this card's ordinary spending range (median $108.02, z=-0.16) over 2761 prior transactions",
+        "source": "graph",
+        "ref": "query:card_baseline(card_id=C11000-K2)",
+        "entity_ids": [
+          "3418313",
+          "C11000-K2"
+        ],
+        "delta_fraud_probability": 0.0143,
+        "reliability": 1.0
+      },
+      {
+        "claim": "21 confirmed-fraud closed cases sit within two hops of this card, device or customer (distance-decayed proximity 10.5)",
+        "source": "graph",
+        "ref": "query:fraud_proximity(entity_ids=..., max_hops=2)",
+        "entity_ids": [
+          "CC-0063",
+          "CC-0452",
+          "CC-0557",
+          "CC-0695",
+          "CC-0932",
+          "CC-1357",
+          "CC-1703",
+          "CC-1865",
+          "CC-2083",
+          "CC-2483"
+        ],
+        "delta_fraud_probability": 0.0063,
+        "reliability": 1.0
+      },
+      {
+        "claim": "Out-of-region use governs this case: Out-of-region use. Card-present purchases in a billing region the cardholder has no history in, while their normal activity continues at home. Several days of purchases in one new region is a trip, not a clone. Policy R2, R3.",
+        "source": "document",
+        "ref": "policy:PATTERN-out_of_region_use",
+        "entity_ids": []
+      },
+      {
+        "claim": "Account takeover governs this case: Account takeover. Mixed-channel activity inconsistent with the cardholder, often with device and match-flag anomalies, pointing to stolen credentials rather than a stolen number.",
+        "source": "document",
+        "ref": "policy:PATTERN-account_takeover",
+        "entity_ids": []
+      }
+    ],
+    "evidence_requests_detail": [],
+    "voi_ranking": [
+      {
+        "type": "customer_validation",
+        "name": "Customer transaction validation",
+        "channel": "push/SMS (simulated)",
+        "expected_info_gain": 0.2587,
+        "cost": 3.0,
+        "info_per_unit_cost": 0.0862,
+        "permitted": true,
+        "blocked_by": "",
+        "outcome_distribution": {
+          "customer_denied": 0.654,
+          "customer_confirmed": 0.166,
+          "customer_no_response": 0.18
+        }
+      },
+      {
+        "type": "step_up_auth",
+        "name": "Step-up authentication challenge",
+        "channel": "app/OTP (simulated)",
+        "expected_info_gain": 0.379,
+        "cost": 5.0,
+        "info_per_unit_cost": 0.0758,
+        "permitted": true,
+        "blocked_by": "",
+        "outcome_distribution": {
+          "step_up_failed": 0.711,
+          "step_up_passed": 0.289
+        }
+      },
+      {
+        "type": "analyst_info",
+        "name": "Analyst query — prior relationship and ring context",
+        "channel": "internal analyst queue (simulated)",
+        "expected_info_gain": -0.0708,
+        "cost": 8.0,
+        "info_per_unit_cost": -0.0089,
+        "permitted": false,
+        "blocked_by": "no shared origin to ask an analyst about",
+        "outcome_distribution": {
+          "analyst_confirms_ring": 0.08,
+          "analyst_no_prior_relationship": 0.92
+        }
+      }
+    ],
+    "decisions": [
+      {
+        "decision_id": "AUTO-055-D01",
+        "step": 1,
+        "node": "case_opener",
+        "posterior_before": {
+          "none": 0.62,
+          "card_testing": 0.0012,
+          "card_not_present_fraud": 0.1189,
+          "card_not_present_new_device": 0.0963,
+          "out_of_region_use": 0.0675,
+          "account_takeover": 0.0949,
+          "undocumented": 0.0012
+        },
+        "posterior_after": {
+          "none": 0.62,
+          "card_testing": 0.0012,
+          "card_not_present_fraud": 0.1189,
+          "card_not_present_new_device": 0.0963,
+          "out_of_region_use": 0.0675,
+          "account_takeover": 0.0949,
+          "undocumented": 0.0012
+        },
+        "rationale": "Case opened from a risk_score trigger with the temporal cutoff fixed at 2016-11-01 16:26:58. Prior over hypotheses is conditioned on how the alert arrived, not on the bank model's score.",
+        "payload": {
+          "prior": {
+            "none": 0.62,
+            "card_testing": 0.0012,
+            "card_not_present_fraud": 0.1189,
+            "card_not_present_new_device": 0.0963,
+            "out_of_region_use": 0.0675,
+            "account_takeover": 0.0949,
+            "undocumented": 0.0012
+          }
+        },
+        "prev_hash": "0000000000000000000000000000000000000000000000000000000000000000",
+        "hash": "7dcaa68d39956228e5a4777fadbfd7a12183d02252b4716d76e4c12caaae7e41"
+      },
+      {
+        "decision_id": "AUTO-055-D02",
+        "step": 2,
+        "node": "ledger_update",
+        "posterior_before": {
+          "none": 0.4768,
+          "card_testing": 0.0012,
+          "card_not_present_fraud": 0.1213,
+          "card_not_present_new_device": 0.0983,
+          "out_of_region_use": 0.0689,
+          "account_takeover": 0.2323,
+          "undocumented": 0.0012
+        },
+        "posterior_after": {
+          "none": 0.146,
+          "card_testing": 0.0003,
+          "card_not_present_fraud": 0.017,
+          "card_not_present_new_device": 0.0047,
+          "out_of_region_use": 0.0621,
+          "account_takeover": 0.7699,
+          "undocumented": 0.0
+        },
+        "rationale": "Folded 25 measured observations into the posterior. Fraud probability moved from 0.523 to 0.854; leading hypothesis is account_takeover.",
+        "payload": {
+          "signals_fired": [
+            "mixed_channel_shift",
+            "amount_typical",
+            "known_device_and_region",
+            "fraud_proximity",
+            "risk_score_high"
+          ]
+        },
+        "prev_hash": "7dcaa68d39956228e5a4777fadbfd7a12183d02252b4716d76e4c12caaae7e41",
+        "hash": "97db8a455367102834d637a9c0de8cac326bf93ee72f156cdabf2f908cecb83e"
+      },
+      {
+        "decision_id": "AUTO-055-D03",
+        "step": 3,
+        "node": "action_recommender",
+        "posterior_before": {
+          "none": 0.146,
+          "card_testing": 0.0003,
+          "card_not_present_fraud": 0.017,
+          "card_not_present_new_device": 0.0047,
+          "out_of_region_use": 0.0621,
+          "account_takeover": 0.7699,
+          "undocumented": 0.0
+        },
+        "posterior_after": {
+          "none": 0.146,
+          "card_testing": 0.0003,
+          "card_not_present_fraud": 0.017,
+          "card_not_present_new_device": 0.0047,
+          "out_of_region_use": 0.0621,
+          "account_takeover": 0.7699,
+          "undocumented": 0.0
+        },
+        "rationale": "Final recommendation: BLOCK_CARD(L1), CREATE_CASE(auto), FILE_REPORT(L2). Verdict fraud, pattern account_takeover, exposure $2,310.89.",
+        "payload": {
+          "actions": [
+            {
+              "action": "BLOCK_CARD",
+              "route": "L1",
+              "reason": "R2: unauthorised use established"
+            },
+            {
+              "action": "CREATE_CASE",
+              "route": "auto",
+              "reason": "3a: fraud probability 0.85 reaches the 0.30 case threshold"
+            },
+            {
+              "action": "FILE_REPORT",
+              "route": "L2",
+              "reason": "§3a: exposure $2,310.89 exceeds the $1,000 threshold."
+            }
+          ],
+          "cited_rules": [
+            "3a",
+            "R2"
+          ],
+          "verdict": "fraud",
+          "pattern": "account_takeover"
+        },
+        "prev_hash": "97db8a455367102834d637a9c0de8cac326bf93ee72f156cdabf2f908cecb83e",
+        "hash": "0677d679da6f4efcd5d7ae86881aad5af0ae4f5e2da5ad9dc264d91eefb99090"
+      }
+    ],
+    "audit_chain": {
+      "head": "0677d679da6f4efcd5d7ae86881aad5af0ae4f5e2da5ad9dc264d91eefb99090"
+    },
+    "cited_policy_rules": [
+      "3a",
+      "R2"
+    ],
+    "policy_notes": [],
+    "forbidden_actions": [
+      "BLOCK_ALL_CARDS"
+    ],
+    "obligations": [],
+    "explanation": {
+      "evidence_used": "Activity in the 72 hours before the alert mixes 6 online and 40 card-present transactions, shifting the online share by 0.27 against this card's own baseline; 5 closely matching closed investigations were retrieved by fusing narrative similarity with shared-entity overlap; 5 of them were confirmed fraud, most often account_takeover; Flagged transaction used a device profile and billing region already established on this card; Flagged amount $111.95 sits inside this card's ordinary spending range (median $108.02, z=-0.16) over 2761 prior transactions; 21 confirmed-fraud closed cases sit within two hops of this card, device or customer (distance-decayed proximity 10.5); Out-of-region use governs this case: Out-of-region use. Card-present purchases in a billing region the cardholder has no history in, while their normal activity continues at home. Several days of purchases in one new region is a trip, not a clone. Policy R2, R3.",
+      "why_more_evidence_was_requested": "No further evidence was requested: nothing available would have moved the decision enough to justify the friction of asking.",
+      "why_these_actions": "BLOCK_CARD (L1) — R2: unauthorised use established; CREATE_CASE (auto) — 3a: fraud probability 0.85 reaches the 0.30 case threshold; FILE_REPORT (L2) — §3a: exposure $2,310.89 exceeds the $1,000 threshold.",
+      "remaining_uncertainty": "account takeover leads legitimate activity by 0.62; the two are not fully separated.",
+      "counterfactual": "What would change the decision: had customer transaction validation returned customer confirmed, fraud probability would move from 0.85 to 0.10; had customer transaction validation returned customer denied, fraud probability would move from 0.85 to 0.98.",
+      "stop_reason": "Fraud probability 0.85 is at or above the 0.85 ceiling in policy §6, supported by 7 independent pieces of evidence, with account_takeover leading none by 0.62."
+    },
+    "prior_cases": [
+      {
+        "case_id": "CC-2483",
+        "outcome": "confirmed_fraud",
+        "pattern": "account_takeover",
+        "fused_score": 0.7589,
+        "similarity": 0.668,
+        "shared_entities": 2,
+        "shared_with": [
+          "C11000",
+          "C11000-K2"
+        ]
+      },
+      {
+        "case_id": "CC-3355",
+        "outcome": "confirmed_fraud",
+        "pattern": "account_takeover",
+        "fused_score": 0.7553,
+        "similarity": 0.6615,
+        "shared_entities": 2,
+        "shared_with": [
+          "C11000",
+          "C11000-K2"
+        ]
+      },
+      {
+        "case_id": "CC-0452",
+        "outcome": "confirmed_fraud",
+        "pattern": "account_takeover",
+        "fused_score": 0.7552,
+        "similarity": 0.6612,
+        "shared_entities": 2,
+        "shared_with": [
+          "C11000",
+          "C11000-K2"
+        ]
+      },
+      {
+        "case_id": "CC-2945",
+        "outcome": "confirmed_fraud",
+        "pattern": "account_takeover",
+        "fused_score": 0.7506,
+        "similarity": 0.653,
+        "shared_entities": 2,
+        "shared_with": [
+          "C11000",
+          "C11000-K2"
+        ]
+      },
+      {
+        "case_id": "CC-0063",
+        "outcome": "confirmed_fraud",
+        "pattern": "account_takeover",
+        "fused_score": 0.75,
+        "similarity": 0.6518,
+        "shared_entities": 2,
+        "shared_with": [
+          "C11000",
+          "C11000-K2"
+        ]
+      }
+    ],
+    "executed_actions": [
+      {
+        "action": "CREATE_CASE",
+        "case_id": "AUTO-055",
+        "card_id": "C11000-K2",
+        "customer_id": "C11000",
+        "route": "auto",
+        "executed": true,
+        "simulated": true,
+        "reference": "SIM-233BFFD9C7",
+        "executed_at": "2026-09-22T19:55:11Z",
+        "effect": "Fraud case opened and written to the graph.",
+        "customer_impact": "none"
+      }
+    ],
+    "pending_approval": [
+      {
+        "action": "BLOCK_CARD",
+        "route": "L1",
+        "awaiting": "team lead"
+      },
+      {
+        "action": "FILE_REPORT",
+        "route": "L2",
+        "awaiting": "fraud manager"
+      }
+    ],
+    "episode_basis": "mixed-channel legs inconsistent with the cardholder's own pattern (trimmed to the 6 legs nearest the alert)",
+    "backend": "local",
+    "llm": {
+      "available": false,
+      "provider": "anthropic",
+      "model": "deterministic-templates",
+      "calls": 0,
+      "cached": 0
+    },
+    "trace": [
+      {
+        "node": "trigger_intake",
+        "at": 0.001,
+        "trigger_type": "risk_score",
+        "flagged_txn_id": "3418313",
+        "as_of": "2016-11-01 16:26:58"
+      },
+      {
+        "node": "case_opener",
+        "at": 0.001,
+        "graph_case_id": "CASE-AUTO-055",
+        "prior_fraud": 0.38
+      },
+      {
+        "node": "evidence_planner",
+        "at": 0.001,
+        "planned_tools": [
+          "card_baseline",
+          "episode_window",
+          "velocity_burst",
+          "device_first_use",
+          "device_fanout",
+          "region_profile",
+          "out_of_region_probe",
+          "card_testing_probe",
+          "threshold_structuring_probe",
+          "mixed_channel_probe",
+          "recurring_charge_probe",
+          "email_mismatch_profile",
+          "shared_entity_ring",
+          "fraud_proximity",
+          "behavioural_neighbours",
+          "hybrid_case_recall",
+          "policy_retrieve"
+        ],
+        "rationale": "",
+        "llm_used": false
+      },
+      {
+        "node": "graph_retrieval",
+        "at": 0.681,
+        "signals_fired": [
+          "mixed_channel_shift",
+          "amount_typical",
+          "known_device_and_region",
+          "fraud_proximity",
+          "risk_score_high"
+        ],
+        "tool_calls": 25,
+        "baseline_txns": 2761
+      },
+      {
+        "node": "memory_recall",
+        "at": 0.731,
+        "recalled": [
+          "CC-2483",
+          "CC-3355",
+          "CC-0452",
+          "CC-2945",
+          "CC-0063"
+        ],
+        "fraud_share": 1.0,
+        "p_fraud_before": 0.38,
+        "p_fraud_after": 0.5232
+      },
+      {
+        "node": "policy_grounding",
+        "at": 0.747,
+        "retrieved": [
+          "PATTERN-out_of_region_use",
+          "PATTERN-account_takeover",
+          "PATTERN-card_not_present_fraud",
+          "POLICY-R6",
+          "PATTERN-card_testing",
+          "PATTERN-card_not_present_new_device"
+        ]
+      },
+      {
+        "node": "ledger_update",
+        "at": 0.748,
+        "folded": 25,
+        "p_fraud": 0.854,
+        "posterior": {
+          "none": 0.146,
+          "card_testing": 0.0003,
+          "card_not_present_fraud": 0.017,
+          "card_not_present_new_device": 0.0047,
+          "out_of_region_use": 0.0621,
+          "account_takeover": 0.7699,
+          "undocumented": 0.0
+        },
+        "top": "account_takeover",
+        "movers": [
+          [
+            "mixed_channel_shift",
+            0.2073
+          ],
+          [
+            "memory_recall",
+            0.1432
+          ],
+          [
+            "known_device_and_region",
+            0.0547
+          ],
+          [
+            "device_new_on_account",
+            0.0502
+          ],
+          [
+            "matches_cleared_alert_template",
+            -0.0387
+          ]
+        ]
+      },
+      {
+        "node": "uncertainty_assessor",
+        "at": 0.749,
+        "p_fraud": 0.854,
+        "margin": 0.624,
+        "entropy": 0.7516,
+        "independent_evidence": 7,
+        "round": 0,
+        "best_voi": 0.0862,
+        "stop": {
+          "stop": true,
+          "code": "DECISIVE_POSTERIOR",
+          "reason": "Fraud probability 0.85 is at or above the 0.85 ceiling in policy §6, supported by 7 independent pieces of evidence, with account_takeover leading none by 0.62."
+        },
+        "voi_ranking": [
+          {
+            "type": "customer_validation",
+            "name": "Customer transaction validation",
+            "channel": "push/SMS (simulated)",
+            "expected_info_gain": 0.2587,
+            "cost": 3.0,
+            "info_per_unit_cost": 0.0862,
+            "permitted": true,
+            "blocked_by": "",
+            "outcome_distribution": {
+              "customer_denied": 0.654,
+              "customer_confirmed": 0.166,
+              "customer_no_response": 0.18
+            }
+          },
+          {
+            "type": "step_up_auth",
+            "name": "Step-up authentication challenge",
+            "channel": "app/OTP (simulated)",
+            "expected_info_gain": 0.379,
+            "cost": 5.0,
+            "info_per_unit_cost": 0.0758,
+            "permitted": true,
+            "blocked_by": "",
+            "outcome_distribution": {
+              "step_up_failed": 0.711,
+              "step_up_passed": 0.289
+            }
+          },
+          {
+            "type": "analyst_info",
+            "name": "Analyst query — prior relationship and ring context",
+            "channel": "internal analyst queue (simulated)",
+            "expected_info_gain": -0.0708,
+            "cost": 8.0,
+            "info_per_unit_cost": -0.0089,
+            "permitted": false,
+            "blocked_by": "no shared origin to ask an analyst about",
+            "outcome_distribution": {
+              "analyst_confirms_ring": 0.08,
+              "analyst_no_prior_relationship": 0.92
+            }
+          }
+        ]
+      },
+      {
+        "node": "action_recommender",
+        "at": 0.771,
+        "verdict": "fraud",
+        "pattern": "account_takeover",
+        "exposure": 2310.89,
+        "actions": [
+          {
+            "action": "BLOCK_CARD",
+            "route": "L1",
+            "reason": "R2: unauthorised use established"
+          },
+          {
+            "action": "CREATE_CASE",
+            "route": "auto",
+            "reason": "3a: fraud probability 0.85 reaches the 0.30 case threshold"
+          },
+          {
+            "action": "FILE_REPORT",
+            "route": "L2",
+            "reason": "§3a: exposure $2,310.89 exceeds the $1,000 threshold."
+          }
+        ],
+        "cited_rules": [
+          "3a",
+          "R2"
+        ]
+      },
+      {
+        "node": "permission_gate",
+        "at": 0.772,
+        "executed": [
+          "CREATE_CASE"
+        ],
+        "pending_approval": [
+          {
+            "action": "BLOCK_CARD",
+            "route": "L1",
+            "awaiting": "team lead"
+          },
+          {
+            "action": "FILE_REPORT",
+            "route": "L2",
+            "awaiting": "fraud manager"
+          }
+        ]
+      },
+      {
+        "node": "explainer",
+        "at": 0.773,
+        "summary_chars": 751,
+        "llm_used": false
+      },
+      {
+        "node": "case_writer",
+        "at": 0.775,
+        "graph_case_id": "CASE-AUTO-055",
+        "affected_txns": 6,
+        "sar_filed": true
+      },
+      {
+        "node": "memory_consolidator",
+        "at": 0.776,
+        "audit_chain_intact": true,
+        "decisions": 3
+      }
+    ],
+    "framework": "langgraph"
+  },
+  "audit_chain": {
+    "intact": true,
+    "detail": "chain intact across 3 decisions",
+    "head": "0677d679da6f4efcd5d7ae86881aad5af0ae4f5e2da5ad9dc264d91eefb99090"
+  },
+  "found_by": "risk_score"
+}

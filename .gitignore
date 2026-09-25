@@ -1,0 +1,26 @@
+# Secrets
+.env
+*.pem
+
+# The dataset ships separately and is large. `Datasets/` is where the HHGOA
+# download goes; see README.md "Getting the data".
+Datasets/*.csv
+data/staged/
+data/raw/
+.cache/
+
+# Python
+.pytest_cache/
+__pycache__/
+*.py[cod]
+*.egg-info/
+.venv/
+venv/
+.pytest_cache/
+.ipynb_checkpoints/
+
+# OS / editor
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/

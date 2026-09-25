@@ -1,0 +1,106 @@
+/* ===========================================================================
+   Derived projections and graph data science.
+
+   Two things happen here, both offline and both once:
+
+   1. CO_OCCURS_WITH is materialised. It collapses
+         Card -> Transaction -> DeviceProfile -> Transaction -> Card
+      into a single hop. Ring detection and community algorithms then run an
+      order of magnitude faster, and `shared_entity_ring` becomes one hop
+      instead of four. Each edge carries the device that created it, the window
+      it spanned, and whether any leg arrived through an anonymising proxy —
+      which is the attribute the undocumented ring typology turns on.
+
+   2. The GDS algorithms run over that projection and their results are
+      *materialised onto the vertices*. The agent reads `community_id` and
+      `hub_rank`; it never recomputes them. Running Louvain inside an
+      investigation blows the latency budget, and a slow demo is a lost demo.
+
+   Install the algorithms first:
+       Savanna:  GDS library is preinstalled
+       CE:       git clone https://github.com/tigergraph/gsql-graph-algorithms
+
+   Run:  python graph/install.py --step projections
+   =========================================================================== */
+
+USE GRAPH FraudGraph
+
+/* --------------------------------------------------------------------------
+   Card <-> Card through a shared device profile.
+
+   Generic browser fingerprints are excluded at build time. A profile used by
+   more than 150 cards over the whole six months is "Windows | Windows 10 |
+   chrome 63.0 | 1920x1080", not a device, and projecting it produces a
+   hairball in which every card is connected to every other card.
+   -------------------------------------------------------------------------- */
+CREATE OR REPLACE QUERY build_card_co_occurrence(INT max_device_cards = 150)
+FOR GRAPH FraudGraph SYNTAX v2 {
+  SetAccum<VERTEX<Card>> @cards;
+  SetAccum<VERTEX<Card>> @anon_cards;
+  MinAccum<DATETIME>     @first_ts;
+  MaxAccum<DATETIME>     @last_ts;
+
+  devices = {DeviceProfile.*};
+  devices = SELECT d FROM devices:d WHERE d.n_cards > 1 AND d.n_cards <= max_device_cards;
+
+  touched = SELECT d FROM devices:d -(DEVICE_USED_IN:e)- Transaction:t -(MADE_WITH:e2)- Card:c
+            ACCUM
+              d.@cards += c,
+              d.@first_ts += t.ts,
+              d.@last_ts  += t.ts,
+              CASE WHEN t.proxy LIKE "%ANONYMOUS%" OR t.proxy LIKE "%HIDDEN%"
+                   THEN d.@anon_cards += c END;
+
+  linked = SELECT d FROM touched:d
+           POST-ACCUM
+             FOREACH a IN d.@cards DO
+               FOREACH b IN d.@cards DO
+                 CASE WHEN getvid(a) < getvid(b) THEN
+                   INSERT INTO CO_OCCURS_WITH VALUES (
+                     a, b, 1, d.device_profile, d.@first_ts, d.@last_ts,
+                     (d.@anon_cards.contains(a) AND d.@anon_cards.contains(b)))
+                 END
+               END
+             END;
+
+  PRINT linked.size() AS devices_projected;
+}
+
+/* --------------------------------------------------------------------------
+   Communities and hubs over the projection, materialised onto Card.
+   -------------------------------------------------------------------------- */
+RUN QUERY tg_wcc(
+  ["Card"], ["CO_OCCURS_WITH"],
+  /* print_results */ FALSE, /* result_attribute */ "community_id",
+  /* file_path */ "", /* maximum_iteration */ 20)
+
+RUN QUERY tg_pagerank(
+  ["Card"], ["CO_OCCURS_WITH"],
+  /* max_change */ 0.001, /* max_iter */ 25, /* damping */ 0.85,
+  /* top_k */ 100, /* print_accum */ FALSE,
+  /* result_attribute */ "hub_rank", /* file_path */ "", /* display_edges */ FALSE)
+
+RUN QUERY tg_louvain(["Card"], ["CO_OCCURS_WITH"], 10, 1, 1, "", FALSE, FALSE)
+
+RUN QUERY tg_kcore(["Card"], ["CO_OCCURS_WITH"], 3, 1000, "", FALSE, FALSE)
+
+/* --------------------------------------------------------------------------
+   A ring, in the sense policy R6 means it: a connected component holding more
+   than three cards and at least one confirmed-fraud closed case.
+   -------------------------------------------------------------------------- */
+CREATE OR REPLACE QUERY ring_candidates(INT min_cards = 4, DATETIME as_of)
+FOR GRAPH FraudGraph SYNTAX v2 {
+  MapAccum<INT, SetAccum<STRING>> @@component_cards;
+  MapAccum<INT, SumAccum<INT>>    @@component_fraud_cases;
+
+  cards = {Card.*};
+  cards = SELECT c FROM cards:c
+          WHERE c.community_id != 0
+          ACCUM @@component_cards += (c.community_id -> c.card_id);
+
+  fraud = SELECT cc FROM cards:c -(CC_CARD_OF:e)- ClosedCase:cc
+          WHERE cc.outcome == "confirmed_fraud" AND cc.opened_at < as_of
+          ACCUM @@component_fraud_cases += (c.community_id -> 1);
+
+  PRINT @@component_cards AS components, @@component_fraud_cases AS fraud_case_counts;
+}

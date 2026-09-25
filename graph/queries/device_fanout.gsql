@@ -1,0 +1,54 @@
+/* device_fanout — how many cards share this device profile, and how anomalous
+   that sharing actually is.
+
+   Raw fan-out is close to meaningless in this dataset. A device profile is a
+   model/OS/browser/screen string, not a serial number, and 92% of online
+   transactions sit on a profile shared by three or more cards. Counting
+   distinct cards would fire on almost every online alert. Three sharper counts
+   carry the signal instead:
+
+     n_cards_new_in_window   cards seeing this profile for the first time
+     n_cards_anon_proxy      cards reaching it through an anonymising proxy
+     n_cards_marked_new      cards where the identity record says id_15 = New
+
+   A rare profile arriving brand new on a run of accounts at once, behind a
+   proxy, is a hub. That combination is how the undocumented ring typology in
+   this dataset was found.                                                    */
+
+USE GRAPH FraudGraph
+
+CREATE OR REPLACE QUERY device_fanout(STRING device_profile, DATETIME as_of,
+                                      INT window_days = 30)
+FOR GRAPH FraudGraph SYNTAX v2 {
+  DATETIME since = epoch_to_datetime(datetime_to_epoch(as_of) - window_days * 86400);
+  SetAccum<STRING> @@cards_window, @@cards_before, @@cards_anon, @@cards_new_status;
+  SetAccum<STRING> @@customers, @@proxies;
+  SumAccum<INT>    @@n_txns_window;
+
+  start = {DeviceProfile.*};
+  start = SELECT d FROM start:d WHERE d.device_profile == device_profile;
+
+  win = SELECT t FROM start:d -(DEVICE_USED_IN:e)- Transaction:t
+        WHERE t.ts > since AND t.ts <= as_of
+        ACCUM @@n_txns_window += 1,
+              @@cards_window += t.card_id,
+              @@customers += t.customer_id,
+              CASE WHEN t.proxy LIKE "%ANONYMOUS%" OR t.proxy LIKE "%HIDDEN%"
+                   THEN @@cards_anon += t.card_id, @@proxies += t.proxy END,
+              CASE WHEN t.device_status == "New"
+                   THEN @@cards_new_status += t.card_id END;
+
+  before = SELECT t FROM start:d -(DEVICE_USED_IN:e)- Transaction:t
+           WHERE t.ts <= since
+           ACCUM @@cards_before += t.card_id;
+
+  PRINT device_profile, @@n_txns_window AS n_txns_window,
+        @@cards_window.size() AS n_cards,
+        @@customers.size() AS n_customers,
+        (@@cards_window MINUS @@cards_before).size() AS n_cards_new_in_window,
+        (@@cards_window MINUS @@cards_before) AS new_card_ids,
+        @@cards_anon.size() AS n_cards_anon_proxy,
+        @@cards_anon AS anon_proxy_card_ids,
+        @@cards_new_status.size() AS n_cards_marked_new,
+        @@cards_window AS card_ids, @@proxies AS proxy_values;
+}

@@ -1,0 +1,31 @@
+# Core — required to reproduce the twenty answer files end to end.
+pandas>=2.2
+numpy>=1.26
+pyarrow>=15
+scikit-learn>=1.4
+tabulate>=0.9
+
+# Agent orchestration. The topology also runs through a sequential driver if
+# LangGraph is absent, so this is recommended rather than load-bearing.
+langgraph>=0.2
+langchain-core>=0.3
+
+# TigerGraph. Only needed when running against a live workspace; the local
+# mirror over the staged parquet needs none of it.
+pyTigerGraph>=1.6
+
+# Analyst console
+fastapi>=0.110
+uvicorn[standard]>=0.29
+
+# Convenience
+python-dotenv>=1.0
+
+# Optional. Embeddings fall back to TF-IDF + SVD when this is unavailable, which
+# downloads nothing and is byte-reproducible.
+sentence-transformers>=3.0
+
+# Optional LLM providers — install only the one you use.
+anthropic>=0.40
+# openai>=1.40
+# google-generativeai>=0.8

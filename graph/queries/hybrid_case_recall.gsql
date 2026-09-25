@@ -1,0 +1,102 @@
+/* ===========================================================================
+   hybrid_case_recall — the signature query of this project
+
+   Pure vector search over closed-case narratives returns investigations that
+   *sound* like this one. Pure graph traversal returns investigations that are
+   *connected* to it. Neither is what an analyst means by "have we seen this
+   before". Fuse them, in one statement, inside the database.
+
+   Leg 1  vectorSearch over ClosedCase.narrative_emb
+   Leg 2  traversal from the entities under investigation back to the cases
+          that touched them — card, customer, transaction, device profile
+   Fuse   0.55 * cosine + 0.45 * (1 - exp(-0.6 * shared_entities))
+
+   The saturating term on the graph leg matters: the first shared entity is
+   worth a lot, the fourth is worth very little, and a linear term would let one
+   busy device profile dominate the ranking.
+
+   Both legs carry the `as_of` guard. A memory system that can retrieve a case
+   opened after the one it is reasoning about is not a memory system, it is a
+   leak, and every backtest number downstream of it is fiction.
+   =========================================================================== */
+
+USE GRAPH FraudGraph
+
+CREATE OR REPLACE QUERY hybrid_case_recall(
+    LIST<DOUBLE> query_vec,
+    SET<STRING>  entity_ids,
+    DATETIME     as_of,
+    INT          k = 5,
+    DOUBLE       w_vec = 0.55,
+    DOUBLE       w_graph = 0.45
+) FOR GRAPH FraudGraph SYNTAX v2 {
+
+  MapAccum<VERTEX<ClosedCase>, DOUBLE> @@vec_score;
+  MapAccum<VERTEX<ClosedCase>, INT>    @@shared;
+  MapAccum<VERTEX<ClosedCase>, DOUBLE> @@weighted;   /* shared, weighted by entity type */
+  MapAccum<VERTEX<ClosedCase>, SetAccum<STRING>> @@overlap;
+  SumAccum<DOUBLE> @score;
+  SumAccum<INT>    @shared_n;
+  SetAccum<STRING> @shared_with;
+
+  /* ---- leg 1: semantic neighbours among prior narratives ---------------- */
+  candidates = vectorSearch({ClosedCase.narrative_emb}, query_vec, k * 8);
+  candidates = SELECT c FROM candidates:c
+               WHERE c.opened_at < as_of
+               ACCUM @@vec_score += (c -> c.@distance);
+
+  /* ---- leg 2: cases that touched any entity in this investigation ------- */
+  seed_txn  = {Transaction.*};
+  seed_txn  = SELECT t FROM seed_txn:t WHERE entity_ids.contains(t.txn_id);
+  linked_t  = SELECT c FROM seed_txn:t -(CC_INVOLVED_IN:e)- ClosedCase:c
+              WHERE c.opened_at < as_of
+              ACCUM @@shared += (c -> 1), @@weighted += (c -> 2.0),
+                    @@overlap += (c -> t.txn_id);
+
+  seed_card = {Card.*};
+  seed_card = SELECT v FROM seed_card:v WHERE entity_ids.contains(v.card_id);
+  linked_c  = SELECT c FROM seed_card:v -((CC_CARD_OF|CC_CONNECTED_FROM):e)- ClosedCase:c
+              WHERE c.opened_at < as_of
+              ACCUM @@shared += (c -> 1), @@weighted += (c -> 1.0),
+                    @@overlap += (c -> v.card_id);
+
+  seed_dev  = {DeviceProfile.*};
+  seed_dev  = SELECT v FROM seed_dev:v WHERE entity_ids.contains(v.device_profile);
+  linked_d  = SELECT c FROM seed_dev:v -(CC_DEVICE_OF:e)- ClosedCase:c
+              WHERE c.opened_at < as_of
+              ACCUM @@shared += (c -> 1), @@weighted += (c -> 1.6),
+                    @@overlap += (c -> v.device_profile);
+
+  /* ---- fuse -------------------------------------------------------------
+
+     Two things this gets right that the obvious version does not.
+
+     1. The semantic term is recomputed for the *whole union*, not taken as
+        zero for a case the traversal found. Templated analyst narratives all
+        sit around 0.73 cosine, so an absent semantic term costs more than a
+        present shared entity gains — and the cases that share the hub device
+        outright rank below cases that merely read alike.
+
+     2. Shared entities are weighted by type. Landing on the same device
+        profile as a prior confirmed fraud is a far stronger claim than sharing
+        a customer id with a case on that same customer, which is close to
+        tautological.                                                          */
+  all_cases = candidates UNION linked_t UNION linked_c UNION linked_d;
+  result = SELECT c FROM all_cases:c
+           ACCUM
+             c.@shared_n += @@shared.get(c),
+             c.@shared_with += @@overlap.get(c),
+             c.@score += w_vec * (1.0 - gds.vector.distance(
+                             c.narrative_emb, query_vec, "COSINE"))
+                       + w_graph * (1.0 - exp(-1.2 * @@weighted.get(c)))
+           ORDER BY c.@score DESC
+           LIMIT k;
+
+  PRINT result[
+      result.case_id, result.outcome, result.pattern, result.exposure_usd,
+      result.opened_at, result.narrative,
+      result.@score AS fused_score,
+      result.@shared_n AS shared_entities,
+      result.@shared_with AS shared_with
+  ];
+}

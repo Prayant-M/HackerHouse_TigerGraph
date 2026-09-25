@@ -1,0 +1,41 @@
+/* shared_entity_ring — policy R6, shared-origin detection.
+
+   One hop out through the card's device profiles, then back to every other card
+   that touched them inside the window, keeping only hubs that are genuinely
+   anomalous: reached through an anonymising proxy, or rare overall yet brand
+   new to a run of accounts at once.
+
+   Runs over the CO_OCCURS_WITH projection built by 04_projections.gsql, so it
+   is a single hop instead of Card -> Transaction -> Device -> Transaction ->
+   Card. On a card with ten thousand transactions that difference is the whole
+   latency budget.                                                            */
+
+USE GRAPH FraudGraph
+
+CREATE OR REPLACE QUERY shared_entity_ring(STRING card_id, DATETIME as_of,
+                                           INT window_days = 30,
+                                           INT min_weight = 1)
+FOR GRAPH FraudGraph SYNTAX v2 {
+  DATETIME since = epoch_to_datetime(datetime_to_epoch(as_of) - window_days * 86400);
+  SetAccum<STRING> @@members, @@anon_members;
+  MapAccum<STRING, SetAccum<STRING>> @@by_device;
+  MapAccum<STRING, SumAccum<INT>>    @@device_weight;
+
+  start = {Card.*};
+  start = SELECT c FROM start:c WHERE c.card_id == card_id;
+
+  peers = SELECT o FROM start:c -(CO_OCCURS_WITH:e)- Card:o
+          WHERE e.weight >= min_weight AND e.last_ts >= since AND e.first_ts <= as_of
+          ACCUM
+            @@members += o.card_id,
+            @@by_device += (e.shared_device -> o.card_id),
+            @@device_weight += (e.shared_device -> 1),
+            CASE WHEN e.via_anon_proxy THEN @@anon_members += o.card_id END;
+
+  PRINT card_id, @@members AS connected_card_ids,
+        @@members.size() + 1 AS ring_size,
+        @@by_device AS shared_devices,
+        @@device_weight AS device_weights,
+        @@anon_members AS anon_proxy_members,
+        (@@anon_members.size() >= 2) AS anon_proxy_ring;
+}

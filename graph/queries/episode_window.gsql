@@ -1,0 +1,39 @@
+/* episode_window — the suspect window, and the baseline behind it.
+
+   Every anomaly signal in the system is measured as window-against-baseline.
+   75% of closed-case episodes open within 29 hours of the alert, so a 72-hour
+   window catches the tail without swallowing ordinary history.               */
+
+USE GRAPH FraudGraph
+
+CREATE OR REPLACE QUERY episode_window(STRING card_id, DATETIME as_of,
+                                       INT window_seconds = 259200)
+FOR GRAPH FraudGraph SYNTAX v2 {
+  DATETIME cutoff = epoch_to_datetime(datetime_to_epoch(as_of) - window_seconds);
+  SumAccum<INT>    @@n_window, @@n_baseline, @@w_online, @@w_in_person;
+  SumAccum<DOUBLE> @@window_value, @@base_sum;
+  SetAccum<STRING> @@window_txns, @@window_regions, @@window_devices;
+
+  start = {Card.*};
+  start = SELECT c FROM start:c WHERE c.card_id == card_id;
+
+  win = SELECT t FROM start:c -(MADE:e)- Transaction:t
+        WHERE t.ts > cutoff AND t.ts <= as_of
+        ACCUM @@n_window += 1, @@window_value += t.amount,
+              @@window_txns += t.txn_id, @@window_regions += t.region,
+              CASE WHEN t.channel == "online"
+                   THEN @@w_online += 1 ELSE @@w_in_person += 1 END;
+
+  wdev = SELECT d FROM win:t -(FROM_DEVICE:e)- DeviceProfile:d
+         ACCUM @@window_devices += d.device_profile;
+
+  base = SELECT t FROM start:c -(MADE:e)- Transaction:t
+         WHERE t.ts <= cutoff
+         ACCUM @@n_baseline += 1, @@base_sum += t.amount;
+
+  PRINT cutoff AS baseline_cutoff, @@n_window AS n_window,
+        @@window_value AS window_value_usd, @@window_txns AS window_txn_ids,
+        @@window_regions AS window_regions, @@window_devices AS window_devices,
+        @@w_online AS window_online, @@w_in_person AS window_in_person,
+        @@n_baseline AS n_baseline, @@base_sum AS baseline_total;
+}

@@ -1,0 +1,24 @@
+/* policy_retrieve — GraphRAG over the bank's own documents.
+
+   The agent is grounded with retrieved *clauses*, not with the whole policy
+   pasted into a prompt and a hope. Every recommendation names the rule that
+   permitted it, and the citation comes from the rule object that actually
+   fired, so a citation cannot drift from the document it claims to quote.
+
+   `kinds` narrows to policy_rule, policy_section, typology,
+   regulatory_reference or guidance.                                          */
+
+USE GRAPH FraudGraph
+
+CREATE OR REPLACE QUERY policy_retrieve(LIST<DOUBLE> query_vec, INT k = 5,
+                                        SET<STRING> kinds)
+FOR GRAPH FraudGraph SYNTAX v2 {
+  cand = vectorSearch({PolicyDoc.text_emb}, query_vec, k * 4);
+  result = SELECT d FROM cand:d
+           WHERE kinds.size() == 0 OR kinds.contains(d.kind)
+           ORDER BY d.@distance DESC
+           LIMIT k;
+  PRINT result[result.doc_id, result.kind, result.section, result.title,
+               result.text, result.url, result.issuer,
+               result.@distance AS similarity];
+}

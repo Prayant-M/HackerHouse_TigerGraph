@@ -1,0 +1,48 @@
+/* card_baseline — the card's established behaviour strictly before a cutoff.
+
+   The cutoff is `as_of - EPISODE_WINDOW_HOURS`, not `as_of`. Measuring a
+   flagged transaction against everything up to the alert lets the first legs of
+   the fraud episode teach the baseline that the new device and the new region
+   are normal, and by the last leg nothing looks unusual any more. Replaying the
+   closed cases both ways makes the inversion visible — see
+   eval/reports/calibration.md.                                               */
+
+USE GRAPH FraudGraph
+
+CREATE OR REPLACE QUERY card_baseline(STRING card_id, DATETIME cutoff)
+FOR GRAPH FraudGraph SYNTAX v2 {
+  SumAccum<INT>    @@n;
+  SumAccum<DOUBLE> @@sum_amt, @@sum_sq, @@n_online;
+  MaxAccum<DOUBLE> @@max_amt;
+  MinAccum<DATETIME> @@first_seen;
+  MaxAccum<DATETIME> @@last_seen;
+  MapAccum<STRING, SumAccum<INT>> @@regions, @@products;
+  SetAccum<STRING> @@devices;
+  ListAccum<DOUBLE> @@amounts;
+
+  start = {Card.*};
+  start = SELECT c FROM start:c WHERE c.card_id == card_id;
+
+  txns = SELECT t FROM start:c -(MADE:e)- Transaction:t
+         WHERE t.ts <= cutoff
+         ACCUM
+           @@n += 1,
+           @@sum_amt += t.amount,
+           @@sum_sq  += t.amount * t.amount,
+           @@max_amt += t.amount,
+           @@amounts += t.amount,
+           @@first_seen += t.ts,
+           @@last_seen  += t.ts,
+           @@regions  += (t.region -> 1),
+           @@products += (t.product_cd -> 1),
+           CASE WHEN t.channel == "online" THEN @@n_online += 1 END;
+
+  devs = SELECT d FROM txns:t -(FROM_DEVICE:e)- DeviceProfile:d
+         ACCUM @@devices += d.device_profile;
+
+  PRINT @@n AS n_txns, @@sum_amt AS total_amt, @@max_amt AS amt_max,
+        @@amounts AS amounts,          /* percentiles computed client side */
+        @@n_online AS n_online, @@first_seen AS first_seen, @@last_seen AS last_seen,
+        @@regions AS region_counts, @@products AS product_mix,
+        @@devices AS known_devices, cutoff AS baseline_cutoff;
+}

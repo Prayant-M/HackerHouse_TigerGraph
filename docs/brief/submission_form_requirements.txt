@@ -1,0 +1,74 @@
+
+TigerGraph × HHGoa 2026 - Agentic Fraud Investigation: Submission
+Submit your online-round build for the TigerGraph task. One submission per team, by the team lead. 
+
+Deadline: Sept 24th, 2026, 11:59 PM IST. No resubmissions, so submit only when your build is final.
+
+Before you fill this in, make sure your public GitHub repo has the 20 case files in cases/, a README that explains how to run it end to end, and your 3–5 minute demo video is uploaded and viewable by link.
+
+Questions: TigerGraph Discord, https://discord.com/invite/4cc7SNqRf
+
+prayant.m@gmail.com Switch account
+ 
+* Indicates required question
+Email
+*
+Record prayant.m@gmail.com as the email to be included with my response
+Team name (exactly as on Devfolio)
+*
+Devfolio ID of Team Lead
+*
+Team size
+*
+1
+2
+3
+Lead: Name, Email, Phone Number
+*
+Name, email, phone. One line, comma separated. 
+Example: Devanshu, devanshu.saxena@tigergraph.com, 7404313376. 
+We will use this to reach your team about results and Goa.
+
+Member 2: Name, Email, Phone Number
+Member 3: Name, Email, Phone Number
+Public GitHub repo URL
+*
+Paste your public repo link.
+
+Your 20 answer files must be in a folder named cases/ at the repo root, one file per case, named exactly as in case_pack.csv (HHG-001.json … HHG-020.json). 
+
+We score them directly from the repo.
+My repo has all 20 answer files in cases/, named exactly as in case_pack.csv.
+*
+Yes
+Demo video URL (3–5 min)
+*
+Live UI URL (optional)
+LLM model used
+*
+
+Agent framework used
+*
+
+Social post URLs
+*
+Each team member posts about what you built or your experience with the task on any social platform, tagging @TigerGraphDB and @247pmstudio. Paste every post link here.
+
+Technical blog URL
+*
+Post a technical blog on any platform covering what you built, the architecture, how you used TigerGraph, and your results. Paste the link.
+How was your experience with TigerGraph?
+
+What worked well, what was confusing or slow, what you wish existed!?
+*
+Anything else you want to tell us ?
+
+TigerGraph deployment: Savanna / Community Edition
+*
+Savanna
+Community Edition
+Never submit passwords through Google Forms.
+This form was created inside of TigerGraph. - Contact form owner
+Does this form look suspicious? Report
+
+Google Forms

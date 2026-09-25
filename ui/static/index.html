@@ -1,0 +1,84 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Fraud Investigation Console</title>
+<link rel="stylesheet" href="/static/styles.css">
+</head>
+<body>
+<header class="topbar">
+  <div class="brand">
+    <span class="mark"></span>
+    <div>
+      <h1>Agentic Fraud Investigation</h1>
+      <p id="health">connecting…</p>
+    </div>
+  </div>
+  <nav class="tabs" role="tablist">
+    <button class="tab active" data-view="inbox">Case inbox</button>
+    <button class="tab" data-view="approvals">Approval queue <span id="approval-count" class="pill"></span></button>
+    <button class="tab" data-view="calibration">Calibration</button>
+    <button class="tab" data-view="policy">Policy</button>
+  </nav>
+</header>
+
+<main>
+  <!-- ─────────────────────────────────────────────────────── inbox ── -->
+  <section id="view-inbox" class="view active">
+    <aside class="inbox">
+      <div class="inbox-head">
+        <h2>Alerts</h2>
+        <div class="filters">
+          <button class="chip active" data-filter="all">all</button>
+          <button class="chip" data-filter="fraud">fraud</button>
+          <button class="chip" data-filter="uncertain">uncertain</button>
+          <button class="chip" data-filter="legitimate">legitimate</button>
+        </div>
+      </div>
+      <ul id="case-list" class="case-list"></ul>
+    </aside>
+
+    <article id="detail" class="detail">
+      <div class="empty">Select a case to open the investigation record.</div>
+    </article>
+  </section>
+
+  <!-- ────────────────────────────────────────────────── approvals ── -->
+  <section id="view-approvals" class="view">
+    <div class="panel wide">
+      <h2>Actions awaiting human approval</h2>
+      <p class="note">The agent executes only <code>auto</code>-routed actions. Everything
+        here was recommended with its route stated and is waiting on a person. A decision
+        writes an <code>APPROVED_BY</code> edge onto the case — including a rejection, which
+        is the most useful signal the memory layer gets.</p>
+      <div id="approval-list"></div>
+    </div>
+  </section>
+
+  <!-- ──────────────────────────────────────────────── calibration ── -->
+  <section id="view-calibration" class="view">
+    <div class="panel wide">
+      <h2>Measured likelihood ratios</h2>
+      <p class="note">Every closed investigation replayed through the same extractor the agent
+        uses, under its own <code>as_of</code>. These are measured from outcomes, not chosen.</p>
+      <div id="calibration-head" class="stat-row"></div>
+      <div id="calibration-table"></div>
+    </div>
+  </section>
+
+  <!-- ───────────────────────────────────────────────────── policy ── -->
+  <section id="view-policy" class="view">
+    <div class="panel wide">
+      <h2>Compiled policy</h2>
+      <p class="note">The bank's fraud policy as executable rules. The agent may only choose
+        from the actions these rules permit; anything else is dropped before it reaches an
+        answer file.</p>
+      <div id="policy-list"></div>
+    </div>
+  </section>
+</main>
+
+<script src="/static/app.js"></script>
+</body>
+</html>

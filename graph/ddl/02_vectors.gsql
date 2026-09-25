@@ -1,0 +1,47 @@
+/* ===========================================================================
+   FraudGraph — vector attributes (TigerVector, TigerGraph 4.2+)
+
+   Two embedding spaces live in the same database as the graph, which is the
+   whole reason this project belongs on TigerGraph rather than on a graph store
+   plus a separate vector store:
+
+     ClosedCase.narrative_emb   semantic space over 5,565 analyst narratives
+     Case.narrative_emb         the agent's own cases, so memory compounds
+     PolicyDoc.text_emb         policy clauses, typologies, regulatory refs
+     Pattern.desc_emb           soft typology matching before the hard matchers
+     Transaction.behaviour_emb  ENGINEERED, not textual — C/D/M columns plus a
+                                24-component PCA of V1..V339, so "transactions
+                                that *behave* like this one" is a real query
+                                rather than an LLM's impression of a table
+
+   `hybrid_case_recall` fuses the first space with a graph traversal in a single
+   GSQL statement. That fusion is the headline.
+
+   DIMENSION must match EMBEDDING_DIM in .env. Changing it means dropping and
+   recreating every vector attribute, so fix it before loading.
+
+   NOTE: TigerGraph builds the HNSW index asynchronously. Vectors that have not
+   finished indexing do not appear in search results — and RESTPP does not error
+   on a misspelled vector attribute name, it just silently gives you an empty
+   index. `graph/install.py --step verify` polls the index status and asserts
+   non-zero counts for exactly this reason.
+
+   Run:  python graph/install.py --step vectors
+   =========================================================================== */
+
+USE GRAPH FraudGraph
+
+CREATE SCHEMA_CHANGE JOB fraud_vectors FOR GRAPH FraudGraph {
+  ADD VECTOR ATTRIBUTE ClosedCase.narrative_emb (
+      DIMENSION=384, METRIC="COSINE", INDEXTYPE="HNSW");
+  ADD VECTOR ATTRIBUTE Case.narrative_emb (
+      DIMENSION=384, METRIC="COSINE", INDEXTYPE="HNSW");
+  ADD VECTOR ATTRIBUTE PolicyDoc.text_emb (
+      DIMENSION=384, METRIC="COSINE", INDEXTYPE="HNSW");
+  ADD VECTOR ATTRIBUTE Pattern.desc_emb (
+      DIMENSION=384, METRIC="COSINE", INDEXTYPE="HNSW");
+  ADD VECTOR ATTRIBUTE Transaction.behaviour_emb (
+      DIMENSION=64, METRIC="COSINE", INDEXTYPE="HNSW");
+}
+
+RUN SCHEMA_CHANGE JOB fraud_vectors
