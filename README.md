@@ -30,6 +30,21 @@ approval routing, the stopping rule — is deterministic Python that **cannot
 import an LLM**, and a test fails the build if that ever changes. The model
 plans, synthesises and explains. The graph decides.
 
+**At a glance:** TigerGraph Savanna 4.2.5 · 590,742 transactions · 21 installed
+GSQL queries reached **through the TigerGraph MCP server** · TigerVector GraphRAG ·
+GDS WCC + PageRank · 11 legitimate / 9 fraud / 2 SARs / 5 decisions changed after
+evidence · 20 / 20 answers audit-clean · 64 tests.
+
+**Diagrams:** eighteen architecture diagrams (system, agent loop, MCP path, schema,
+GraphRAG, decision authority, ring detection, case lifecycle, R7 walkthrough,
+pipeline, temporal wall, trust boundaries, policy rules R1–R10, all twenty
+benchmark cases, console and API, autonomous monitoring, evaluation, failure
+modes) live in [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) as Mermaid,
+rendered by GitHub, and as an interactive page:
+[FraudGraph Blueprints](https://claude.ai/artifact/VioVT79phoeLTjBKkMWRvb). PNG exports of all eighteen are in
+[`docs/diagrams/`](docs/diagrams/); a dev.to-ready post is in
+[`docs/DEVTO_POST.md`](docs/DEVTO_POST.md).
+
 ---
 
 ## Table of contents
@@ -41,6 +56,7 @@ plans, synthesises and explains. The graph decides.
 - [Repository map](#repository-map)
 - [Everything a command does](#everything-a-command-does)
 - [Design notes worth knowing before you read the code](#design-notes-worth-knowing-before-you-read-the-code)
+- [Checking the answers](#checking-the-answers)
 - [Results](#results)
 - [Submission artefacts](#submission-artefacts)
 - [Troubleshooting](#troubleshooting)
@@ -54,8 +70,11 @@ plans, synthesises and explains. The graph decides.
 | Trigger from a risk score, a customer report, or an analyst request | `agent/graph.py::trigger_from_row`, prior conditioned per trigger |
 | Investigate: neighbourhood, history, device, behaviour, prior cases | `graph/queries/*.gsql`, mirrored in `graphstore/local.py` |
 | Assess: name the pattern, name the type, give a confidence number | `core/hypotheses.py`, `core/evidence_ledger.py` |
-| Case lifecycle as a graph object, reconstructible | `Case` subgraph + `case_chain.gsql` |
+| Case lifecycle as a graph object, reconstructible | `FraudCase` subgraph + `case_chain.gsql`, read back after every write |
 | Memory that measurably changes the output | `hybrid_case_recall`, `fraud_proximity`, measured likelihood ratios |
+| TigerGraph MCP exposes the graph to the agent | `graphstore/mcp_client.py` → official `tigergraph-mcp` (stdio, 69 tools) |
+| GraphRAG grounds the agent in evidence and documents | TigerVector over narratives, policy clauses, typologies; `policy_retrieve.gsql` |
+| GSQL and graph algorithms | 21 installed queries; GDS WCC + PageRank in `05_graph_algorithms.gsql` |
 | Controlled evidence gathering, then re-reason | `core/voi.py` + `agent/nodes.py::evidence_gap_resolver` |
 | Next best action **before and after** evidence, with approval route | `record_provisional` → `action_recommender`, `core/permissions.py` |
 | Explain, and say why it stopped | `core/stopping.py`, `report/narrative.py` |
@@ -71,6 +90,11 @@ matter:
 - **It is calibrated against the closed cases, and the calibration caught two
   bugs that had silently inverted the whole system.** See
   [Design notes](#the-calibration-trap-that-inverts-everything).
+- **It asks what happened on *other* cards.** A rare device making near-identical
+  purchases on several unrelated cards within a week is a ring no single card
+  shows. That signal (`peer_purchases`) fired on 31 confirmed-fraud closed cases
+  and no cleared ones — the strongest likelihood ratio in the model (22.4). See
+  [Design notes](#rings-you-cannot-see-from-one-card).
 
 ---
 
@@ -163,7 +187,8 @@ python ui/server.py        # http://127.0.0.1:8080
 ```bash
 python eval/backtest.py        # replay the October holdout, write eval/reports/
 python benchmark/monitor.py    # the agent raises its own alerts across Nov–Dec
-python -m pytest tests -q      # 52 tests on the core, the policy and the answer schema
+python -m pytest tests -q      # 64 tests: core, policy, answer schema, backend parity
+python eval/audit_answers.py   # policy + data audit of cases/ → eval/reports/answer_audit.md
 ```
 
 ---
@@ -179,7 +204,8 @@ cp .env.example .env
 # set TG_HOST, TG_USERNAME, TG_PASSWORD  (see SETUP_REQUIRED_FROM_YOU.md §2)
 
 python ingest/06_stage_graph_csv.py     # CSVs the loading jobs consume
-python graph/install.py --step all      # schema, vectors, load, queries, GDS, verify
+python graph/install.py --step all      # schema, vectors, load, queries, projections, GDS algorithms, verify
+python graph/install.py --from queries   # resume from any step
 python benchmark/run_20.py              # now reads and writes TigerGraph
 ```
 
@@ -194,6 +220,22 @@ accepts a misspelled vector attribute name without error and hands you an empty
 index. Both look exactly like "no similar prior cases found", which is the worst
 possible way to discover them.
 
+**The agent reaches TigerGraph through MCP.** `graphstore/mcp_client.py` starts
+the official [TigerGraph MCP server](https://github.com/tigergraph/tigergraph-mcp)
+(`tigergraph-mcp`) over stdio, and every investigation query, vertex lookup and
+case write goes through its tools (`tigergraph__run_installed_query`,
+`tigergraph__get_node`, `tigergraph__add_node`, …). If the server can't start,
+or a call fails, the store falls back to a direct connection for that call.
+`TG_VIA_MCP=0` turns MCP off. The console's status pill shows which route is live.
+
+**Graph algorithms.** WCC and PageRank from TigerGraph's GDS library
+(`GDBMS_ALGO`) run over the anonymous-proxy slice of the card co-occurrence
+network. The full network is one 6,125-card component held together by ordinary
+shared browser strings; the anonymous slice isolates the HHG-014 ring as its own
+54-card component, with the case's card ranked #2 by PageRank. Both are all-time
+structure, so the agent cites them as context in the ring evidence and never
+feeds them into the probability.
+
 Both backends implement the same `GraphStore` contract and share the same window
 matchers (`graphstore/matchers.py`), so they answer the same question rather
 than merely similar ones.
@@ -203,25 +245,23 @@ than merely similar ones.
 ## The analyst console
 
 ```bash
-python ui/server.py
+python ui/server.py        # http://127.0.0.1:8080
 ```
 
-No build step, no bundler, no `node_modules` — FastAPI serving one HTML file.
+No build step, no bundler, no `node_modules` — FastAPI serving one page. Light
+theme, responsive down to phone width, keyboard-navigable.
 
-- **Case inbox** — twenty alerts, filterable by verdict, marked when the
-  recommendation was revised
-- **Uncertainty meter** — the posterior across all seven hypotheses, with the
-  policy thresholds marked on it
-- **Evidence board** — every item with the *measured movement in belief* it
-  caused, so you can see which evidence actually mattered
-- **Before / after** — the provisional recommendation, the evidence request with
-  its information-per-unit-of-friction, the revision, and what changed
-- **Case subgraph canvas** — the same object `case_chain()` walks in TigerGraph
-- **Live re-run** — streams the agent's reasoning trace over SSE while the
-  posterior moves on screen
-- **Approval queue** — approving or rejecting writes an `APPROVED_BY` edge
-- **Calibration** — the measured likelihood-ratio table
-- **Policy** — the compiled rules with their verbatim clause text
+| Page | What it shows |
+|---|---|
+| **Home** | What the agent does in five steps, live counts from the answer files, three "start here" cases |
+| **Cases** | Search + dropdown filters (verdict, trigger, sort, revised, SAR). Each case has five tabs, each deep-linkable (`#/cases/HHG-019/evidence`): **Overview** (fraud gauge, uncertainty in bits, open questions, first recommendation → question → final decision, SAR with copy), **Evidence** (the probability path from the trigger's prior through every ledger entry to the final figure, belief by hypothesis, every item's measured movement, claim-type badges and filter), **Graph** (the written case subgraph; zoom, pan, click to inspect), **Similar cases** (hybrid recall scores), **Audit trail** (step-by-step replay, hash-chained ledger, graph read-back checks, full trace). **Re-run live** streams the reasoning; **⬇ JSON** downloads the answer file. |
+| **Scoreboard** | All 20 decisions in one sortable matrix with each case's audit status and a CSV export |
+| **Approvals** | L1 / L2 actions waiting for a person; approving writes an `APPROVED_BY` edge |
+| **Monitoring** | Alerts the agent raised itself, compared by sweep (structuring, device hub, bank model) |
+| **Insights** | Measured likelihood ratios; the bank policy as a searchable accordion |
+
+The status pill reads **TigerGraph · via MCP** when the graph is reached through
+the MCP server, and **Local mirror** when the workspace is unreachable.
 
 ---
 
@@ -233,8 +273,9 @@ graph/
   ddl/                   01_schema.gsql · 02_vectors.gsql
   loading/               03_loading_jobs.gsql
   queries/               the investigation toolkit, one file per primitive
-  algorithms/            04_projections.gsql — CO_OCCURS_WITH + GDS
-  install.py             idempotent installer, --dry-run supported
+  algorithms/            04_projections.gsql — CO_OCCURS_WITH + ANON_CO_OCCURS projections
+                         05_graph_algorithms.gsql — GDS WCC + PageRank (GDBMS_ALGO)
+  install.py             idempotent installer: --dry-run, --step, --from
 src/fraudagent/
   config.py              every tunable dial, env-overridable
   graphstore/            base.py · local.py · tigergraph.py · matchers.py
@@ -242,12 +283,15 @@ src/fraudagent/
   agent/                 graph.py (LangGraph) · nodes.py · llm.py · simulator.py
   report/                answer.py (schema + validation) · narrative.py
   memory/                embeddings.py
+  graphstore/mcp_client.py  agent ↔ graph through the TigerGraph MCP server
   mcp_servers/           simulated_actions.py
-eval/                    backtest.py → reports/
+eval/                    backtest.py → reports/ · audit_answers.py → reports/answer_audit.md
 benchmark/               run_20.py → cases/ · monitor.py → autonomous/
 ui/                      server.py + static/
 cases/                   ← THE SUBMISSION: HHG-001.json … HHG-020.json
-docs/                    ARCHITECTURE.md · BLOG.md · DEMO_SCRIPT.md
+docs/                    ARCHITECTURE.md (12 Mermaid diagrams) · BLOG.md
+GETTING_STARTED.md       clone → dataset → run → what to check
+DEMO_VIDEO_SCRIPT.md     the 3–5 minute video, shot by shot
 INTEGRATION.md           the full engineering record — what was built and why
 SETUP_REQUIRED_FROM_YOU.md   accounts, keys, budget, decisions
 ```
@@ -265,12 +309,14 @@ SETUP_REQUIRED_FROM_YOU.md   accounts, keys, budget, decisions
 | `ingest/05_calibrate.py` | Replays closed investigations, measures `P(signal \| pattern)`, fits damping on a temporal holdout | ~45min |
 | `ingest/06_stage_graph_csv.py` | Writes the CSVs the TigerGraph loading jobs consume | ~2min |
 | `ingest/07_verify.py` | Checks every artefact against the dataset's own labels | ~10s |
-| `graph/install.py` | Schema → vectors → load → queries → GDS → verify | ~20min |
+| `graph/install.py` | Schema → vectors → load → queries → projections → GDS algorithms → verify | ~20min |
+| `graph/install.py --from <step>` | Resume from any step after a failure or a workspace nap | — |
 | `benchmark/run_20.py` | **The submission.** Twenty answer files, validated | ~1min |
 | `eval/backtest.py` | October holdout: precision, recall, Brier, ECE, confusion | ~10min |
 | `benchmark/monitor.py` | Autonomous sweep of Nov–Dec, three trigger sources | ~5min |
 | `ui/server.py` | Analyst console | — |
-| `pytest tests -q` | 52 tests on the core, the policy and the answer schema | <1s |
+| `eval/audit_answers.py` | Checks every answer file against the raw data and each policy rule | ~20s |
+| `pytest tests -q` | 64 tests: core, policy, R7 cadence, grounding, answer schema, backend parity | ~40s |
 
 ---
 
@@ -382,18 +428,88 @@ threshold in policy §6, so it never changes an action.
 
 ---
 
+### Rings you cannot see from one card
+
+Several fraud cases look ordinary card by card. On the graph, the flagged
+purchase's device made near-identical purchases on other cards in the same week:
+HHG-019's $99.92 sits next to $100.00 and $100.06 on two other cards from a
+device profile only 3 cards had used by the time of the alert; HHG-011's $131.30 next to $125.59 and
+$125.72, also from a 3-card device. `peer_purchases.gsql` asks that two-hop question.
+
+The gate matters more than the query. On a generic browser string
+("chrome 66.0", 175 cards) ordinary shoppers with similar baskets would make a
+false ring, so the signal only fires on a device seen on at most 10 cards up to
+the alert. Its weight is measured, not chosen: it fired on 31 confirmed-fraud
+closed cases and no cleared ones (likelihood ratio 22.4).
+
+Two things it deliberately does not do, both learned on the October holdout. It
+is **fired-only**: folding in "did not fire" on every other case nudged each one
+away from card-not-present fraud and cost nineteen correct pattern calls, and
+the absence of a rare hub is not a finding. And its peer cards are **evidence,
+not connected cards**: treating them as connected made §3a file 19 reports the
+bank itself never filed. The peers move the probability; R6 and the report still
+need a proven shared origin.
+
+### A habit is not only monthly (R7)
+
+R7 protects a customer who disputes their own recurring charge, and says
+"monthly". HHG-018's $39.08 product-W charge appears 21 times on the card over
+140 days, every one to three weeks. The matcher accepts a monthly cadence or a
+regular one (≥ 4 earlier identical charges over ≥ 45 days, no gap over 45 days,
+median gap ≤ 35 days). The closed history cannot teach the verification reply —
+all 4,665 of its customer reports were fraud — so for an R7 match the simulator
+assumes the reply R7 exists for: the cardholder recognises the charge. The case
+closes as legitimate with a reminder, and the assumption is written into the
+answer file.
+
+### Guardrails on what the model writes
+
+The LLM writes summaries, pattern descriptions and SAR narratives. Any of them
+that cites an identifier (case, card, customer, transaction) not present in the
+material it was given is rejected and the deterministic template is used instead
+(`report/narrative.py::grounded`). Every evidence item is tagged as a graph fact,
+a derived inference, a model score, policy text, the customer's statement or a
+simulated reply, and each case lists its open questions — what the agent still
+does not know when it stops.
+
+### A write is not a write until it reads back
+
+After writing the case subgraph the agent reads it back with `case_chain` and
+checks the case vertex, the affected transactions, the connected cards and the
+SAR link. `written_to_graph` is only `true` if the case read back.
+`GRAPH_STRICT=1` fails closed instead of falling back to the local mirror.
+
+---
+
+## Checking the answers
+
+There is no answer key, so correctness cannot be proven. What can be checked is
+everything mechanical: `python eval/audit_answers.py` verifies every ID against
+the dataset, that nothing postdates the alert, exposure (§4), approval routes
+(§2), case and SAR rules (§3a), R1, R2, R3, R7, the stop rule (§6) and graph
+read-back. Current result: **0 issues across 20 files**
+(`eval/reports/answer_audit.md`). The console's Scoreboard shows the same audit
+per case.
+
+---
+
 ## Results
 
 ### The twenty benchmark cases
 
-11 legitimate, 9 fraud. Two SARs. Four cases requested evidence and four
-revised their recommendation. All 20 validate against the Answer Format.
-Mean 1.4 s and 24 graph calls per case.
+11 legitimate, 9 fraud. Two SARs. Five cases requested evidence and all five
+revised their recommendation. All 20 validate against the Answer Format and pass
+the audit. Run against TigerGraph through MCP: 1,492 MCP calls, 0 fallbacks, about
+4 s and 38 graph calls per case.
 
-Both undocumented typologies are present and both are caught: **HHG-006**
-(sub-threshold structuring, $1,906.07 across four purchases in thirty minutes)
-and **HHG-014** (shared-device ring, 19 connected cards, anonymous-proxy ratio
-1.00).
+| Case | What the graph showed |
+|---|---|
+| **HHG-006** | Sub-threshold structuring (undocumented U1): four purchases, $1,906.07 in thirty minutes. SAR. |
+| **HHG-014** | Shared-device ring (undocumented U2): 19 connected cards, anonymous-proxy ratio 1.00; WCC puts the card in a 54-card component, PageRank #2. SAR. |
+| **HHG-019** | A risk-model alert the bank's model scored low: the same rare device bought ~$100 on two other cards that week (`peer_purchases`, LR 22.4). Fraud at 0.95, card blocked. No SAR: $99.92, one card, documented pattern — the peers are evidence, not a proven shared origin. |
+| **HHG-011** | A disputed purchase with the same peer signature on two other cards. Fraud at 0.97, blocked, no SAR for the same reason. |
+| **HHG-018** | A disputed $39.08 charge the card has paid 21 times: R7 → verify → recognised → closed, no block. |
+| **HHG-002, 007, 017, 020** | Thin evidence: verify first, then close on the reply. |
 
 ### October holdout — and the result worth reading twice
 
@@ -404,16 +520,21 @@ would be measuring the label.
 
 | | as seen | graph only |
 |---|---:|---:|
-| **AUC** | **0.936** | **0.531** |
-| precision / recall | 0.93 / 0.98 | 0.695 / 0.168 |
-| Brier / ECE | 0.0559 / 0.028 | 0.5015 / 0.4984 |
-| **pattern accuracy (both sides say fraud)** | **0.573** | **0.561** |
-| affected-transaction overlap | 0.613 | 0.117 |
-| **SAR agreement with the bank's own filing** | **0.925** | **0.922** |
+| **AUC** | **0.921** | **0.520** |
+| precision / recall | 0.891 / 0.967 | 0.637 / 0.209 |
+| Brier / ECE | 0.0825 / 0.036 | 0.4951 / 0.4966 |
+| **pattern accuracy (both sides say fraud)** | **0.508** (n=236) | **0.471** (n=51) |
+| affected-transaction overlap | 0.587 | 0.141 |
+| **SAR agreement with the bank's own filing** | **0.900** | **0.907** |
 
-Strip the trigger and fraud-versus-not collapses to chance — AUC 0.936 to
-0.531. Strip the trigger and **pattern accuracy barely moves, and SAR
-agreement does not move at all.**
+Strip the trigger and fraud-versus-not collapses to chance — AUC 0.921 to
+0.520. Strip the trigger and **pattern accuracy barely moves (0.508 → 0.471),
+and SAR agreement does not move at all (0.900 → 0.907).**
+
+Ablation: rerunning calibration and backtest with `peer_purchases` forced off
+drops graph-only recall from 0.209 to 0.184 and precision from 0.637 to 0.608,
+with the as-seen arm unchanged — the signal adds evidence the trigger doesn't
+already carry. Details in `INTEGRATION.md` §12a.
 
 So the division of labour is measured, not claimed: the trigger decides
 *whether*; the graph decides *which typology*, *how far it goes*, and *whether
@@ -426,14 +547,12 @@ from three triggers and investigates all of them:
 
 | trigger | alerts | assessed fraud |
 |---|---:|---:|
-| `structuring_sweep` (undocumented U1) | 20 | **20** |
-| `device_hub_sweep` (undocumented U2) | 18 | **14** |
-| `risk_score` (the bank's own model, top scores) | 20 | 2 |
+| `structuring_sweep` (undocumented U1) | 30 | **30** ($38,145.65) |
+| `device_hub_sweep` (undocumented U2) | 27 | **24** |
+| `risk_score` (the bank's own model, top scores) | 30 | 6 |
 
-The bank's twenty highest-scoring transactions in the exam period yield
-2 fraud. The structuring sweep yields
-20 of
-20 — none of which the model scores
+The bank's thirty highest-scoring transactions in the exam period yield
+6 fraud. The structuring sweep yields 30 of 30 — none of which the model scores
 highly, because every individual leg is an ordinary purchase and the pattern
 only exists across the burst. Results land in `benchmark/autonomous/`, never in
 `cases/`.
@@ -451,7 +570,8 @@ only exists across the burst. Results land in `benchmark/autonomous/`, never in
 | — SAR where policy requires one | `sar` block; `file` always agrees with the final actions |
 | — next best action **before** evidence | `next_best_actions.initial` |
 | — and **after** | `next_best_actions.final` + `what_changed` |
-| Demo video | shot list in `docs/DEMO_SCRIPT.md` |
+| Demo video | shot list in `DEMO_VIDEO_SCRIPT.md` |
+| Answer audit | `eval/reports/answer_audit.md` (0 issues) |
 | Technical blog post | draft in `docs/BLOG.md` |
 | Social post tagging @TigerGraphDB | yours to write |
 
@@ -479,6 +599,17 @@ entry point puts `src/` on the path itself.
 **Savanna workspace asleep** — it auto-starts, but the first call may time out.
 The store falls back to the local mirror with a printed warning; re-run once the
 workspace is up to exercise the real backend.
+
+**Status pill says "Local mirror"** — the workspace was asleep when the console
+started. Ping it, then restart `ui/server.py`. Set `GRAPH_STRICT=1` to fail instead
+of falling back.
+
+**MCP server won't start** — `pip install tigergraph-mcp`. The store falls back to
+the direct connection per call and prints why; `TG_VIA_MCP=0` skips MCP.
+
+**GSQL "reserved keyword" or "Encountered" errors** — TigerGraph 4.2 reserves
+`Case`, `proxy`, `cost` and others; the schema already avoids them. The installer
+stops at the first refusal and names the file.
 
 **Slow first run** — `sentence-transformers` downloads model weights once. Set
 `EMBEDDING_PROVIDER=tfidf` to avoid the download entirely; it is fully offline

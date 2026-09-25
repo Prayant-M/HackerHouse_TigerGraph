@@ -23,7 +23,7 @@ FOR GRAPH FraudGraph SYNTAX v2 {
   start = {Card.*};
   start = SELECT c FROM start:c WHERE c.card_id == card_id;
 
-  txns = SELECT t FROM start:c -(MADE:e)- Transaction:t
+  txns = SELECT t FROM start:c -(MADE>:e)- Transaction:t
          WHERE t.ts <= cutoff
          ACCUM
            @@n += 1,
@@ -37,7 +37,7 @@ FOR GRAPH FraudGraph SYNTAX v2 {
            @@products += (t.product_cd -> 1),
            CASE WHEN t.channel == "online" THEN @@n_online += 1 END;
 
-  devs = SELECT d FROM txns:t -(FROM_DEVICE:e)- DeviceProfile:d
+  devs = SELECT d FROM txns:t -(FROM_DEVICE>:e)- DeviceProfile:d
          ACCUM @@devices += d.device_profile;
 
   PRINT @@n AS n_txns, @@sum_amt AS total_amt, @@max_amt AS amt_max,

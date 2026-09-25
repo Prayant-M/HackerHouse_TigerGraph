@@ -81,7 +81,9 @@ def evaluate(posterior: dict[str, float], n_independent_evidence: int, round_no:
             True, DECISIVE,
             f"Fraud probability {p_fraud:.2f} clears the {cfg.t_block_card:.2f} threshold for the "
             f"actions this case requires, and {top_h} is separated from {second_h} by "
-            f"{margin:.2f}, above the {cfg.separation_floor:.2f} floor.")
+            f"{margin:.2f}, above the {cfg.separation_floor:.2f} floor. The actions policy requires "
+            f"at this probability are already fixed, so further steps are unlikely to change the "
+            f"decision (policy §6).")
 
     if best_voi_ratio < cfg.min_voi_per_unit_cost:
         return StopDecision(

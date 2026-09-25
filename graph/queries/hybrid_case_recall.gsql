@@ -23,7 +23,7 @@
 USE GRAPH FraudGraph
 
 CREATE OR REPLACE QUERY hybrid_case_recall(
-    LIST<DOUBLE> query_vec,
+    LIST<FLOAT>  query_vec,
     SET<STRING>  entity_ids,
     DATETIME     as_of,
     INT          k = 5,
@@ -31,7 +31,8 @@ CREATE OR REPLACE QUERY hybrid_case_recall(
     DOUBLE       w_graph = 0.45
 ) FOR GRAPH FraudGraph SYNTAX v2 {
 
-  MapAccum<VERTEX<ClosedCase>, DOUBLE> @@vec_score;
+  MapAccum<VERTEX, FLOAT> @@dist;         /* vectorSearch distance_map, COSINE */
+  MapAccum<VERTEX, FLOAT> @@dist_linked;  /* separate: MapAccum sums repeated keys */
   MapAccum<VERTEX<ClosedCase>, INT>    @@shared;
   MapAccum<VERTEX<ClosedCase>, DOUBLE> @@weighted;   /* shared, weighted by entity type */
   MapAccum<VERTEX<ClosedCase>, SetAccum<STRING>> @@overlap;
@@ -40,32 +41,46 @@ CREATE OR REPLACE QUERY hybrid_case_recall(
   SetAccum<STRING> @shared_with;
 
   /* ---- leg 1: semantic neighbours among prior narratives ---------------- */
-  candidates = vectorSearch({ClosedCase.narrative_emb}, query_vec, k * 8);
-  candidates = SELECT c FROM candidates:c
-               WHERE c.opened_at < as_of
-               ACCUM @@vec_score += (c -> c.@distance);
+  /* Only cases opened before as_of are eligible, and the filter goes in
+     *before* the top-k cut: filtering after it leaves fewer than k * 8. */
+  eligible   = SELECT c FROM ClosedCase:c WHERE c.opened_at < as_of;
+  candidates = vectorSearch({ClosedCase.narrative_emb}, query_vec, k * 8,
+                            {candidate_set: eligible, distance_map: @@dist});
 
   /* ---- leg 2: cases that touched any entity in this investigation ------- */
   seed_txn  = {Transaction.*};
   seed_txn  = SELECT t FROM seed_txn:t WHERE entity_ids.contains(t.txn_id);
-  linked_t  = SELECT c FROM seed_txn:t -(CC_INVOLVED_IN:e)- ClosedCase:c
+  linked_t  = SELECT c FROM seed_txn:t -(CC_INVOLVED_IN>:e)- ClosedCase:c
               WHERE c.opened_at < as_of
               ACCUM @@shared += (c -> 1), @@weighted += (c -> 2.0),
                     @@overlap += (c -> t.txn_id);
 
   seed_card = {Card.*};
   seed_card = SELECT v FROM seed_card:v WHERE entity_ids.contains(v.card_id);
-  linked_c  = SELECT c FROM seed_card:v -((CC_CARD_OF|CC_CONNECTED_FROM):e)- ClosedCase:c
+  linked_c  = SELECT c FROM seed_card:v -((CC_CARD_OF>|CC_CONNECTED_FROM>):e)- ClosedCase:c
               WHERE c.opened_at < as_of
               ACCUM @@shared += (c -> 1), @@weighted += (c -> 1.0),
                     @@overlap += (c -> v.card_id);
 
   seed_dev  = {DeviceProfile.*};
   seed_dev  = SELECT v FROM seed_dev:v WHERE entity_ids.contains(v.device_profile);
-  linked_d  = SELECT c FROM seed_dev:v -(CC_DEVICE_OF:e)- ClosedCase:c
+  linked_d  = SELECT c FROM seed_dev:v -(CC_DEVICE_OF>:e)- ClosedCase:c
               WHERE c.opened_at < as_of
-              ACCUM @@shared += (c -> 1), @@weighted += (c -> 1.6),
+              ACCUM @@shared += (c -> 1),
+                    /* weighted like the local mirror, which types an entity
+                       id by its shape: a profile string without a "|" counts
+                       at the customer weight */
+                    CASE WHEN v.device_profile LIKE "%|%"
+                         THEN @@weighted += (c -> 1.6)
+                         ELSE @@weighted += (c -> 0.7) END,
                     @@overlap += (c -> v.device_profile);
+
+  /* A shared customer is nearly tautological, so it weighs least. Customers
+     have no edge to ClosedCase; the case carries the id. */
+  linked_u  = SELECT c FROM ClosedCase:c
+              WHERE c.opened_at < as_of AND entity_ids.contains(c.customer_id)
+              ACCUM @@shared += (c -> 1), @@weighted += (c -> 0.7),
+                    @@overlap += (c -> c.customer_id);
 
   /* ---- fuse -------------------------------------------------------------
 
@@ -81,14 +96,24 @@ CREATE OR REPLACE QUERY hybrid_case_recall(
         profile as a prior confirmed fraud is a far stronger claim than sharing
         a customer id with a case on that same customer, which is close to
         tautological.                                                          */
-  all_cases = candidates UNION linked_t UNION linked_c UNION linked_d;
+  linked = linked_t UNION linked_c UNION linked_d UNION linked_u;
+  IF linked.size() > 0 THEN
+    /* Semantic distance for the traversal-found cases too: a second search
+       restricted to exactly that set fills in their entries in @@dist. */
+    scored_linked = vectorSearch({ClosedCase.narrative_emb}, query_vec, linked.size(),
+                                 {candidate_set: linked, distance_map: @@dist_linked});
+  END;
+
+  all_cases = candidates UNION linked;
   result = SELECT c FROM all_cases:c
            ACCUM
              c.@shared_n += @@shared.get(c),
              c.@shared_with += @@overlap.get(c),
-             c.@score += w_vec * (1.0 - gds.vector.distance(
-                             c.narrative_emb, query_vec, "COSINE"))
-                       + w_graph * (1.0 - exp(-1.2 * @@weighted.get(c)))
+             CASE WHEN @@dist.containsKey(c)
+                  THEN c.@score += w_vec * (1.0 - @@dist.get(c))
+                  WHEN @@dist_linked.containsKey(c)
+                  THEN c.@score += w_vec * (1.0 - @@dist_linked.get(c)) END,
+             c.@score += w_graph * (1.0 - exp(-1.2 * @@weighted.get(c)))
            ORDER BY c.@score DESC
            LIMIT k;
 

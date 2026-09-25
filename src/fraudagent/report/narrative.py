@@ -14,6 +14,7 @@ for: a filing that stands on its own.
 from __future__ import annotations
 
 import json
+import re
 from typing import Any
 
 from ..agent.llm import LLMClient
@@ -32,6 +33,21 @@ SYSTEM = (
     "- Write plainly. No marketing language, no hedging filler, no bullet lists unless asked.\n"
     "- Be specific about what the evidence is and what it is not. Say what remains uncertain."
 )
+
+# Identifiers the dataset uses: benchmark and agent cases, closed cases, cards,
+# customers, transactions. The model may only repeat the ones it was given.
+_ID = re.compile(r"\b(CASE-HHG-\d{3}|HHG-\d{3}|CC-\d{4}|C\d{5}-K\d|C\d{5}|\d{7})\b")
+
+
+def grounded(text: str, source: str) -> str:
+    """Return `text` only if every identifier it cites appears in `source`, the
+    material the model was given. A citation the evidence does not contain is a
+    fabricated one, so the caller falls back to the deterministic template."""
+    text = (text or "").strip()
+    if not text:
+        return ""
+    unknown = {m for m in _ID.findall(text) if m not in source}
+    return "" if unknown else text
 
 
 def _brief(ctx: InvestigationContext, pattern: str, verdict: str, p_fraud: float,
@@ -87,7 +103,7 @@ def case_summary(llm: LLMClient, ctx: InvestigationContext, pattern: str, verdic
         "the conclusion is, and what is still uncertain. Do not list the actions — they are "
         "recorded separately. Plain prose, no heading, no bullet points.\n\n" + brief,
         max_tokens=600)
-    return text.strip() or template_summary(ctx, pattern, verdict, p_fraud, episode,
+    return grounded(text, brief) or template_summary(ctx, pattern, verdict, p_fraud, episode,
                                             evidence, priors)
 
 
@@ -150,7 +166,8 @@ def sar_narrative(llm: LLMClient, ctx: InvestigationContext, pattern: str, p_fra
         "identifiers and figures present in the brief.\n\n"
         f"Filing reason: {reason}\n\n" + brief,
         max_tokens=900)
-    return text.strip() or template_sar(ctx, pattern, p_fraud, episode, evidence, priors)
+    return grounded(text, brief) or template_sar(ctx, pattern, p_fraud, episode, evidence,
+                                                 priors)
 
 
 def template_sar(ctx: InvestigationContext, pattern: str, p_fraud: float,
@@ -228,7 +245,8 @@ def pattern_description(llm: LLMClient, ctx: InvestigationContext,
         f"Seed cases: {', '.join(sub.seed_cases)}\n"
         f"Measured on this case: {json.dumps(probe, default=str)}\n",
         max_tokens=400)
-    if text.strip():
+    source = " ".join(sub.seed_cases) + json.dumps(probe, default=str) + ctx.flagged.card_id
+    if grounded(text, source):
         return text.strip()
     if sub_typology == "threshold_structuring":
         return (

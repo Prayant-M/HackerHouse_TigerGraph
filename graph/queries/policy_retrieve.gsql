@@ -10,15 +10,21 @@
 
 USE GRAPH FraudGraph
 
-CREATE OR REPLACE QUERY policy_retrieve(LIST<DOUBLE> query_vec, INT k = 5,
+CREATE OR REPLACE QUERY policy_retrieve(LIST<FLOAT> query_vec, INT k = 5,
                                         SET<STRING> kinds)
 FOR GRAPH FraudGraph SYNTAX v2 {
-  cand = vectorSearch({PolicyDoc.text_emb}, query_vec, k * 4);
+  /* TigerVector reports distances through distance_map, not a vertex
+     accumulator. COSINE distance is 1 - cosine similarity. */
+  MapAccum<VERTEX, FLOAT> @@dist;
+  SumAccum<DOUBLE> @similarity;
+
+  cand = vectorSearch({PolicyDoc.text_emb}, query_vec, k * 4, {distance_map: @@dist});
   result = SELECT d FROM cand:d
            WHERE kinds.size() == 0 OR kinds.contains(d.kind)
-           ORDER BY d.@distance DESC
+           ACCUM d.@similarity = 1.0 - @@dist.get(d)
+           ORDER BY d.@similarity DESC
            LIMIT k;
   PRINT result[result.doc_id, result.kind, result.section, result.title,
                result.text, result.url, result.issuer,
-               result.@distance AS similarity];
+               result.@similarity AS similarity];
 }

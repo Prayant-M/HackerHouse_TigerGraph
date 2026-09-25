@@ -11,6 +11,8 @@ can be traced back to the exact rows they rest on.
 
 from __future__ import annotations
 
+import os
+
 from dataclasses import dataclass, field
 from datetime import datetime, timedelta
 from typing import Any
@@ -78,7 +80,25 @@ class InvestigationContext:
         return ents
 
 
+
+def _community_note(c: dict[str, Any]) -> str:
+    """Context from TigerGraph's GDS algorithms. All-time structure, so it is
+    cited beside the evidence and never changes the signal's strength."""
+    if not c:
+        return ""
+    return (f". Graph algorithms (all-time context): the card sits in a "
+            f"{c['community_size']}-card connected component of anonymous-proxy device "
+            f"sharing (WCC), ranked #{c['rank_in_community']} by PageRank")
+
+# Ablation switch: SIGNALS_OFF=peer_purchases,recurring_charge forces those
+# detectors to "not fired", so a calibration + backtest pair can measure what
+# each one is worth. Unset in normal runs.
+_OFF = frozenset(s.strip() for s in os.environ.get("SIGNALS_OFF", "").split(",") if s.strip())
+
+
 def _add(signals: dict[str, Signal], sig: Signal) -> None:
+    if sig.name in _OFF:
+        sig.fired = False
     signals[sig.name] = sig
 
 
@@ -197,6 +217,27 @@ def extract(store: GraphStore, case_id: str, flagged_txn_id: str, card_id: str,
         entity_ids=[flagged.device_profile] + list(fanout.get("new_card_ids", []))[:12],
         detail=fanout,
         strength=min(1.0, n_new_cards / 10.0),
+    ))
+    # What happened on *other* cards from this device? A rare profile making
+    # near-identical purchases on several unrelated cards within a week is a
+    # shared origin no single card shows. Rarity gates it: on a generic browser
+    # string ordinary shoppers with similar baskets would make a false "ring".
+    peers = store.peer_purchases(flagged.device_profile, card_id, flagged.amount, as_of,
+                                 window_days=7)
+    probes["peer_purchases"] = peers
+    n_peer_cards = int(peers.get("n_peer_cards", 0))
+    peer_amounts = sorted({round(p["amount"], 2) for p in peers.get("peers", [])})
+    _add(signals, Signal(
+        name="peer_purchases",
+        fired=bool(flagged.device_profile and 0 < n_all_time <= 10 and n_peer_cards >= 2),
+        claim=(f"The same rare device profile ('{flagged.device_profile[:60]}', {n_all_time} cards "
+               f"all-time) made near-identical purchases on {n_peer_cards} other cards in the "
+               f"7 days before the alert (${', $'.join(f'{a:,.2f}' for a in peer_amounts[:5])} "
+               f"against the flagged ${flagged.amount:,.2f})"),
+        ref="query:peer_purchases(device_profile=..., window_days=7)",
+        entity_ids=sorted({p["card_id"] for p in peers.get("peers", [])})[:12],
+        detail=peers | {"n_cards_all_time": n_all_time},
+        strength=min(1.0, n_peer_cards / 4.0),
     ))
     anon_ratio = float(fanout.get("anon_proxy_ratio", 0.0))
     _add(signals, Signal(
@@ -375,8 +416,10 @@ def extract(store: GraphStore, case_id: str, flagged_txn_id: str, card_id: str,
         name="recurring_charge",
         fired=bool(recur.get("recurring")),
         claim=(f"This card has {recur.get('n_prior_same_amount', 0)} prior charges of the same "
-               f"amount and product code, with {recur.get('n_monthly_gaps', 0)} of the gaps "
-               f"falling in the 25-35 day band — a recurring subscription pattern"),
+               f"amount and product code over {recur.get('span_days', 0):.0f} days "
+               f"({recur.get('cadence', 'none')} cadence, median gap "
+               f"{recur.get('median_gap_days', 0):.0f} days) — the cardholder's own recurring "
+               f"charge"),
         ref=f"query:recurring_charge_probe(card_id={card_id}, amount={flagged.amount})",
         entity_ids=list(recur.get("matched_txn_ids", [])),
         detail=recur,
@@ -409,8 +452,10 @@ def extract(store: GraphStore, case_id: str, flagged_txn_id: str, card_id: str,
         claim=(f"{len(ring.get('connected_card_ids', []))} other cards share an anomalous device "
                f"profile with this card inside 30 days; hub device "
                f"'{ring.get('hub_device', '')[:70]}'"
-               + (" reached through an anonymising proxy" if ring.get("anon_proxy_ring") else "")),
-        ref=f"query:shared_entity_ring(card_id={card_id}, window_days=30)",
+               + (" reached through an anonymising proxy" if ring.get("anon_proxy_ring") else "")
+               + _community_note(ring.get("community") or {})),
+        ref=f"query:shared_entity_ring(card_id={card_id}, window_days=30)"
+            + (" + card_community (GDS WCC, PageRank)" if ring.get("community") else ""),
         entity_ids=list(ring.get("connected_card_ids", []))[:15],
         detail=ring,
         strength=min(1.0, len(ring.get("connected_card_ids", [])) / 6.0),
@@ -490,7 +535,8 @@ def extract(store: GraphStore, case_id: str, flagged_txn_id: str, card_id: str,
                      "amount_extreme", "out_of_region_card_present"}
     structural = {"card_testing_sequence", "threshold_structuring", "device_proxy_hub",
                   "shared_origin_ring", "device_shared_across_cards", "velocity_burst",
-                  "mixed_channel_shift", "home_activity_continues", "anonymising_proxy"}
+                  "mixed_channel_shift", "home_activity_continues", "anonymising_proxy",
+                  "peer_purchases"}
     fired_now = {k for k, v in signals.items() if v.fired}
     n_anomalies = len(fired_now & corroborating)
     n_structural = len(fired_now & structural)
@@ -534,5 +580,5 @@ SIGNAL_NAMES: tuple[str, ...] = (
     "match_flag_anomaly", "email_mismatch", "recurring_charge", "amount_typical",
     "known_device_and_region", "shared_origin_ring", "fraud_proximity",
     "behavioural_fraud_neighbourhood", "matches_cleared_alert_template",
-    "customer_disputed", "risk_score_high",
+    "customer_disputed", "risk_score_high", "peer_purchases",
 )

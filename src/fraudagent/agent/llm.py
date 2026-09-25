@@ -112,8 +112,8 @@ class LLMClient:
             return blob["text"]
 
         try:
-            text, in_tok, out_tok = self._invoke(system, prompt, max_tokens or
-                                                 self.cfg.max_tokens)
+            text, in_tok, out_tok = self._invoke_with_backoff(
+                system, prompt, max_tokens or self.cfg.max_tokens)
         except Exception as exc:                      # pragma: no cover - network
             self.usage.errors.append(f"{self._provider}: {exc}")
             if self.cfg.fallback_provider and self._provider != self.cfg.fallback_provider:
@@ -137,6 +137,23 @@ class LLMClient:
                                         "model": model, "at": time.time()}),
                             encoding="utf-8")
         return text
+
+    RETRY_DELAYS_S = (5, 15, 30, 60)
+
+    def _invoke_with_backoff(self, system: str, prompt: str,
+                             max_tokens: int) -> tuple[str, int, int]:
+        """Rate limits are the normal case on a small quota, not an outage:
+        wait and retry a 429 instead of silently dropping to the template."""
+        for delay in (*self.RETRY_DELAYS_S, None):
+            try:
+                return self._invoke(system, prompt, max_tokens)
+            except Exception as exc:                  # pragma: no cover - network
+                msg = str(exc).lower()
+                limited = "429" in msg or "quota" in msg or "rate limit" in msg                     or "resource_exhausted" in msg or "resourceexhausted" in msg
+                if delay is None or not limited:
+                    raise
+                time.sleep(delay)
+        raise RuntimeError("unreachable")
 
     def _invoke(self, system: str, prompt: str, max_tokens: int) -> tuple[str, int, int]:
         client = self._ensure()

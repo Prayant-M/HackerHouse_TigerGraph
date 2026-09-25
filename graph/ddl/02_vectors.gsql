@@ -6,7 +6,7 @@
    plus a separate vector store:
 
      ClosedCase.narrative_emb   semantic space over 5,565 analyst narratives
-     Case.narrative_emb         the agent's own cases, so memory compounds
+     FraudCase.narrative_emb    the agent's own cases, so memory compounds
      PolicyDoc.text_emb         policy clauses, typologies, regulatory refs
      Pattern.desc_emb           soft typology matching before the hard matchers
      Transaction.behaviour_emb  ENGINEERED, not textual — C/D/M columns plus a
@@ -32,15 +32,15 @@
 USE GRAPH FraudGraph
 
 CREATE SCHEMA_CHANGE JOB fraud_vectors FOR GRAPH FraudGraph {
-  ADD VECTOR ATTRIBUTE ClosedCase.narrative_emb (
+  ALTER VERTEX ClosedCase ADD VECTOR ATTRIBUTE narrative_emb (
       DIMENSION=384, METRIC="COSINE", INDEXTYPE="HNSW");
-  ADD VECTOR ATTRIBUTE Case.narrative_emb (
+  ALTER VERTEX FraudCase ADD VECTOR ATTRIBUTE narrative_emb (
       DIMENSION=384, METRIC="COSINE", INDEXTYPE="HNSW");
-  ADD VECTOR ATTRIBUTE PolicyDoc.text_emb (
+  ALTER VERTEX PolicyDoc ADD VECTOR ATTRIBUTE text_emb (
       DIMENSION=384, METRIC="COSINE", INDEXTYPE="HNSW");
-  ADD VECTOR ATTRIBUTE Pattern.desc_emb (
+  ALTER VERTEX Pattern ADD VECTOR ATTRIBUTE desc_emb (
       DIMENSION=384, METRIC="COSINE", INDEXTYPE="HNSW");
-  ADD VECTOR ATTRIBUTE Transaction.behaviour_emb (
+  ALTER VERTEX Transaction ADD VECTOR ATTRIBUTE behaviour_emb (
       DIMENSION=64, METRIC="COSINE", INDEXTYPE="HNSW");
 }
 

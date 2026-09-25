@@ -1,0 +1,34 @@
+/* card_community — what the GDS algorithms say about a card.
+
+   Reads the attributes 05_graph_algorithms.gsql writes: `community_id` from
+   weakly connected components and `hub_rank` from PageRank, both over the
+   CO_OCCURS_WITH device-sharing projection. Returns the size of the card's
+   component, where the card ranks inside it, and the component's top hub.
+
+   All-time structure, so the agent cites it as context beside the
+   time-bounded ring evidence and never folds it into the probability.        */
+
+USE GRAPH FraudGraph
+
+CREATE OR REPLACE QUERY card_community(STRING card_id) FOR GRAPH FraudGraph SYNTAX v2 {
+  SumAccum<INT>    @@size, @@outranked_by;
+  MaxAccum<DOUBLE> @@top_rank;
+  MaxAccum<INT>    @@cid;
+  MaxAccum<DOUBLE> @@rank;
+  SetAccum<STRING> @@top_card;
+
+  me = {Card.*};
+  me = SELECT c FROM me:c WHERE c.card_id == card_id
+       ACCUM @@cid += c.community_id, @@rank += c.hub_rank;
+
+  peers = {Card.*};
+  peers = SELECT c FROM peers:c WHERE c.community_id == @@cid
+          ACCUM @@size += 1, @@top_rank += c.hub_rank,
+                CASE WHEN c.hub_rank > @@rank THEN @@outranked_by += 1 END;
+  top = SELECT c FROM peers:c WHERE c.hub_rank >= @@top_rank
+        ACCUM @@top_card += c.card_id;
+
+  PRINT card_id, @@cid AS community_id, @@size AS community_size,
+        @@rank AS hub_rank, @@outranked_by + 1 AS rank_in_community,
+        @@top_card AS top_hub_cards;
+}

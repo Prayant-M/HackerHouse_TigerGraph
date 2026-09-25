@@ -1,0 +1,33 @@
+/* peer_purchases — what happened on *other* cards from the same device?
+
+   Two hops from the flagged purchase: its device profile, then every purchase
+   made from that profile on a different card inside the window, at an amount
+   close to the flagged one. A rare device making near-identical purchases on
+   several unrelated cards within days is a shared-origin signature that no
+   single card shows on its own (HHG-019: ~$100 on three cards in four days).
+
+   The caller decides rarity from device_fanout's all-time card count, so a
+   generic browser string ("chrome 66.0", 175 cards) can never make a "ring"
+   out of ordinary shoppers who happen to spend similar amounts.
+
+   Bounded by as_of like every other read.                                    */
+
+USE GRAPH FraudGraph
+
+CREATE OR REPLACE QUERY peer_purchases(STRING device_profile, STRING exclude_card,
+                                       DOUBLE amount, DOUBLE tolerance,
+                                       DATETIME since, DATETIME as_of)
+FOR GRAPH FraudGraph SYNTAX v2 {
+  start = {DeviceProfile.*};
+  start = SELECT d FROM start:d WHERE d.device_profile == device_profile;
+
+  peers = SELECT t FROM start:d -(DEVICE_USED_IN>:e)- Transaction:t
+          WHERE t.ts >= since AND t.ts <= as_of
+            AND t.card_id != exclude_card
+            AND abs(t.amount - amount) <= tolerance
+          ORDER BY t.ts ASC
+          LIMIT 50;
+
+  PRINT peers[peers.txn_id AS txn_id, peers.card_id AS card_id, peers.amount AS amount,
+              peers.ts AS ts, peers.channel AS channel] AS peers;
+}

@@ -148,7 +148,9 @@ def evaluate(s: CaseState) -> PolicyDecision:
             cited.append(rule)
 
     # ---- R7 first: a disputed charge that is the customer's own subscription
-    if s.recurring_charge_match and s.trigger_type == "customer_report":
+    # Once the cardholder has answered, R3 (recognised) or R2 (denied) governs.
+    if (s.recurring_charge_match and s.trigger_type == "customer_report"
+            and not s.customer_response):
         add("CREATE_CASE", "R7", "customer disputes a charge matching their own recurring pattern")
         add("VERIFY_WITH_CUSTOMER", "R7", "confirm the subscription with the cardholder")
         add("WARN_CUSTOMER", "R7", "remind the cardholder of the recurring charge")
@@ -167,6 +169,14 @@ def evaluate(s: CaseState) -> PolicyDecision:
 
     # ---- R2/R3/R4: what the customer said
     if s.customer_response == "confirmed":
+        # §3a opens a case whenever evidence is requested, and R3's "note the
+        # confirmation in the case file" needs that case to exist.
+        if s.evidence_requested:
+            add("CREATE_CASE", "3a", "evidence was requested; the case records the "
+                                     "cardholder's confirmation")
+        if s.recurring_charge_match:
+            add("WARN_CUSTOMER", "R7", "remind the cardholder of the recurring charge they "
+                                       "disputed and then recognised")
         add("CLOSE_NO_FRAUD", "R3", "the cardholder confirmed the transaction")
         obligations.append("Record the confirmation in the case file (R3).")
         return PolicyDecision(actions, cited, obligations, forbidden, notes)
@@ -262,7 +272,12 @@ def evaluate(s: CaseState) -> PolicyDecision:
     # ---- monitoring / closure fall-throughs
     if s.verdict == "legitimate" and not any(
             a.action in {"BLOCK_CARD", "DECLINE_TRANSACTION"} for a in actions):
-        add("CLOSE_NO_FRAUD", "R3", "the evidence supports genuine cardholder activity")
+        # R3 is the customer-confirmation rule; no customer was asked on this
+        # path, so the closure rests on the §6 stopping rule instead.
+        add("CLOSE_NO_FRAUD", "§6",
+            f"§6: fraud probability {s.fraud_probability:.2f} is at or below the 0.15 floor on "
+            "independent graph evidence; the activity is consistent with the cardholder, so no "
+            "customer contact was needed")
         if s.trigger_type == "risk_score" and s.fraud_probability >= 0.10:
             add("MONITOR_CARD", "R4", "keep sensitivity raised for 72 hours as a precaution")
     elif not actions:

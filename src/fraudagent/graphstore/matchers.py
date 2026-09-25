@@ -125,17 +125,37 @@ def detect_threshold_structuring(online_rows: Sequence[dict[str, Any]],
 
 
 def recurrence_from_rows(rows: Sequence[dict[str, Any]]) -> dict[str, Any]:
-    """Policy R7 — same amount, same product code, monthly cadence."""
+    """Policy R7 — the customer's own repeat charge: same amount, same product.
+
+    R7 says "monthly". Two cadences qualify: a monthly one (two or more gaps of
+    26-35 days), and an established habit — at least eight earlier identical
+    charges over a quarter or more, never more than 45 days apart, at a steady
+    pace (median gap 5-35 days). HHG-018's $39.08 charge recurs every one to
+    three weeks for 140 days.
+
+    The habit bar is deliberately high. On the October holdout a looser rule
+    (four charges over six weeks) fired on 15 disputes, 14 of them confirmed
+    fraud: fraud episodes repeat an amount too, but in a burst (CC-4331: 21
+    charges, median gap 2.8 days, over 82 days). A quarter of steady history is
+    what a burst cannot fake."""
     ordered = sorted(rows, key=lambda r: r["ts"])
     gaps = [round((b["ts"] - a["ts"]).total_seconds() / 86400.0, 1)
             for a, b in zip(ordered, ordered[1:])]
     monthly = [g for g in gaps if 26.0 <= g <= 35.0]
     n_prior = max(len(ordered) - 1, 0)
+    span = ((ordered[-1]["ts"] - ordered[0]["ts"]).total_seconds() / 86400.0
+            if len(ordered) > 1 else 0.0)
+    median_gap = sorted(gaps)[len(gaps) // 2] if gaps else 0.0
+    regular = bool(n_prior >= 8 and span >= 90.0 and gaps and max(gaps) <= 45.0
+                   and 5.0 <= median_gap <= 35.0)
     return {
         "n_prior_same_amount": n_prior,
         "gaps_days": gaps[-6:],
         "n_monthly_gaps": len(monthly),
-        "recurring": bool(n_prior >= 2 and len(monthly) >= 2),
+        "median_gap_days": round(median_gap, 1),
+        "span_days": round(span, 1),
+        "cadence": "monthly" if len(monthly) >= 2 else "regular" if regular else "none",
+        "recurring": bool((n_prior >= 2 and len(monthly) >= 2) or regular),
         "near_recurring": bool(n_prior >= 1 and len(monthly) >= 1),
         "matched_txn_ids": [str(r["txn_id"]) for r in ordered[-6:]],
     }

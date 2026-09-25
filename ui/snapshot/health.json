@@ -1,0 +1,30 @@
+{
+  "captured_at": "2026-09-25T05:52:57Z",
+  "graph": {
+    "backend": "tigergraph",
+    "ok": true,
+    "transport": "mcp",
+    "mcp_tools": 69,
+    "graph": "FraudGraph",
+    "vertex_counts": {
+      "Analyst": 3,
+      "SAR": 5,
+      "EvidenceRequest": 5,
+      "RecommendedAction": 95,
+      "Decision": 70,
+      "Finding": 0,
+      "EmailDomain": 60,
+      "DeviceProfile": 9705,
+      "Transaction": 590742,
+      "Customer": 13553,
+      "Card": 14850,
+      "BillingRegion": 332,
+      "ClosedCase": 5565,
+      "Pattern": 7,
+      "PolicyDoc": 41,
+      "FraudCase": 20,
+      "Evidence": 162
+    },
+    "embedding_dim": 384
+  }
+}

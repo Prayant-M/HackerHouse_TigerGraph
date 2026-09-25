@@ -19,125 +19,141 @@
 USE GRAPH FraudGraph
 
 CREATE LOADING JOB load_entities FOR GRAPH FraudGraph {
-  DEFINE FILENAME f_customer  = "ANY:customers.csv";
-  DEFINE FILENAME f_card      = "ANY:cards.csv";
-  DEFINE FILENAME f_device    = "ANY:devices.csv";
-  DEFINE FILENAME f_region    = "ANY:regions.csv";
-  DEFINE FILENAME f_email     = "ANY:email_domains.csv";
+  DEFINE FILENAME f_customer;
+  DEFINE HEADER h_customer = "customer_id", "n_cards", "first_seen", "last_seen", "home_region";
+  DEFINE FILENAME f_card;
+  DEFINE HEADER h_card = "card_id", "customer_id", "brand", "card_type", "issuer_code", "first_seen", "last_seen", "n_txns", "amt_mean", "amt_median", "amt_std", "amt_p95", "online_share", "home_region";
+  DEFINE FILENAME f_device;
+  DEFINE HEADER h_device = "device_profile", "device_info", "os", "browser", "screen", "device_type", "n_txns", "n_cards", "n_customers", "first_seen", "last_seen";
+  DEFINE FILENAME f_region;
+  DEFINE HEADER h_region = "region", "country", "n_txns", "n_cards";
+  DEFINE FILENAME f_email;
+  DEFINE HEADER h_email = "domain", "is_free";
 
   LOAD f_customer TO VERTEX Customer VALUES
       ($"customer_id", $"n_cards", $"first_seen", $"last_seen", $"home_region")
-      USING header="true", separator=",";
+      USING header="false", USER_DEFINED_HEADER="h_customer", separator=",", quote="double";
 
   LOAD f_card TO VERTEX Card VALUES
       ($"card_id", $"customer_id", $"brand", $"card_type", $"issuer_code",
        $"first_seen", $"last_seen", $"n_txns", $"amt_mean", $"amt_median",
        $"amt_std", $"amt_p95", $"online_share", $"home_region", 0, 0.0)
-      USING header="true", separator=",";
+      USING header="false", USER_DEFINED_HEADER="h_card", separator=",", quote="double";
 
   LOAD f_device TO VERTEX DeviceProfile VALUES
       ($"device_profile", $"device_info", $"os", $"browser", $"screen",
        $"device_type", $"n_txns", $"n_cards", $"n_customers",
        $"first_seen", $"last_seen")
-      USING header="true", separator=",";
+      USING header="false", USER_DEFINED_HEADER="h_device", separator=",", quote="double";
 
   LOAD f_region TO VERTEX BillingRegion VALUES
       ($"region", $"country", $"n_txns", $"n_cards")
-      USING header="true", separator=",";
+      USING header="false", USER_DEFINED_HEADER="h_region", separator=",", quote="double";
 
   LOAD f_email TO VERTEX EmailDomain VALUES ($"domain", $"is_free")
-      USING header="true", separator=",";
+      USING header="false", USER_DEFINED_HEADER="h_email", separator=",", quote="double";
 }
 
 CREATE LOADING JOB load_transactions FOR GRAPH FraudGraph {
-  DEFINE FILENAME f_txn = "ANY:transactions.csv";
+  DEFINE FILENAME f_txn;
+  DEFINE HEADER h_txn = "txn_id", "ts", "amount", "product_cd", "channel", "risk_score", "card_id", "customer_id", "region", "country", "dist1", "dist2", "device_status", "proxy", "match_status", "m_mismatch_count", "amt_zscore_card", "hour", "dow", "device_profile", "email_p", "email_r";
 
   LOAD f_txn TO VERTEX Transaction VALUES
       ($"txn_id", $"ts", $"amount", $"product_cd", $"channel", $"risk_score",
        $"card_id", $"customer_id", $"region", $"country", $"dist1", $"dist2",
        $"device_status", $"proxy", $"match_status", $"m_mismatch_count",
        $"amt_zscore_card", $"hour", $"dow")
-      USING header="true", separator=",";
+      USING header="false", USER_DEFINED_HEADER="h_txn", separator=",", quote="double";
 
-  LOAD f_txn TO EDGE MADE_WITH   VALUES ($"txn_id", $"card_id")       USING header="true";
+  LOAD f_txn TO EDGE MADE_WITH   VALUES ($"txn_id", $"card_id")       USING header="false", USER_DEFINED_HEADER="h_txn", separator=",", quote="double";
   LOAD f_txn TO EDGE BILLED_IN   VALUES ($"txn_id", $"region")        WHERE $"region" != ""
-      USING header="true";
+      USING header="false", USER_DEFINED_HEADER="h_txn", separator=",", quote="double";
   LOAD f_txn TO EDGE FROM_DEVICE VALUES ($"txn_id", $"device_profile")
-      WHERE $"device_profile" != "" USING header="true";
+      WHERE $"device_profile" != "" USING header="false", USER_DEFINED_HEADER="h_txn", separator=",", quote="double";
   LOAD f_txn TO EDGE PURCHASER_EMAIL VALUES ($"txn_id", $"email_p")
-      WHERE $"email_p" != "" USING header="true";
+      WHERE $"email_p" != "" USING header="false", USER_DEFINED_HEADER="h_txn", separator=",", quote="double";
   LOAD f_txn TO EDGE RECIPIENT_EMAIL VALUES ($"txn_id", $"email_r")
-      WHERE $"email_r" != "" USING header="true";
+      WHERE $"email_r" != "" USING header="false", USER_DEFINED_HEADER="h_txn", separator=",", quote="double";
 }
 
 CREATE LOADING JOB load_card_ownership FOR GRAPH FraudGraph {
-  DEFINE FILENAME f_card = "ANY:cards.csv";
-  LOAD f_card TO EDGE OWNED_BY VALUES ($"card_id", $"customer_id") USING header="true";
+  DEFINE FILENAME f_card;
+  DEFINE HEADER h_card = "card_id", "customer_id", "brand", "card_type", "issuer_code", "first_seen", "last_seen", "n_txns", "amt_mean", "amt_median", "amt_std", "amt_p95", "online_share", "home_region";
+  LOAD f_card TO EDGE OWNED_BY VALUES ($"card_id", $"customer_id") USING header="false", USER_DEFINED_HEADER="h_card", separator=",", quote="double";
 }
 
 CREATE LOADING JOB load_next_txn FOR GRAPH FraudGraph {
   /* Transaction -> NEXT_TXN -> Transaction, ordered by ts within a card.
      Precomputed in Python; doing it in GSQL would need a sort per card. */
-  DEFINE FILENAME f_next = "ANY:next_txn.csv";
+  DEFINE FILENAME f_next;
+  DEFINE HEADER h_next = "from_txn", "to_txn", "gap_hours";
   LOAD f_next TO EDGE NEXT_TXN VALUES ($"from_txn", $"to_txn", $"gap_hours")
-      USING header="true", separator=",";
+      USING header="false", USER_DEFINED_HEADER="h_next", separator=",", quote="double";
 }
 
 CREATE LOADING JOB load_closed_cases FOR GRAPH FraudGraph {
-  DEFINE FILENAME f_cc      = "ANY:closed_cases.csv";
-  DEFINE FILENAME f_cc_txn  = "ANY:closed_case_txns.csv";
-  DEFINE FILENAME f_cc_conn = "ANY:closed_case_connected.csv";
-  DEFINE FILENAME f_cc_dev  = "ANY:closed_case_devices.csv";
+  DEFINE FILENAME f_cc;
+  DEFINE HEADER h_cc = "case_id", "customer_id", "card_id", "opened_at", "closed_at", "outcome", "pattern", "n_txns", "exposure_usd", "actions_taken", "report_filed", "analyst_notes", "narrative_emb";
+  DEFINE FILENAME f_cc_txn;
+  DEFINE HEADER h_cc_txn = "case_id", "txn_id";
+  DEFINE FILENAME f_cc_conn;
+  DEFINE HEADER h_cc_conn = "case_id", "card_id";
+  DEFINE FILENAME f_cc_dev;
+  DEFINE HEADER h_cc_dev = "case_id", "device_profile";
 
   LOAD f_cc TO VERTEX ClosedCase VALUES
       ($"case_id", $"customer_id", $"card_id", $"opened_at", $"closed_at",
        $"outcome", $"pattern", $"n_txns", $"exposure_usd", $"actions_taken",
        $"report_filed", $"analyst_notes")
-      USING header="true", separator=",", quote="double";
+      USING header="false", USER_DEFINED_HEADER="h_cc", separator=",", quote="double";
 
   /* The narrative vector. Written as bare "0.1,0.2,..." by the staging step —
      SPLIT() cannot take a nested token function, so the brackets are stripped
      in Python, not here. */
   LOAD f_cc TO VECTOR ATTRIBUTE narrative_emb ON VERTEX ClosedCase
       VALUES ($"case_id", SPLIT($"narrative_emb", ","))
-      USING header="true", separator=",", quote="double";
+      USING header="false", USER_DEFINED_HEADER="h_cc", separator=",", quote="double";
 
-  LOAD f_cc      TO EDGE CC_ON_CARD      VALUES ($"case_id", $"card_id") USING header="true";
-  LOAD f_cc_txn  TO EDGE CC_INVOLVES     VALUES ($"case_id", $"txn_id")  USING header="true";
-  LOAD f_cc_conn TO EDGE CC_CONNECTED_TO VALUES ($"case_id", $"card_id") USING header="true";
+  LOAD f_cc      TO EDGE CC_ON_CARD      VALUES ($"case_id", $"card_id") USING header="false", USER_DEFINED_HEADER="h_cc", separator=",", quote="double";
+  LOAD f_cc_txn  TO EDGE CC_INVOLVES     VALUES ($"case_id", $"txn_id")  USING header="false", USER_DEFINED_HEADER="h_cc_txn", separator=",", quote="double";
+  LOAD f_cc_conn TO EDGE CC_CONNECTED_TO VALUES ($"case_id", $"card_id") USING header="false", USER_DEFINED_HEADER="h_cc_conn", separator=",", quote="double";
   LOAD f_cc_dev  TO EDGE CC_ON_DEVICE    VALUES ($"case_id", $"device_profile")
-      USING header="true";
+      USING header="false", USER_DEFINED_HEADER="h_cc_dev", separator=",", quote="double";
 }
 
 CREATE LOADING JOB load_policy FOR GRAPH FraudGraph {
-  DEFINE FILENAME f_doc     = "ANY:policy_docs.csv";
-  DEFINE FILENAME f_pattern = "ANY:patterns.csv";
+  DEFINE FILENAME f_doc;
+  DEFINE HEADER h_doc = "doc_id", "kind", "section", "title", "text", "url", "issuer", "text_emb";
+  DEFINE FILENAME f_pattern;
+  DEFINE HEADER h_pattern = "pattern_id", "name", "description", "source", "base_rate", "historical_precision", "n_observed", "desc_emb";
 
   LOAD f_doc TO VERTEX PolicyDoc VALUES
       ($"doc_id", $"kind", $"section", $"title", $"text", $"url", $"issuer")
-      USING header="true", separator=",", quote="double";
+      USING header="false", USER_DEFINED_HEADER="h_doc", separator=",", quote="double";
   LOAD f_doc TO VECTOR ATTRIBUTE text_emb ON VERTEX PolicyDoc
       VALUES ($"doc_id", SPLIT($"text_emb", ","))
-      USING header="true", separator=",", quote="double";
+      USING header="false", USER_DEFINED_HEADER="h_doc", separator=",", quote="double";
 
   LOAD f_pattern TO VERTEX Pattern VALUES
       ($"pattern_id", $"name", $"description", $"source", $"base_rate",
        $"historical_precision", $"n_observed")
-      USING header="true", separator=",", quote="double";
+      USING header="false", USER_DEFINED_HEADER="h_pattern", separator=",", quote="double";
   LOAD f_pattern TO VECTOR ATTRIBUTE desc_emb ON VERTEX Pattern
       VALUES ($"pattern_id", SPLIT($"desc_emb", ","))
-      USING header="true", separator=",", quote="double";
+      USING header="false", USER_DEFINED_HEADER="h_pattern", separator=",", quote="double";
 }
 
 CREATE LOADING JOB load_behaviour_vectors FOR GRAPH FraudGraph {
-  DEFINE FILENAME f_beh = "ANY:behaviour_emb.csv";
+  DEFINE FILENAME f_beh;
+  DEFINE HEADER h_beh = "txn_id", "behaviour_emb";
   LOAD f_beh TO VECTOR ATTRIBUTE behaviour_emb ON VERTEX Transaction
       VALUES ($"txn_id", SPLIT($"behaviour_emb", ","))
-      USING header="true", separator=",";
+      USING header="false", USER_DEFINED_HEADER="h_beh", separator=",", quote="double";
 }
 
 CREATE LOADING JOB load_analysts FOR GRAPH FraudGraph {
-  DEFINE FILENAME f_a = "ANY:analysts.csv";
+  DEFINE FILENAME f_a;
+  DEFINE HEADER h_a = "analyst_id", "role", "approval_ceiling";
   LOAD f_a TO VERTEX Analyst VALUES ($"analyst_id", $"role", $"approval_ceiling")
-      USING header="true", separator=",";
+      USING header="false", USER_DEFINED_HEADER="h_a", separator=",", quote="double";
 }

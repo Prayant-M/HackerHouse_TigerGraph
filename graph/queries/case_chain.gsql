@@ -14,19 +14,19 @@ USE GRAPH FraudGraph
 
 CREATE OR REPLACE QUERY case_chain(STRING graph_case_id)
 FOR GRAPH FraudGraph SYNTAX v2 {
-  start = {Case.*};
+  start = {FraudCase.*};
   start = SELECT c FROM start:c WHERE c.graph_case_id == graph_case_id;
 
-  evidence  = SELECT e FROM start:c -(HAS_EVIDENCE:x)- Evidence:e;
-  findings  = SELECT f FROM start:c -(PRODUCED_FINDING:x)- Finding:f;
-  decisions = SELECT d FROM start:c -(DECIDED:x)- Decision:d ORDER BY d.step ASC;
-  actions   = SELECT a FROM start:c -(RECOMMENDS:x)- RecommendedAction:a;
-  requests  = SELECT r FROM start:c -(REQUESTED:x)- EvidenceRequest:r;
-  sars      = SELECT s FROM start:c -(FILED:x)- SAR:s;
-  recalled  = SELECT p FROM start:c -(RECALLED_CASE:x)- ClosedCase:p;
-  txns      = SELECT t FROM start:c -(INVESTIGATES_TXN:x)- Transaction:t;
-  conn      = SELECT k FROM start:c -(CONNECTED_CARD:x)- Card:k;
-  cited     = SELECT p FROM start:c -(CITES_POLICY:x)- PolicyDoc:p;
+  evidence  = SELECT e FROM start:c -(HAS_EVIDENCE>:x)- Evidence:e;
+  findings  = SELECT f FROM start:c -(PRODUCED_FINDING>:x)- Finding:f;
+  decisions = SELECT d FROM start:c -(DECIDED>:x)- Decision:d ORDER BY d.step ASC;
+  actions   = SELECT a FROM start:c -(RECOMMENDS>:x)- RecommendedAction:a;
+  requests  = SELECT r FROM start:c -(REQUESTED>:x)- EvidenceRequest:r;
+  sars      = SELECT s FROM start:c -(FILED>:x)- SAR:s;
+  recalled  = SELECT p FROM start:c -(RECALLED_CASE>:x)- ClosedCase:p;
+  txns      = SELECT t FROM start:c -(INVESTIGATES_TXN>:x)- Transaction:t;
+  conn      = SELECT k FROM start:c -(CONNECTED_CARD>:x)- Card:k;
+  cited     = SELECT p FROM start:c -(CITES_POLICY>:x)- PolicyDoc:p;
 
   PRINT start     AS investigation;
   PRINT evidence  AS evidence;

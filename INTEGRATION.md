@@ -22,6 +22,7 @@ engineering account — `README.md` is the operating manual and
 12. [Requirement-by-requirement traceability](#12-requirement-by-requirement-traceability)
 12a. [Results](#12a-results)
 13. [Known limits and what I would do next](#13-known-limits-and-what-i-would-do-next)
+14. [What other teams' designs taught us](#14-what-other-teams-designs-taught-us)
 
 ---
 
@@ -31,11 +32,11 @@ engineering account — `README.md` is the operating manual and
 |---|---|---|
 | Ingestion pipeline (7 stages) | `ingest/` | complete, verified |
 | TigerGraph schema, vectors, loading jobs | `graph/ddl/`, `graph/loading/` | complete |
-| GSQL investigation toolkit (11 files) | `graph/queries/` | complete |
+| GSQL investigation toolkit (14 files) | `graph/queries/` | complete |
 | Derived projection + GDS | `graph/algorithms/` | complete |
 | Idempotent installer | `graph/install.py` | complete, `--dry-run` supported |
 | Graph access layer, two backends | `src/fraudagent/graphstore/` | complete |
-| Deterministic decision core | `src/fraudagent/core/` | complete, 52 tests |
+| Deterministic decision core | `src/fraudagent/core/` | complete, 64 tests across the suite |
 | LangGraph agent | `src/fraudagent/agent/` | complete |
 | Answer builder + schema validator | `src/fraudagent/report/` | complete |
 | Simulated action service | `src/fraudagent/mcp_servers/` | complete |
@@ -159,10 +160,14 @@ cases around the entities under investigation. This is what turns four months of
 static history into a live graph signal that feeds the ledger as a likelihood
 ratio, rather than as documents to paste into a prompt.
 
-GDS (`tg_wcc`, `tg_louvain`, `tg_pagerank`, `tg_kcore`) runs **offline** over
-the projection and materialises `community_id` and `hub_rank` onto `Card`. The
-agent reads them; it never recomputes them. Running Louvain inside an
-investigation destroys the latency budget and it shows on stage.
+GDS runs **offline** through the 4.x `GDBMS_ALGO` package (the 3.x `tg_*`
+queries do not install on 4.2): WCC and PageRank over `ANON_CO_OCCURS`, the
+anonymous-proxy slice of the card projection, write `community_id` and
+`hub_rank` onto `Card`. Over the full projection WCC finds one 6,125-card
+component held together by ordinary browser strings; over the slice it isolates
+the HHG-014 ring as a 54-card component with the case's card ranked #2. The agent
+reads the result through `card_community` and cites it as all-time context next
+to the time-bounded ring evidence; it never enters the probability.
 
 ---
 
@@ -457,11 +462,15 @@ FastAPI serving one HTML file, one stylesheet, one script. No build step, no
 bundler, no `node_modules`, so `python ui/server.py` is the whole deployment
 story.
 
-Case inbox · uncertainty meter with policy thresholds marked · evidence board
-showing the measured belief movement per item · before/after recommendations
-with the evidence request and its information-per-friction · case subgraph
-canvas · live re-run streaming the reasoning trace over SSE · approval queue
-that writes `APPROVED_BY` edges · the calibration table · the compiled policy.
+Six pages: Home (the five-step story, live counts, three "start here" cases),
+Cases (search and dropdown filters; per case an Overview with gauge, entropy in
+bits, open questions and the before → question → after journey; Evidence with
+claim-type badges; a zoomable Graph tab; Similar cases; an Audit trail with a
+replay stepper, the hash-chained ledger and the graph read-back checks),
+Scoreboard (all 20 with audit status, sortable, CSV), Approvals (writes
+`APPROVED_BY`), Monitoring (the autonomous sweeps compared) and Insights
+(calibration, searchable policy). The status pill says whether the graph is
+reached through MCP, directly, or not at all.
 
 ---
 
@@ -482,6 +491,14 @@ that writes `APPROVED_BY` edges · the calibration table · the compiled policy.
 | 11 | **Dual backend with shared matchers** | Reproducible without an instance; differentially testable |
 | 12 | **Schema validator in the runner** | Catches what would silently score zero |
 | 13 | **Runs with no API key** | A judge can reproduce the twenty files with zero credentials |
+| 14 | **Peer-purchase ring signal** (`peer_purchases.gsql`) | Rings that are invisible from one card; LR 22.4 measured on the closed cases |
+| 15 | **R7 regular-cadence recurrence** | A charge paid 21 times every one to three weeks is a habit, not only a monthly one |
+| 16 | **Verified write-back** | `written_to_graph` means the case read back, with counts checked |
+| 17 | **ID-grounded LLM prose** | Text citing an identifier the evidence lacks falls back to the template |
+| 18 | **Claim types and open questions** | Facts, inferences, scores and simulated replies are never confused |
+| 19 | **Fail-closed strict mode** (`GRAPH_STRICT=1`) | A demo can never present mirror results as graph results |
+| 20 | **Committed answer audit** (`eval/audit_answers.py`) | Every policy rule and data invariant, re-checkable in one command |
+| 21 | **Scoreboard and monitoring views** | The whole benchmark and the proactive sweeps on one screen each |
 
 ---
 
@@ -490,9 +507,9 @@ that writes `APPROVED_BY` edges · the calibration table · the compiled policy.
 | Brief requirement | Implementation |
 |---|---|
 | Trigger: risk score / customer report / analyst request | `trigger_from_row`; prior conditioned per trigger in `trigger_prior` |
-| Investigate: graph, history, device, behaviour, prior cases | 11 GSQL primitives; 26 signals in `core/signals.py` |
+| Investigate: graph, history, device, behaviour, prior cases | 21 installed GSQL queries; 28 signals in `core/signals.py` |
 | Assess: pattern, type, risk level **with a confidence number** | `fraud_probability` + full 7-way posterior |
-| Create and progress a case; maintain decisions | `Case` subgraph; `DecisionLedger`; `case_chain()` |
+| Create and progress a case; maintain decisions | `FraudCase` subgraph; `DecisionLedger`; `case_chain()` read-back |
 | Case memory that informs new investigations | `hybrid_case_recall` + `fraud_proximity` + measured LRs |
 | Controlled evidence gathering, policy-approved | `core/voi.py`, policy gate on asking, `simulator.py` |
 | Next best action, one or more, with approval route | `policy_engine.evaluate` → `permissions.route` |
@@ -501,11 +518,11 @@ that writes `APPROVED_BY` edges · the calibration table · the compiled policy.
 | Determine when to stop | `core/stopping.py`, two-sided, recorded in `stop_reason` |
 | Explain evidence, uncertainty, why these actions | `report/narrative.py::explanation` + policy notes |
 | TigerGraph for graph **and** vector | one store, three vector attributes, `hybrid_case_recall` |
-| GSQL and graph algorithms | `graph/queries/`, `graph/algorithms/` with GDS |
-| TigerGraph MCP | `graphstore/` is the tool surface; `mcp_servers/` wraps the actions |
+| GSQL and graph algorithms | `graph/queries/`; GDS WCC + PageRank via `GDBMS_ALGO` in `graph/algorithms/05_graph_algorithms.gsql` |
+| TigerGraph MCP | `graphstore/mcp_client.py` runs the official `tigergraph-mcp` server over stdio; every agent read (`run_installed_query`, `get_node`, `get_node_edges`) and case write (`add_node`, `add_edge`) goes through it, with a per-call fallback to a direct connection |
 | GraphRAG | `policy_retrieve` over 41 clause chunks; the LLM gets clauses, not raw rows |
 | User interface | `ui/` |
-| Case written to the graph | `write_case` + `case_write_links`, same payload as the JSON |
+| Case written to the graph | `write_case` + `case_write_links`, same payload as the JSON, verified by `case_chain` read-back |
 | SAR where policy requires | `sar_required` implements §3a exactly; validated for agreement |
 
 ---
@@ -517,16 +534,22 @@ that writes `APPROVED_BY` edges · the calibration table · the compiled policy.
 | | |
 |---|---|
 | verdicts | 11 legitimate, 9 fraud |
-| patterns | 11 `none`, 3 `card_not_present_new_device`, 2 `out_of_region_use`, 2 `undocumented`, 2 `account_takeover` |
-| SARs filed | 2 |
-| evidence requested | 4 cases |
-| recommendation changed after evidence | 4 cases |
+| patterns | 11 `none`, 4 `card_not_present_new_device`, 2 `undocumented`, 2 `account_takeover`, 1 `out_of_region_use` |
+| SARs filed | 2 (HHG-006, HHG-014) |
+| evidence requested | 5 cases |
+| recommendation changed after evidence | 5 cases |
 | schema validation | 20/20 pass |
-| mean latency | 1.4 s/case, 24 graph calls |
+| answer audit | 0 issues (`eval/reports/answer_audit.md`) |
+| graph path | TigerGraph via MCP: 1,492 calls, 0 fallbacks; ~4 s and ~38 graph calls per case |
 
 Both undocumented typologies appear and are caught: **HHG-006** is sub-threshold
 structuring ($1,906.07 across four purchases in thirty minutes) and **HHG-014**
 is the shared-device ring (19 connected cards, anonymous-proxy ratio 1.00).
+**HHG-019** and **HHG-011** are rings visible only on other cards (peer
+purchases): fraud at 0.95 and 0.97 and blocked, but no SAR — $99.92 and $131.30
+on one card with a documented pattern meet none of §3a's conditions, and the
+peers are evidence, not a proven shared origin. **HHG-018** is a disputed
+recurring charge closed under R7.
 
 ### October holdout backtest
 
@@ -535,19 +558,24 @@ with the trigger stripped. See §7 for why one number would have been misleading
 
 | | as seen | graph only |
 |---|---:|---:|
-| **AUC** | **0.936** | **0.531** |
-| precision / recall | 0.93 / 0.98 | 0.695 / 0.168 |
-| Brier / ECE | 0.0559 / 0.028 | 0.5015 / 0.4984 |
-| **pattern accuracy, both sides agree it is fraud** | **0.573** (n=239) | **0.561** (n=41) |
-| affected-transaction overlap (Jaccard) | 0.613 | 0.117 |
-| SAR agreement with the bank's own filing | 0.925 | 0.922 |
+| **AUC** | **0.921** | **0.520** |
+| precision / recall | 0.891 / 0.967 | 0.637 / 0.209 |
+| Brier / ECE | 0.0825 / 0.036 | 0.4951 / 0.4966 |
+| **pattern accuracy, both sides agree it is fraud** | **0.508** (n=236) | **0.471** (n=51) |
+| affected-transaction overlap (Jaccard) | 0.587 | 0.141 |
+| SAR agreement with the bank's own filing | 0.900 | 0.907 |
 
 The two rows at the bottom are the ones that matter, and they are the result I
 would put first. Fraud-versus-not collapses when the trigger is removed — AUC
-0.936 to 0.531, essentially chance — but **pattern accuracy barely
-moves (0.573 to
-0.561) and SAR agreement does not move at
-all (0.925 to 0.922)**.
+0.921 to 0.520, essentially chance — but **pattern accuracy barely
+moves (0.508 to 0.471) and SAR agreement does not move at all (0.900 to
+0.907)**.
+
+These figures come after the R7 cadence rule was tightened and `peer_purchases`
+made fired-only (§14). An earlier build scored higher on paper (AUC 0.936,
+pattern 0.573) with a looser R7 rule that the holdout showed was clearing
+confirmed fraud whose amounts happened to repeat in a burst; the lower number is
+the honest one.
 
 That is a clean division of labour, and it is measured rather than asserted:
 
@@ -558,6 +586,20 @@ That is a clean division of labour, and it is measured rather than asserted:
 
 Six pattern classes; always guessing the majority would score 0.26.
 
+**What `peer_purchases` is worth, measured.** The same calibration and backtest
+rerun with the detector forced off (`SIGNALS_OFF=peer_purchases`):
+
+| | with | without |
+|---|---:|---:|
+| graph-only precision / recall | 0.637 / 0.209 | 0.608 / 0.184 |
+| graph-only Brier | 0.4951 | 0.5083 |
+| as-seen pattern accuracy (all fraud) | 0.492 | 0.488 |
+| as-seen precision / recall | 0.891 / 0.967 | 0.891 / 0.967 |
+
+It adds six graph-only true positives (51 against 45) with no extra false positives (29 either way),
+and leaves the as-seen arm untouched. Small, but measured, and in the direction
+that matters: evidence the trigger doesn't already carry.
+
 ### Autonomous monitoring (outside the benchmark)
 
 The agent raised its own alerts across November and December from three
@@ -565,15 +607,13 @@ triggers, then investigated all of them under the same policy:
 
 | found_by          |   alerts |   fraud |   mean_p |   exposure |
 |:------------------|---------:|--------:|---------:|-----------:|
-| device_hub_sweep  |       18 |      14 |    0.705 |    2583.34 |
-| risk_score        |       20 |       2 |    0.135 |    4082.92 |
-| structuring_sweep |       20 |      20 |    0.949 |   31611    |
+| device_hub_sweep  |       27 |      24 |    0.825 |    3396.39 |
+| risk_score        |       30 |       6 |    0.224 |   16520.3  |
+| structuring_sweep |       30 |      30 |    0.945 |   38145.7  |
 
-The bank's own model, at its twenty highest scores in the exam period, yields
-**2 fraud**. The sub-threshold structuring
-sweep yields **20 of
-20**, worth
-$31,611, none of which the risk model
+The bank's own model, at its thirty highest scores in the exam period, yields
+**6 fraud**. The sub-threshold structuring sweep yields **30 of 30**, worth
+$38,145.65, none of which the risk model
 scores highly — because every individual leg is an ordinary purchase and the
 pattern only exists across the burst. That is the case for doing this in a
 graph.
@@ -585,14 +625,11 @@ graph.
 Stated plainly, because a limits section that lists nothing real is not a limits
 section.
 
-1. **The GSQL is authored but not executed against a live instance in this
-   build.** There were no TigerGraph credentials available during development.
-   The queries are written against the 4.2 documentation, the installer is
-   idempotent and supports `--dry-run`, and the local mirror is a working
-   reference implementation of every one of them — but until
-   `graph/install.py --step all` runs against a real workspace, treat the GSQL
-   as reviewed rather than tested. That is the first thing to do with
-   credentials, and `--step verify` is written specifically to catch what breaks.
+1. **The R7 reply and the peer-signal gate are assumptions.** The simulated
+   recognition of a recurring charge follows R7's own premise, because the
+   history holds no recurring disputes to learn from; the "rare device" cut-off
+   (≤ 10 cards) is chosen, while the signal's weight is measured. Both are
+   written into the answer files.
 2. **Memory does not yet close the loop on weighting.** Cases the agent writes
    are retrievable by the next investigation, but the likelihood-ratio table is
    not recomputed from them. Memory that updates the agent's *evidence
@@ -608,8 +645,37 @@ section.
    it uses only information the agent already has — but that means the
    before/after loop demonstrates correct *movement*, not correct *outcomes*.
    Real responses would change the measured numbers.
-6. **No differential test between the backends in CI.** They share the window
-   matchers, but only a live instance can prove the traversals agree.
+6. **GDS output is context only.** WCC and PageRank see the whole six months,
+   so they are cited beside the evidence and never weighed; a time-sliced
+   projection per alert would let them count.
+
+---
+
+## 14. What other teams' designs taught us
+
+After the first submission-ready build, ten other teams' technical write-ups for
+the same brief were read end to end. Most ideas were already here (a
+deterministic policy engine, VoI-driven evidence requests, a temporal wall,
+case memory in the graph). What was worth taking, and what was checked against
+the data before anything changed:
+
+| Idea (from) | Checked how | What changed |
+|---|---|---|
+| HHG-018 is a forgotten recurring charge, R7 (three teams) | 21 identical $39.07–39.08 product-W charges since July, never more than 21 days apart | R7 matcher accepts a regular cadence; the simulated reply follows R7; verdict legitimate, no block |
+| "What happened on other cards?" (SentinelGraph) | HHG-019 and HHG-011: rare devices with near-identical purchases on two other cards within days; generic strings excluded | `peer_purchases` query + signal, LR 22.4 measured on 31 fraud / 0 cleared closed cases. **Fired-only** (its absence is not evidence) and its peers are **evidence, not connected cards** — the holdout showed both mistakes |
+| Read the case back before claiming it was written (FraudLens, BROTHERHOOD) | `case_chain` returns every linked vertex | `written_to_graph` = read-back; counts checked and shown in the audit trail |
+| Reject LLM text citing IDs not in the evidence (SentinelGraph) | Regex over case, card, customer and transaction IDs | `grounded()` on every LLM-written field |
+| Observed fact vs derived inference vs model score (BALLERINA) | Mapped from each ledger entry's source | `claim_type` on every evidence item; filter and badges in the console |
+| Explicit open questions (SentinelGraph, BROTHERHOOD) | Derived deterministically from the case state | `open_questions` in every answer file |
+| Uncertainty as a quantity (RAVEL's entropy) | Binary entropy of the final posterior | Shown in bits beside the gauge |
+| Fail closed when the graph is down (BALLERINA) | — | `GRAPH_STRICT=1` |
+| Scoreboard / executive matrix (RAVEL, SentinelGraph) | Built on the audit | Scoreboard page + CSV |
+
+Considered and not adopted: a gradient-boosted prior (the closed cases' trigger
+is perfectly confounded with the label, see §7); leaving `fraud_probability`
+null (it is a scored field, and ours is calibrated and capped); a second, custom
+MCP server (the official one already exposes installed queries, and one path is
+easier to audit than two).
 
 ---
 

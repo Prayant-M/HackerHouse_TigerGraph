@@ -29,6 +29,42 @@ ROUTES = {"auto", "L1", "L2"}
 SOURCES = {"graph", "document", "customer", "external"}
 
 
+def _transport(store: GraphStore) -> str:
+    """How this case reached the graph: through the TigerGraph MCP server, a
+    direct connection, or the local mirror."""
+    gateway = getattr(store, "graph", None)
+    return getattr(gateway, "transport", "") or getattr(store, "backend", "local")
+
+
+def open_questions(state, evidence: list[dict[str, Any]], p_fraud: float) -> list[str]:
+    """What the agent still does not know when it stops. Stated, not implied:
+    an empty answer and an unavailable one are different things."""
+    ctx = state["ctx"]
+    f = ctx.flagged
+    out: list[str] = []
+    if not f.device_profile:
+        out.append("No identity record for the flagged transaction, so device and proxy "
+                   "evidence is unavailable rather than clean.")
+    if any("simulated" in (r.channel + r.assumed_response).lower() for r in state["requests"]):
+        out.append("The customer's reply was simulated (no real channel in this round); "
+                   "a real reply could still change the outcome.")
+    up = sum(1 for e in evidence if (e.get("delta_fraud_probability") or 0) > 0.005)
+    down = sum(1 for e in evidence if (e.get("delta_fraud_probability") or 0) < -0.005)
+    if up and down:
+        out.append(f"Evidence conflicts: {up} items raised the fraud likelihood and {down} "
+                   f"lowered it.")
+    if 0.15 < p_fraud < 0.85:
+        out.append(f"The probability ({p_fraud:.2f}) stopped short of the policy's 0.85 / 0.15 "
+                   f"bounds; the decision rests on the §6 'further steps would not change it' "
+                   f"rule.")
+    if ctx.trigger_type == "customer_report":
+        out.append("The dataset has no merchant field, so the R7 recurring-charge check uses "
+                   "amount, product code and cadence only.")
+    if not state["priors"]:
+        out.append("No similar prior investigation was recalled.")
+    return out
+
+
 def build_answer(state, store: GraphStore) -> tuple[dict[str, Any], dict[str, Any]]:
     from ..agent.llm import get_llm
     from ..agent.nodes import _case_state, _evidence_entries
@@ -133,6 +169,8 @@ def build_answer(state, store: GraphStore) -> tuple[dict[str, Any], dict[str, An
         "executed_actions": state.get("result", {}).get("executed_actions", []),
         "pending_approval": state.get("result", {}).get("pending_approval", []),
         "episode_basis": ep.basis,
+        "open_questions": open_questions(state, evidence, p_fraud),
+        "graph_transport": _transport(store),
         "backend": getattr(store, "backend", "unknown"),
         "llm": {"available": llm.available, "provider": llm.cfg.provider,
                 "model": llm.cfg.model if llm.available else "deterministic-templates",

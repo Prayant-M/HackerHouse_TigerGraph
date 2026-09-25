@@ -302,3 +302,53 @@ def test_threshold_structuring_matcher_finds_the_undocumented_typology():
 def test_structuring_matcher_does_not_fire_on_ordinary_spending():
     assert not detect_threshold_structuring(
         _rows([(0, 12.00), (20, 480.00), (40, 33.50)]))["matched"]
+
+
+# ──────────────────────────────────────── R7 cadence, R3 case, grounding ──
+def _charges(days):
+    from datetime import datetime, timedelta
+    t0 = datetime(2016, 7, 1)
+    return [{"ts": t0 + timedelta(days=d), "txn_id": str(3000000 + i)} for i, d in enumerate(days)]
+
+
+def test_r7_recognises_a_regular_repeat_charge_not_only_a_monthly_one():
+    from fraudagent.graphstore.matchers import recurrence_from_rows
+    # HHG-018's shape: the same charge every one to three weeks for months
+    r = recurrence_from_rows(_charges([0, 6, 25, 33, 50, 53, 63, 77, 95, 116, 136, 150]))
+    assert r["recurring"] and r["cadence"] == "regular"
+    assert recurrence_from_rows(_charges([0, 30, 61]))["cadence"] == "monthly"
+
+
+def test_r7_does_not_call_two_coincidences_a_habit():
+    from fraudagent.graphstore.matchers import recurrence_from_rows
+    assert not recurrence_from_rows(_charges([0, 3]))["recurring"]
+    assert not recurrence_from_rows(_charges([0, 5, 90, 95, 180]))["recurring"]   # 85-day gap
+    # a fraud burst repeats an amount too: 21 charges, 2-3 days apart, 60 days
+    assert not recurrence_from_rows(_charges(list(range(0, 63, 3))))["recurring"]
+
+
+def test_r7_hands_over_to_r3_once_the_cardholder_recognises_the_charge():
+    d = policy_engine.evaluate(_state(trigger_type="customer_report", recurring_charge_match=True,
+                                      customer_response="confirmed", evidence_requested=True))
+    names = d.action_names()
+    assert "BLOCK_CARD" not in names and "VERIFY_WITH_CUSTOMER" not in names
+    assert names[-1] == "CLOSE_NO_FRAUD" and {"CREATE_CASE", "WARN_CUSTOMER"} <= set(names)
+
+
+def test_a_case_is_opened_whenever_evidence_was_requested():
+    d = policy_engine.evaluate(_state(customer_response="confirmed", evidence_requested=True))
+    assert d.action_names() == ["CREATE_CASE", "CLOSE_NO_FRAUD"]
+
+
+def test_closing_without_asking_cites_the_stopping_rule_not_r3():
+    d = policy_engine.evaluate(_state(verdict="legitimate", fraud_probability=0.05))
+    close = next(a for a in d.actions if a.action == "CLOSE_NO_FRAUD")
+    assert close.reason.startswith("§6") and "R3" not in close.reason
+
+
+def test_llm_prose_citing_an_id_the_evidence_lacks_is_rejected():
+    from fraudagent.report.narrative import grounded
+    brief = "card C13487-K1 · device ring · CC-2649 · txn 3478561"
+    assert grounded("Card C13487-K1 shares a device with CC-2649.", brief)
+    assert grounded("Matches CC-9999 on card C13487-K1.", brief) == ""
+    assert grounded("", brief) == ""

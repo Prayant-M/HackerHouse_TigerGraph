@@ -1,0 +1,1074 @@
+{
+  "executed_actions": [
+    {
+      "action": "CREATE_CASE",
+      "case_id": "AUTO-068",
+      "card_id": "C01782-K2",
+      "customer_id": "C01782",
+      "route": "auto",
+      "executed": true,
+      "simulated": true,
+      "reference": "SIM-F04B94689C",
+      "executed_at": "2026-09-24T22:36:58Z",
+      "effect": "Fraud case opened and written to the graph.",
+      "customer_impact": "none"
+    }
+  ],
+  "pending_approval": [
+    {
+      "action": "BLOCK_CARD",
+      "route": "L1",
+      "awaiting": "team lead"
+    }
+  ],
+  "case_id": "AUTO-068",
+  "case": {
+    "status": "closed_fraud",
+    "verdict": "fraud",
+    "fraud_probability": 0.939,
+    "pattern": "card_not_present_new_device",
+    "pattern_description": "",
+    "affected_txn_ids": [
+      "3497655"
+    ],
+    "first_suspicious_txn_id": "3497655",
+    "connected_card_ids": [],
+    "connected_device_profiles": [
+      "Windows | Windows 10 | edge 16.0 | 1920x1080"
+    ],
+    "exposure_usd": 149.97,
+    "evidence": [
+      {
+        "claim": "Simulated: cardholder states they did not make this purchase and still holds the card. Assumed because the graph evidence points to unauthorised use; no real response was available for this round. (most likely response under the evidence gathered so far, p=0.47; no real reply was available)",
+        "source": "customer",
+        "ref": "evidence_request:1",
+        "entity_ids": []
+      },
+      {
+        "claim": "5 closely matching closed investigations were retrieved by fusing narrative similarity with shared-entity overlap; 5 of them were confirmed fraud, most often card_not_present_new_device",
+        "source": "graph",
+        "ref": "query:hybrid_case_recall(k=5, as_of=2016-11-29 21:16:04)",
+        "entity_ids": [
+          "CC-2556",
+          "CC-5217",
+          "CC-2925",
+          "CC-2625",
+          "CC-0932"
+        ]
+      },
+      {
+        "claim": "Billing region 110.0 has 0 transactions in this card's established history; its home region is 143.0 (20 regions seen in total)",
+        "source": "graph",
+        "ref": "query:region_profile(card_id=C01782-K2, region=110.0)",
+        "entity_ids": [
+          "3497655",
+          "C01782-K2"
+        ]
+      },
+      {
+        "claim": "Transaction came from device profile 'Windows | Windows 10 | edge 16.0 | 1920x1080' which the identity record marks 'New' for this account and which has no prior use on this card",
+        "source": "graph",
+        "ref": "query:device_first_use(card_id=C01782-K2, device_profile=...)",
+        "entity_ids": [
+          "3497655",
+          "Windows | Windows 10 | edge 16.0 | 1920x1080"
+        ]
+      },
+      {
+        "claim": "Activity in the 72 hours before the alert mixes 1 online and 1 card-present transactions, shifting the online share by 0.28 against this card's own baseline",
+        "source": "graph",
+        "ref": "query:mixed_channel_probe(card_id=C01782-K2, window_hours=72)",
+        "entity_ids": [
+          "C01782-K2"
+        ]
+      },
+      {
+        "claim": "71 confirmed-fraud closed cases sit within two hops of this card, device or customer (distance-decayed proximity 20.5)",
+        "source": "graph",
+        "ref": "query:fraud_proximity(entity_ids=..., max_hops=2)",
+        "entity_ids": [
+          "CC-0763",
+          "CC-3877",
+          "CC-4105",
+          "CC-0932",
+          "CC-1258",
+          "CC-2556",
+          "CC-2625",
+          "CC-2925",
+          "CC-5217",
+          "CC-5263"
+        ]
+      },
+      {
+        "claim": "Flagged amount $149.97 sits inside this card's ordinary spending range (median $157.70, z=-0.41) over 96 prior transactions",
+        "source": "graph",
+        "ref": "query:card_baseline(card_id=C01782-K2)",
+        "entity_ids": [
+          "3497655",
+          "C01782-K2"
+        ]
+      },
+      {
+        "claim": "Out-of-region use governs this case: Out-of-region use. Card-present purchases in a billing region the cardholder has no history in, while their normal activity continues at home. Several days of purchases in one new region is a trip, not a clone. Policy R2, R3.",
+        "source": "document",
+        "ref": "policy:PATTERN-out_of_region_use",
+        "entity_ids": []
+      },
+      {
+        "claim": "Card-not-present fraud governs this case: Card-not-present fraud. The number is used online without the card. Amounts and products that don't fit the cardholder's history, often in a burst of two to four within 48 hours. On its own, one unusual online purchase is ambiguous: verify.",
+        "source": "document",
+        "ref": "policy:PATTERN-card_not_present_fraud",
+        "entity_ids": []
+      }
+    ],
+    "similar_prior_cases": [
+      "CC-2556",
+      "CC-5217",
+      "CC-2925",
+      "CC-2625",
+      "CC-0932"
+    ],
+    "summary": "The bank's model scored transaction 3497655 at 0.97 ($149.97, online, billing region 110.0). The investigation found: simulated: cardholder states they did not make this purchase and still holds the card. Assumed because the graph evidence points to unauthorised use; no real response was available for this round. (most likely response under the evidence gathered so far, p=0.47; no real reply was available); 5 closely matching closed investigations were retrieved by fusing narrative similarity with shared-entity overlap; 5 of them were confirmed fraud, most often card_not_present_new_device; billing region 110.0 has 0 transactions in this card's established history; its home region is 143.0 (20 regions seen in total). The activity is assessed as card-not-present fraud from a device new to the account at probability 0.94, covering 1 transaction(s) worth $149.97. Closed case CC-2556 (confirmed fraud, account takeover) is the closest prior investigation.",
+    "written_to_graph": true,
+    "graph_case_id": "CASE-AUTO-068"
+  },
+  "evidence_requests": [
+    {
+      "type": "customer_validation",
+      "asked_after_step": 3,
+      "assumed_response": "Simulated: cardholder states they did not make this purchase and still holds the card. Assumed because the graph evidence points to unauthorised use; no real response was available for this round. (most likely response under the evidence gathered so far, p=0.47; no real reply was available)"
+    }
+  ],
+  "next_best_actions": {
+    "initial": [
+      {
+        "action": "VERIFY_WITH_CUSTOMER",
+        "route": "auto",
+        "reason": "§5: ask the cardholder to validate the transaction before any action that would inconvenience them"
+      },
+      {
+        "action": "CREATE_CASE",
+        "route": "auto",
+        "reason": "3a: fraud probability 0.59 reaches the 0.30 case threshold"
+      },
+      {
+        "action": "ESCALATE_TO_ANALYST",
+        "route": "auto",
+        "reason": "R8: verdict is uncertain with $3,114.01 exposed and conflicting evidence"
+      }
+    ],
+    "final": [
+      {
+        "action": "BLOCK_CARD",
+        "route": "L1",
+        "reason": "R2: the cardholder denies the transaction"
+      },
+      {
+        "action": "CREATE_CASE",
+        "route": "auto",
+        "reason": "R2: unauthorised use confirmed by the cardholder"
+      }
+    ],
+    "what_changed": "Customer transaction validation returned customer denied, moving fraud probability from 0.59 to 0.94; the recommendation added BLOCK_CARD and dropped ESCALATE_TO_ANALYST, VERIFY_WITH_CUSTOMER."
+  },
+  "sar": {
+    "file": false,
+    "reason": "§3a: fraud is established but none of the filing conditions hold — exposure is under $1,000 ($149.97), the activity is confined to this card, and the pattern is a documented one. Case only, no report.",
+    "narrative": "",
+    "subjects": [],
+    "total_amount_usd": 0,
+    "activity_dates": []
+  },
+  "stop_reason": "A verification response settled the question outright (policy §6).",
+  "tool_calls": 25,
+  "tokens": 0,
+  "latency_s": 0.72,
+  "agent_record": {
+    "trigger": {
+      "type": "risk_score",
+      "text": "Autonomous monitor: model scored transaction 3497655 ($149.97, online) at 0.97.",
+      "flagged_txn_id": "3497655",
+      "card_id": "C01782-K2",
+      "customer_id": "C01782",
+      "opened_at": "2016-11-29 21:16:04",
+      "risk_score": 0.9700000286102295
+    },
+    "as_of": "2016-11-29 21:16:04",
+    "posterior": {
+      "none": 0.061,
+      "card_testing": 0.0003,
+      "card_not_present_fraud": 0.0845,
+      "card_not_present_new_device": 0.7901,
+      "out_of_region_use": 0.0023,
+      "account_takeover": 0.0617,
+      "undocumented": 0.0
+    },
+    "hypothesis_labels": {
+      "none": "Legitimate — unusual but genuine cardholder behaviour",
+      "card_testing": "Card testing — small probing authorisations before a larger hit",
+      "card_not_present_fraud": "Card-not-present fraud — card data used online without the instrument",
+      "card_not_present_new_device": "Card-not-present fraud from a device new to this account",
+      "out_of_region_use": "Out-of-region use — card-present activity in an unfamiliar billing region",
+      "account_takeover": "Account takeover — credentials compromised, mixed-channel abuse",
+      "undocumented": "Undocumented typology — coordinated abuse matching no known pattern"
+    },
+    "prior": {
+      "none": 0.62,
+      "card_testing": 0.002,
+      "card_not_present_fraud": 0.1192,
+      "card_not_present_new_device": 0.0947,
+      "out_of_region_use": 0.0621,
+      "account_takeover": 0.0988,
+      "undocumented": 0.0031
+    },
+    "rounds": 1,
+    "signals_fired": [
+      "device_new_on_account",
+      "region_unseen",
+      "mixed_channel_shift",
+      "amount_typical",
+      "fraud_proximity",
+      "risk_score_high"
+    ],
+    "evidence_with_impact": [
+      {
+        "claim": "Simulated: cardholder states they did not make this purchase and still holds the card. Assumed because the graph evidence points to unauthorised use; no real response was available for this round. (most likely response under the evidence gathered so far, p=0.47; no real reply was available)",
+        "source": "customer",
+        "ref": "evidence_request:1",
+        "entity_ids": [],
+        "delta_fraud_probability": 0.3495,
+        "reliability": 0.85,
+        "claim_type": "simulated_response"
+      },
+      {
+        "claim": "5 closely matching closed investigations were retrieved by fusing narrative similarity with shared-entity overlap; 5 of them were confirmed fraud, most often card_not_present_new_device",
+        "source": "graph",
+        "ref": "query:hybrid_case_recall(k=5, as_of=2016-11-29 21:16:04)",
+        "entity_ids": [
+          "CC-2556",
+          "CC-5217",
+          "CC-2925",
+          "CC-2625",
+          "CC-0932"
+        ],
+        "delta_fraud_probability": 0.1442,
+        "reliability": 0.8,
+        "claim_type": "observed_fact"
+      },
+      {
+        "claim": "Billing region 110.0 has 0 transactions in this card's established history; its home region is 143.0 (20 regions seen in total)",
+        "source": "graph",
+        "ref": "query:region_profile(card_id=C01782-K2, region=110.0)",
+        "entity_ids": [
+          "3497655",
+          "C01782-K2"
+        ],
+        "delta_fraud_probability": -0.1357,
+        "reliability": 1.0,
+        "claim_type": "derived_inference"
+      },
+      {
+        "claim": "Transaction came from device profile 'Windows | Windows 10 | edge 16.0 | 1920x1080' which the identity record marks 'New' for this account and which has no prior use on this card",
+        "source": "graph",
+        "ref": "query:device_first_use(card_id=C01782-K2, device_profile=...)",
+        "entity_ids": [
+          "3497655",
+          "Windows | Windows 10 | edge 16.0 | 1920x1080"
+        ],
+        "delta_fraud_probability": 0.0905,
+        "reliability": 1.0,
+        "claim_type": "derived_inference"
+      },
+      {
+        "claim": "Activity in the 72 hours before the alert mixes 1 online and 1 card-present transactions, shifting the online share by 0.28 against this card's own baseline",
+        "source": "graph",
+        "ref": "query:mixed_channel_probe(card_id=C01782-K2, window_hours=72)",
+        "entity_ids": [
+          "C01782-K2"
+        ],
+        "delta_fraud_probability": 0.0646,
+        "reliability": 1.0,
+        "claim_type": "derived_inference"
+      },
+      {
+        "claim": "71 confirmed-fraud closed cases sit within two hops of this card, device or customer (distance-decayed proximity 20.5)",
+        "source": "graph",
+        "ref": "query:fraud_proximity(entity_ids=..., max_hops=2)",
+        "entity_ids": [
+          "CC-0763",
+          "CC-3877",
+          "CC-4105",
+          "CC-0932",
+          "CC-1258",
+          "CC-2556",
+          "CC-2625",
+          "CC-2925",
+          "CC-5217",
+          "CC-5263"
+        ],
+        "delta_fraud_probability": 0.0508,
+        "reliability": 1.0,
+        "claim_type": "derived_inference"
+      },
+      {
+        "claim": "Flagged amount $149.97 sits inside this card's ordinary spending range (median $157.70, z=-0.41) over 96 prior transactions",
+        "source": "graph",
+        "ref": "query:card_baseline(card_id=C01782-K2)",
+        "entity_ids": [
+          "3497655",
+          "C01782-K2"
+        ],
+        "delta_fraud_probability": 0.0482,
+        "reliability": 1.0,
+        "claim_type": "derived_inference"
+      },
+      {
+        "claim": "Out-of-region use governs this case: Out-of-region use. Card-present purchases in a billing region the cardholder has no history in, while their normal activity continues at home. Several days of purchases in one new region is a trip, not a clone. Policy R2, R3.",
+        "source": "document",
+        "ref": "policy:PATTERN-out_of_region_use",
+        "entity_ids": [],
+        "claim_type": "policy_text"
+      },
+      {
+        "claim": "Card-not-present fraud governs this case: Card-not-present fraud. The number is used online without the card. Amounts and products that don't fit the cardholder's history, often in a burst of two to four within 48 hours. On its own, one unusual online purchase is ambiguous: verify.",
+        "source": "document",
+        "ref": "policy:PATTERN-card_not_present_fraud",
+        "entity_ids": [],
+        "claim_type": "policy_text"
+      }
+    ],
+    "evidence_requests_detail": [
+      {
+        "type": "customer_validation",
+        "asked_after_step": 3,
+        "assumed_response": "Simulated: cardholder states they did not make this purchase and still holds the card. Assumed because the graph evidence points to unauthorised use; no real response was available for this round. (most likely response under the evidence gathered so far, p=0.47; no real reply was available)",
+        "name": "Customer transaction validation",
+        "channel": "push/SMS (simulated)",
+        "question": "Did you make this purchase? Reply YES or NO.",
+        "expected_info_gain": 0.4225,
+        "cost": 3.0,
+        "outcome": "customer_denied",
+        "simulation_seed": 3849966856,
+        "simulated": true,
+        "p_fraud_before": 0.5894,
+        "p_fraud_after": 0.9389
+      }
+    ],
+    "voi_ranking": [
+      {
+        "type": "customer_validation",
+        "name": "Customer transaction validation",
+        "channel": "push/SMS (simulated)",
+        "expected_info_gain": 0.1333,
+        "cost": 3.0,
+        "info_per_unit_cost": 0.0444,
+        "permitted": false,
+        "blocked_by": "the cardholder has already answered this case",
+        "outcome_distribution": {
+          "customer_denied": 0.712,
+          "customer_confirmed": 0.108,
+          "customer_no_response": 0.18
+        }
+      },
+      {
+        "type": "step_up_auth",
+        "name": "Step-up authentication challenge",
+        "channel": "app/OTP (simulated)",
+        "expected_info_gain": 0.0132,
+        "cost": 5.0,
+        "info_per_unit_cost": 0.0026,
+        "permitted": true,
+        "blocked_by": "",
+        "outcome_distribution": {
+          "step_up_failed": 0.776,
+          "step_up_passed": 0.224
+        }
+      },
+      {
+        "type": "analyst_info",
+        "name": "Analyst query — prior relationship and ring context",
+        "channel": "internal analyst queue (simulated)",
+        "expected_info_gain": -0.0497,
+        "cost": 8.0,
+        "info_per_unit_cost": -0.0062,
+        "permitted": false,
+        "blocked_by": "no shared origin to ask an analyst about",
+        "outcome_distribution": {
+          "analyst_confirms_ring": 0.08,
+          "analyst_no_prior_relationship": 0.92
+        }
+      }
+    ],
+    "decisions": [
+      {
+        "decision_id": "AUTO-068-D01",
+        "step": 1,
+        "node": "case_opener",
+        "posterior_before": {
+          "none": 0.62,
+          "card_testing": 0.002,
+          "card_not_present_fraud": 0.1192,
+          "card_not_present_new_device": 0.0947,
+          "out_of_region_use": 0.0621,
+          "account_takeover": 0.0988,
+          "undocumented": 0.0031
+        },
+        "posterior_after": {
+          "none": 0.62,
+          "card_testing": 0.002,
+          "card_not_present_fraud": 0.1192,
+          "card_not_present_new_device": 0.0947,
+          "out_of_region_use": 0.0621,
+          "account_takeover": 0.0988,
+          "undocumented": 0.0031
+        },
+        "rationale": "Case opened from a risk_score trigger with the temporal cutoff fixed at 2016-11-29 21:16:04. Prior over hypotheses is conditioned on how the alert arrived, not on the bank model's score.",
+        "payload": {
+          "prior": {
+            "none": 0.62,
+            "card_testing": 0.002,
+            "card_not_present_fraud": 0.1192,
+            "card_not_present_new_device": 0.0947,
+            "out_of_region_use": 0.0621,
+            "account_takeover": 0.0988,
+            "undocumented": 0.0031
+          }
+        },
+        "prev_hash": "0000000000000000000000000000000000000000000000000000000000000000",
+        "hash": "d60c7d1aa795aa2710220c87303f0055696b0ecd2d385ff7924ce986eebfdd87"
+      },
+      {
+        "decision_id": "AUTO-068-D02",
+        "step": 2,
+        "node": "ledger_update",
+        "posterior_before": {
+          "none": 0.4758,
+          "card_testing": 0.0021,
+          "card_not_present_fraud": 0.1213,
+          "card_not_present_new_device": 0.1775,
+          "out_of_region_use": 0.0633,
+          "account_takeover": 0.1569,
+          "undocumented": 0.0031
+        },
+        "posterior_after": {
+          "none": 0.4106,
+          "card_testing": 0.0002,
+          "card_not_present_fraud": 0.0531,
+          "card_not_present_new_device": 0.496,
+          "out_of_region_use": 0.0014,
+          "account_takeover": 0.0387,
+          "undocumented": 0.0
+        },
+        "rationale": "Folded 25 measured observations into the posterior. Fraud probability moved from 0.524 to 0.589; leading hypothesis is card_not_present_new_device.",
+        "payload": {
+          "signals_fired": [
+            "device_new_on_account",
+            "region_unseen",
+            "mixed_channel_shift",
+            "amount_typical",
+            "fraud_proximity",
+            "risk_score_high"
+          ]
+        },
+        "prev_hash": "d60c7d1aa795aa2710220c87303f0055696b0ecd2d385ff7924ce986eebfdd87",
+        "hash": "0bb77eb136ca7c2f06ec1cdbd5168bac482c854feb056dbfe2e6284ab8ecce69"
+      },
+      {
+        "decision_id": "AUTO-068-D03",
+        "step": 3,
+        "node": "record_provisional",
+        "posterior_before": {
+          "none": 0.4106,
+          "card_testing": 0.0002,
+          "card_not_present_fraud": 0.0531,
+          "card_not_present_new_device": 0.496,
+          "out_of_region_use": 0.0014,
+          "account_takeover": 0.0387,
+          "undocumented": 0.0
+        },
+        "posterior_after": {
+          "none": 0.4106,
+          "card_testing": 0.0002,
+          "card_not_present_fraud": 0.0531,
+          "card_not_present_new_device": 0.496,
+          "out_of_region_use": 0.0014,
+          "account_takeover": 0.0387,
+          "undocumented": 0.0
+        },
+        "rationale": "Provisional recommendation recorded before any additional evidence was requested: VERIFY_WITH_CUSTOMER(auto), CREATE_CASE(auto), ESCALATE_TO_ANALYST(auto)",
+        "payload": {
+          "actions": [
+            {
+              "action": "VERIFY_WITH_CUSTOMER",
+              "route": "auto",
+              "reason": "§5: ask the cardholder to validate the transaction before any action that would inconvenience them"
+            },
+            {
+              "action": "CREATE_CASE",
+              "route": "auto",
+              "reason": "3a: fraud probability 0.59 reaches the 0.30 case threshold"
+            },
+            {
+              "action": "ESCALATE_TO_ANALYST",
+              "route": "auto",
+              "reason": "R8: verdict is uncertain with $3,114.01 exposed and conflicting evidence"
+            }
+          ],
+          "cited_rules": [
+            "R8",
+            "3a"
+          ]
+        },
+        "prev_hash": "0bb77eb136ca7c2f06ec1cdbd5168bac482c854feb056dbfe2e6284ab8ecce69",
+        "hash": "69c6d1bdfa608384170b6f83ff6e7ad47e78c5b967a49f108c4e02eff2594347"
+      },
+      {
+        "decision_id": "AUTO-068-D04",
+        "step": 4,
+        "node": "evidence_gap_resolver",
+        "posterior_before": {
+          "none": 0.4106,
+          "card_testing": 0.0002,
+          "card_not_present_fraud": 0.0531,
+          "card_not_present_new_device": 0.496,
+          "out_of_region_use": 0.0014,
+          "account_takeover": 0.0387,
+          "undocumented": 0.0
+        },
+        "posterior_after": {
+          "none": 0.061,
+          "card_testing": 0.0003,
+          "card_not_present_fraud": 0.0845,
+          "card_not_present_new_device": 0.7901,
+          "out_of_region_use": 0.0023,
+          "account_takeover": 0.0617,
+          "undocumented": 0.0
+        },
+        "rationale": "Requested Customer transaction validation via push/SMS (simulated); response DENIED. Fraud probability moved from 0.589 to 0.939.",
+        "payload": {
+          "request": {
+            "type": "customer_validation",
+            "asked_after_step": 3,
+            "assumed_response": "Simulated: cardholder states they did not make this purchase and still holds the card. Assumed because the graph evidence points to unauthorised use; no real response was available for this round. (most likely response under the evidence gathered so far, p=0.47; no real reply was available)",
+            "name": "Customer transaction validation",
+            "channel": "push/SMS (simulated)",
+            "question": "Did you make this purchase? Reply YES or NO.",
+            "expected_info_gain": 0.4225,
+            "cost": 3.0,
+            "outcome": "customer_denied",
+            "simulation_seed": 3849966856,
+            "simulated": true,
+            "p_fraud_before": 0.5894,
+            "p_fraud_after": 0.9389
+          },
+          "simulation_seed": 3849966856,
+          "global_seed": 4471
+        },
+        "prev_hash": "69c6d1bdfa608384170b6f83ff6e7ad47e78c5b967a49f108c4e02eff2594347",
+        "hash": "1d1cf17b7fb37c436519482d0987cada5cafd9ce0a899ebe0a34760241da99ea"
+      },
+      {
+        "decision_id": "AUTO-068-D05",
+        "step": 5,
+        "node": "action_recommender",
+        "posterior_before": {
+          "none": 0.061,
+          "card_testing": 0.0003,
+          "card_not_present_fraud": 0.0845,
+          "card_not_present_new_device": 0.7901,
+          "out_of_region_use": 0.0023,
+          "account_takeover": 0.0617,
+          "undocumented": 0.0
+        },
+        "posterior_after": {
+          "none": 0.061,
+          "card_testing": 0.0003,
+          "card_not_present_fraud": 0.0845,
+          "card_not_present_new_device": 0.7901,
+          "out_of_region_use": 0.0023,
+          "account_takeover": 0.0617,
+          "undocumented": 0.0
+        },
+        "rationale": "Final recommendation: BLOCK_CARD(L1), CREATE_CASE(auto). Verdict fraud, pattern card_not_present_new_device, exposure $149.97.",
+        "payload": {
+          "actions": [
+            {
+              "action": "BLOCK_CARD",
+              "route": "L1",
+              "reason": "R2: the cardholder denies the transaction"
+            },
+            {
+              "action": "CREATE_CASE",
+              "route": "auto",
+              "reason": "R2: unauthorised use confirmed by the cardholder"
+            }
+          ],
+          "cited_rules": [
+            "R2"
+          ],
+          "verdict": "fraud",
+          "pattern": "card_not_present_new_device"
+        },
+        "prev_hash": "1d1cf17b7fb37c436519482d0987cada5cafd9ce0a899ebe0a34760241da99ea",
+        "hash": "7a61b3861def3bcd48ffa113a19d1e2e4c45c12cec720fdf63f36de78143d13c"
+      }
+    ],
+    "audit_chain": {
+      "head": "7a61b3861def3bcd48ffa113a19d1e2e4c45c12cec720fdf63f36de78143d13c"
+    },
+    "cited_policy_rules": [
+      "3a",
+      "R2",
+      "R8"
+    ],
+    "policy_notes": [
+      "§3a: fraud is established but none of the filing conditions hold — exposure is under $1,000 ($149.97), the activity is confined to this card, and the pattern is a documented one. Case only, no report."
+    ],
+    "forbidden_actions": [
+      "BLOCK_ALL_CARDS",
+      "FILE_REPORT"
+    ],
+    "obligations": [],
+    "explanation": {
+      "evidence_used": "Simulated: cardholder states they did not make this purchase and still holds the card. Assumed because the graph evidence points to unauthorised use; no real response was available for this round. (most likely response under the evidence gathered so far, p=0.47; no real reply was available); 5 closely matching closed investigations were retrieved by fusing narrative similarity with shared-entity overlap; 5 of them were confirmed fraud, most often card_not_present_new_device; Billing region 110.0 has 0 transactions in this card's established history; its home region is 143.0 (20 regions seen in total); Transaction came from device profile 'Windows | Windows 10 | edge 16.0 | 1920x1080' which the identity record marks 'New' for this account and which has no prior use on this card; Activity in the 72 hours before the alert mixes 1 online and 1 card-present transactions, shifting the online share by 0.28 against this card's own baseline; 71 confirmed-fraud closed cases sit within two hops of this card, device or customer (distance-decayed proximity 20.5)",
+      "why_more_evidence_was_requested": "Belief sat at a level that supported no defensible action on its own, and Customer transaction validation carried the highest expected information per unit of customer friction (0.422 nats at cost 3), so it was requested before any blocking action was recommended, as policy R1 requires.",
+      "why_these_actions": "BLOCK_CARD (L1) — R2: the cardholder denies the transaction; CREATE_CASE (auto) — R2: unauthorised use confirmed by the cardholder",
+      "remaining_uncertainty": "card-not-present fraud from a device new to the account leads card-not-present fraud by 0.71; the two are not fully separated. Evidence conflicts: memory_recall against region_unseen; memory_recall against online_burst_2_to_4.",
+      "counterfactual": "What would change the decision: had step-up authentication challenge returned step up passed, fraud probability would move from 0.94 to 0.71; had step-up authentication challenge returned step up failed, fraud probability would move from 0.94 to 1.00.",
+      "stop_reason": "A verification response settled the question outright (policy §6)."
+    },
+    "prior_cases": [
+      {
+        "case_id": "CC-2556",
+        "outcome": "confirmed_fraud",
+        "pattern": "account_takeover",
+        "fused_score": 0.7457,
+        "similarity": 0.6576,
+        "shared_entities": 1,
+        "shared_with": [
+          "Windows | Windows 10 | edge 16.0 | 1920x1080"
+        ]
+      },
+      {
+        "case_id": "CC-5217",
+        "outcome": "confirmed_fraud",
+        "pattern": "card_not_present_new_device",
+        "fused_score": 0.742,
+        "similarity": 0.6508,
+        "shared_entities": 1,
+        "shared_with": [
+          "Windows | Windows 10 | edge 16.0 | 1920x1080"
+        ]
+      },
+      {
+        "case_id": "CC-2925",
+        "outcome": "confirmed_fraud",
+        "pattern": "card_not_present_new_device",
+        "fused_score": 0.741,
+        "similarity": 0.649,
+        "shared_entities": 1,
+        "shared_with": [
+          "Windows | Windows 10 | edge 16.0 | 1920x1080"
+        ]
+      },
+      {
+        "case_id": "CC-2625",
+        "outcome": "confirmed_fraud",
+        "pattern": "account_takeover",
+        "fused_score": 0.7392,
+        "similarity": 0.6458,
+        "shared_entities": 1,
+        "shared_with": [
+          "Windows | Windows 10 | edge 16.0 | 1920x1080"
+        ]
+      },
+      {
+        "case_id": "CC-0932",
+        "outcome": "confirmed_fraud",
+        "pattern": "card_not_present_new_device",
+        "fused_score": 0.7362,
+        "similarity": 0.6404,
+        "shared_entities": 1,
+        "shared_with": [
+          "Windows | Windows 10 | edge 16.0 | 1920x1080"
+        ]
+      }
+    ],
+    "executed_actions": [
+      {
+        "action": "CREATE_CASE",
+        "case_id": "AUTO-068",
+        "card_id": "C01782-K2",
+        "customer_id": "C01782",
+        "route": "auto",
+        "executed": true,
+        "simulated": true,
+        "reference": "SIM-F04B94689C",
+        "executed_at": "2026-09-24T22:36:58Z",
+        "effect": "Fraud case opened and written to the graph.",
+        "customer_impact": "none"
+      }
+    ],
+    "pending_approval": [
+      {
+        "action": "BLOCK_CARD",
+        "route": "L1",
+        "awaiting": "team lead"
+      }
+    ],
+    "episode_basis": "flagged transaction",
+    "open_questions": [
+      "The customer's reply was simulated (no real channel in this round); a real reply could still change the outcome.",
+      "Evidence conflicts: 6 items raised the fraud likelihood and 1 lowered it."
+    ],
+    "graph_transport": "local",
+    "backend": "local",
+    "llm": {
+      "available": false,
+      "provider": "google",
+      "model": "deterministic-templates",
+      "calls": 0,
+      "cached": 0
+    },
+    "trace": [
+      {
+        "node": "trigger_intake",
+        "at": 0.002,
+        "trigger_type": "risk_score",
+        "flagged_txn_id": "3497655",
+        "as_of": "2016-11-29 21:16:04"
+      },
+      {
+        "node": "case_opener",
+        "at": 0.003,
+        "graph_case_id": "CASE-AUTO-068",
+        "prior_fraud": 0.38
+      },
+      {
+        "node": "evidence_planner",
+        "at": 0.004,
+        "planned_tools": [
+          "card_baseline",
+          "episode_window",
+          "velocity_burst",
+          "device_first_use",
+          "device_fanout",
+          "region_profile",
+          "out_of_region_probe",
+          "card_testing_probe",
+          "threshold_structuring_probe",
+          "mixed_channel_probe",
+          "recurring_charge_probe",
+          "email_mismatch_profile",
+          "shared_entity_ring",
+          "fraud_proximity",
+          "behavioural_neighbours",
+          "hybrid_case_recall",
+          "policy_retrieve"
+        ],
+        "rationale": "",
+        "llm_used": false
+      },
+      {
+        "node": "graph_retrieval",
+        "at": 0.481,
+        "signals_fired": [
+          "device_new_on_account",
+          "region_unseen",
+          "mixed_channel_shift",
+          "amount_typical",
+          "fraud_proximity",
+          "risk_score_high"
+        ],
+        "tool_calls": 20,
+        "baseline_txns": 96
+      },
+      {
+        "node": "memory_recall",
+        "at": 0.575,
+        "recalled": [
+          "CC-2556",
+          "CC-5217",
+          "CC-2925",
+          "CC-2625",
+          "CC-0932"
+        ],
+        "fraud_share": 1.0,
+        "p_fraud_before": 0.3799,
+        "p_fraud_after": 0.5242
+      },
+      {
+        "node": "policy_grounding",
+        "at": 0.699,
+        "retrieved": [
+          "PATTERN-out_of_region_use",
+          "PATTERN-card_not_present_fraud",
+          "PATTERN-account_takeover",
+          "PATTERN-card_testing",
+          "PATTERN-card_not_present_new_device",
+          "POLICY-R2"
+        ]
+      },
+      {
+        "node": "ledger_update",
+        "at": 0.702,
+        "folded": 25,
+        "p_fraud": 0.5894,
+        "posterior": {
+          "none": 0.4106,
+          "card_testing": 0.0002,
+          "card_not_present_fraud": 0.0531,
+          "card_not_present_new_device": 0.496,
+          "out_of_region_use": 0.0014,
+          "account_takeover": 0.0387,
+          "undocumented": 0.0
+        },
+        "top": "card_not_present_new_device",
+        "movers": [
+          [
+            "memory_recall",
+            0.1442
+          ],
+          [
+            "region_unseen",
+            -0.1357
+          ],
+          [
+            "device_new_on_account",
+            0.0905
+          ],
+          [
+            "online_burst_2_to_4",
+            -0.0661
+          ],
+          [
+            "mixed_channel_shift",
+            0.0646
+          ]
+        ]
+      },
+      {
+        "node": "uncertainty_assessor",
+        "at": 0.705,
+        "p_fraud": 0.5894,
+        "margin": 0.0854,
+        "entropy": 1.0061,
+        "independent_evidence": 10,
+        "round": 0,
+        "best_voi": 0.1408,
+        "stop": {
+          "stop": false,
+          "code": "CONTINUE",
+          "reason": "Fraud probability 0.59 with a 0.09 margin is not yet decisive and informative evidence remains available."
+        },
+        "voi_ranking": [
+          {
+            "type": "customer_validation",
+            "name": "Customer transaction validation",
+            "channel": "push/SMS (simulated)",
+            "expected_info_gain": 0.4225,
+            "cost": 3.0,
+            "info_per_unit_cost": 0.1408,
+            "permitted": true,
+            "blocked_by": "",
+            "outcome_distribution": {
+              "customer_denied": 0.472,
+              "customer_confirmed": 0.348,
+              "customer_no_response": 0.18
+            }
+          },
+          {
+            "type": "step_up_auth",
+            "name": "Step-up authentication challenge",
+            "channel": "app/OTP (simulated)",
+            "expected_info_gain": 0.3113,
+            "cost": 5.0,
+            "info_per_unit_cost": 0.0623,
+            "permitted": true,
+            "blocked_by": "",
+            "outcome_distribution": {
+              "step_up_failed": 0.509,
+              "step_up_passed": 0.491
+            }
+          },
+          {
+            "type": "analyst_info",
+            "name": "Analyst query — prior relationship and ring context",
+            "channel": "internal analyst queue (simulated)",
+            "expected_info_gain": 0.0811,
+            "cost": 8.0,
+            "info_per_unit_cost": 0.0101,
+            "permitted": false,
+            "blocked_by": "no shared origin to ask an analyst about",
+            "outcome_distribution": {
+              "analyst_confirms_ring": 0.08,
+              "analyst_no_prior_relationship": 0.92
+            }
+          }
+        ]
+      },
+      {
+        "node": "record_provisional",
+        "at": 0.707,
+        "actions": [
+          {
+            "action": "VERIFY_WITH_CUSTOMER",
+            "route": "auto",
+            "reason": "§5: ask the cardholder to validate the transaction before any action that would inconvenience them"
+          },
+          {
+            "action": "CREATE_CASE",
+            "route": "auto",
+            "reason": "3a: fraud probability 0.59 reaches the 0.30 case threshold"
+          },
+          {
+            "action": "ESCALATE_TO_ANALYST",
+            "route": "auto",
+            "reason": "R8: verdict is uncertain with $3,114.01 exposed and conflicting evidence"
+          }
+        ],
+        "cited_rules": [
+          "R8",
+          "3a"
+        ],
+        "p_fraud": 0.5894
+      },
+      {
+        "node": "evidence_gap_resolver",
+        "at": 0.709,
+        "requested": "customer_validation",
+        "response": "DENIED",
+        "p_fraud_before": 0.5894,
+        "p_fraud_after": 0.939,
+        "round": 1
+      },
+      {
+        "node": "uncertainty_assessor",
+        "at": 0.711,
+        "p_fraud": 0.939,
+        "margin": 0.7056,
+        "entropy": 0.754,
+        "independent_evidence": 11,
+        "round": 1,
+        "best_voi": 0.0,
+        "stop": {
+          "stop": true,
+          "code": "VERIFICATION_SETTLED",
+          "reason": "A verification response settled the question outright (policy §6)."
+        },
+        "voi_ranking": [
+          {
+            "type": "customer_validation",
+            "name": "Customer transaction validation",
+            "channel": "push/SMS (simulated)",
+            "expected_info_gain": 0.1333,
+            "cost": 3.0,
+            "info_per_unit_cost": 0.0444,
+            "permitted": false,
+            "blocked_by": "the cardholder has already answered this case",
+            "outcome_distribution": {
+              "customer_denied": 0.712,
+              "customer_confirmed": 0.108,
+              "customer_no_response": 0.18
+            }
+          },
+          {
+            "type": "step_up_auth",
+            "name": "Step-up authentication challenge",
+            "channel": "app/OTP (simulated)",
+            "expected_info_gain": 0.0132,
+            "cost": 5.0,
+            "info_per_unit_cost": 0.0026,
+            "permitted": true,
+            "blocked_by": "",
+            "outcome_distribution": {
+              "step_up_failed": 0.776,
+              "step_up_passed": 0.224
+            }
+          },
+          {
+            "type": "analyst_info",
+            "name": "Analyst query — prior relationship and ring context",
+            "channel": "internal analyst queue (simulated)",
+            "expected_info_gain": -0.0497,
+            "cost": 8.0,
+            "info_per_unit_cost": -0.0062,
+            "permitted": false,
+            "blocked_by": "no shared origin to ask an analyst about",
+            "outcome_distribution": {
+              "analyst_confirms_ring": 0.08,
+              "analyst_no_prior_relationship": 0.92
+            }
+          }
+        ]
+      },
+      {
+        "node": "action_recommender",
+        "at": 0.718,
+        "verdict": "fraud",
+        "pattern": "card_not_present_new_device",
+        "exposure": 149.97,
+        "actions": [
+          {
+            "action": "BLOCK_CARD",
+            "route": "L1",
+            "reason": "R2: the cardholder denies the transaction"
+          },
+          {
+            "action": "CREATE_CASE",
+            "route": "auto",
+            "reason": "R2: unauthorised use confirmed by the cardholder"
+          }
+        ],
+        "cited_rules": [
+          "R2"
+        ]
+      },
+      {
+        "node": "permission_gate",
+        "at": 0.72,
+        "executed": [
+          "CREATE_CASE"
+        ],
+        "pending_approval": [
+          {
+            "action": "BLOCK_CARD",
+            "route": "L1",
+            "awaiting": "team lead"
+          }
+        ]
+      },
+      {
+        "node": "explainer",
+        "at": 0.723,
+        "summary_chars": 964,
+        "llm_used": false
+      },
+      {
+        "node": "case_writer",
+        "at": 0.727,
+        "graph_case_id": "CASE-AUTO-068",
+        "affected_txns": 1,
+        "sar_filed": false
+      },
+      {
+        "node": "memory_consolidator",
+        "at": 0.729,
+        "audit_chain_intact": true,
+        "decisions": 5
+      }
+    ],
+    "write_verification": {
+      "read_back": true,
+      "checks": {},
+      "mismatches": []
+    },
+    "framework": "langgraph"
+  },
+  "audit_chain": {
+    "intact": true,
+    "detail": "chain intact across 5 decisions",
+    "head": "7a61b3861def3bcd48ffa113a19d1e2e4c45c12cec720fdf63f36de78143d13c"
+  },
+  "found_by": "risk_score"
+}

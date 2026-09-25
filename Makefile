@@ -5,7 +5,7 @@
 
 PY ?= python
 
-.PHONY: all setup ingest calibrate cases backtest ui test verify clean graph-install
+.PHONY: all setup ingest calibrate quick-calibrate cases backtest monitor ui test stage verify clean graph-install graph-algorithms audit
 
 all: ingest calibrate cases
 
@@ -44,8 +44,14 @@ test:
 stage:             ## write the CSVs the TigerGraph loading jobs consume
 	$(PY) ingest/06_stage_graph_csv.py
 
-graph-install: stage   ## schema + vectors + load + queries + GDS into TigerGraph
+graph-install: stage   ## schema + vectors + load + queries + projections + GDS into TigerGraph
 	$(PY) graph/install.py --step all
+
+graph-algorithms:  ## re-run the GDS algorithms (WCC + PageRank) on the live graph
+	$(PY) graph/install.py --step algorithms
+
+audit:             ## check every answer file against the data and the policy
+	$(PY) eval/audit_answers.py
 
 verify:
 	$(PY) ingest/07_verify.py

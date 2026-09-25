@@ -344,6 +344,67 @@ real fraud desk does.
 
 ---
 
+## Two cases the first build got wrong, and how the data said so
+
+After the first complete build I read ten other teams' write-ups for the same
+brief. Two disagreements with my answers were worth checking against the data.
+
+**HHG-019 is a ring you can't see from one card.** It is a risk-model alert, and
+this history's risk-model alerts are almost always false alarms (900 of 900
+cleared). But ask what happened on *other* cards: the flagged purchase's device —
+a profile only three cards had ever used — bought $100.00 and $100.06 on two other
+cards that week. `peer_purchases.gsql` is that two-hop question. The gate matters
+more than the query: on a generic browser string ("chrome 66.0", 175 cards)
+ordinary shoppers with similar baskets would make a false ring, so it only fires
+on a rare device. Its weight is measured, not chosen. It fired on 31
+confirmed-fraud closed cases and no cleared ones, a likelihood ratio of 22.4,
+the strongest in the model.
+
+My first version of it made two mistakes, and the October holdout caught both.
+It treated the peer cards as *connected cards*, which switched on R6 and the
+filing rule — and filed 19 reports on holdout cases the bank itself never
+reported. And it folded in "did not fire" on every other case, which nudged
+each one away from card-not-present fraud and cost nineteen correct pattern
+calls. Both fixes are about what the evidence actually proves. Peers move the
+probability; they don't prove a shared origin, so R6 and the report still need
+one. And the absence of a rare hub is not a finding, so the signal is
+fired-only. HHG-019 now ends as fraud at 0.95, card blocked, and no report:
+$99.92 on one card with a documented pattern meets none of §3a's conditions.
+
+**HHG-018 is a subscription the cardholder forgot.** The disputed $39.08 charge
+appears on the card 21 times since July, every one to three weeks. R7 exists for
+exactly this. The first fix — "four identical charges over six weeks is a habit"
+— was wrong, and the October backtest said so: it fired on 15 disputes, 14 of
+them confirmed fraud, because a fraud episode repeats an amount too, in a burst
+(one had 21 charges 2.8 days apart). The rule that survives needs a quarter of
+steady history: at least eight charges over 90 days or more, a median gap of 5
+to 35 days. A burst can't fake that; HHG-018 clears it easily. The simulated
+reply follows R7's own premise — the cardholder recognises the charge — and the
+answer file says so.
+
+The lesson is the same one as the calibration trap: measure the change against
+data it could be wrong on, not only the case it was written for.
+
+---
+
+## Reaching the graph through MCP, and letting the algorithms speak
+
+The agent never holds a database connection of its own. It starts the official
+`tigergraph-mcp` server over stdio and calls `tigergraph__run_installed_query`,
+`get_node`, `add_node` and friends — 1,492 calls on the last full run, zero
+fallbacks. A gateway falls back to a direct connection per call, so a flaky
+tool call degrades one read, not a case; `GRAPH_STRICT=1` turns that into a hard
+failure when you'd rather know.
+
+TigerGraph's GDS library earns its place once you point it at the right
+subgraph. WCC over the full card co-occurrence network returns one 6,125-card
+blob, held together by popular browser strings. Over the anonymous-proxy slice
+(1,725 edges) it isolates the HHG-014 ring as a 54-card component, with the
+case's card second by PageRank. That result is all-time structure, so it is
+cited next to the time-bounded evidence and never weighed.
+
+---
+
 ## Things that turned out to be load-bearing
 
 **`card_id` isn't in the data.** `transactions.csv` has no card column, but the
@@ -362,6 +423,15 @@ an action.
 **Every decision is hash-chained.** Edit a recorded rationale after the fact and
 `verify()` tells you which link broke.
 
+**A write isn't a write until it reads back.** After writing the case subgraph
+the agent walks it with `case_chain` and checks the transactions, connected cards
+and SAR landed. `written_to_graph` means read back, not attempted.
+
+**The model may only cite what it was given.** Any LLM-written sentence that
+names a case, card or transaction absent from its brief is discarded for the
+template. Every evidence item says whether it is a graph fact, an inference, a
+model score, policy text or a simulated reply.
+
 ---
 
 ## What I'd do with more time
@@ -375,9 +445,9 @@ an action.
   activity would be better.
 - **Propagate the ring.** When U2 fires, every connected card is a case waiting
   to be opened. Right now they're monitored, not investigated.
-- **Differential-test the GSQL against the local mirror in CI.** The two backends
-  share their window matchers, but only a live instance can prove the traversals
-  agree.
+- **Time-slice the graph algorithms.** WCC and PageRank see all six months, so
+  they can only be context. A projection cut at each alert's `as_of` would let
+  them count as evidence.
 
 ---
 
@@ -387,6 +457,7 @@ an action.
 python -m pip install -r requirements.txt
 make ingest
 python benchmark/run_20.py
+python eval/audit_answers.py
 python ui/server.py
 ```
 

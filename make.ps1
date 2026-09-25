@@ -23,6 +23,8 @@ switch ($Target) {
   "stage"     { python ingest/06_stage_graph_csv.py }
   "graph-install" { python ingest/06_stage_graph_csv.py; python graph/install.py --step all }
   "verify"    { python ingest/07_verify.py }
-  "all"       { & $PSCommandPath ingest; & $PSCommandPath calibrate; & $PSCommandPath cases }
-  default     { Write-Host "targets: setup ingest calibrate quick-calibrate cases backtest monitor ui test stage graph-install verify all" }
+  "graph-algorithms" { python graph/install.py --step algorithms }
+  "audit"     { python eval/audit_answers.py }
+  "all"       { & $PSCommandPath ingest; & $PSCommandPath calibrate; & $PSCommandPath cases; & $PSCommandPath audit }
+  default     { Write-Host "targets: setup ingest calibrate quick-calibrate cases backtest monitor ui test stage graph-install graph-algorithms verify audit all" }
 }

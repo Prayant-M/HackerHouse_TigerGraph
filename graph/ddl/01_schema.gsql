@@ -66,7 +66,7 @@ CREATE SCHEMA_CHANGE JOB fraud_schema FOR GRAPH FraudGraph {
       dist1 DOUBLE,
       dist2 DOUBLE,
       device_status STRING,       /* id_15: New | Found | Unknown */
-      proxy STRING,               /* id_23: IP_PROXY:ANONYMOUS | TRANSPARENT | HIDDEN */
+      proxy_type STRING,          /* id_23: IP_PROXY:ANONYMOUS | TRANSPARENT | HIDDEN */
       match_status STRING,        /* id_34 */
       m_mismatch_count INT,
       amt_zscore_card DOUBLE,
@@ -138,7 +138,7 @@ CREATE SCHEMA_CHANGE JOB fraud_schema FOR GRAPH FraudGraph {
   ) WITH primary_id_as_attribute="true";
 
   /* ------------------------------------------- the agent's own case work -- */
-  ADD VERTEX Case (
+  ADD VERTEX FraudCase (
       PRIMARY_ID graph_case_id STRING,
       source_case_id STRING,      /* HHG-0xx from the case pack */
       status STRING,              /* open | closed_fraud | closed_legitimate | escalated */
@@ -204,7 +204,7 @@ CREATE SCHEMA_CHANGE JOB fraud_schema FOR GRAPH FraudGraph {
       channel STRING,
       question STRING,
       expected_info_gain DOUBLE,
-      cost DOUBLE,
+      friction_cost DOUBLE,
       asked_after_step INT,
       simulated BOOL,
       simulation_seed INT,
@@ -248,6 +248,12 @@ CREATE SCHEMA_CHANGE JOB fraud_schema FOR GRAPH FraudGraph {
       weight INT, shared_device STRING, first_ts DATETIME, last_ts DATETIME,
       via_anon_proxy BOOL);
 
+  /* The anonymous-proxy slice of CO_OCCURS_WITH. The full projection is one
+     6,125-card component held together by ordinary shared browser strings;
+     this slice is where rings live, so the GDS algorithms run on it
+     (graph/algorithms/05_graph_algorithms.gsql). */
+  ADD UNDIRECTED EDGE ANON_CO_OCCURS (FROM Card, TO Card, weight INT, shared_device STRING);
+
   /* -------------------------------------------------- memory subgraph ---- */
   ADD DIRECTED EDGE CC_INVOLVES  (FROM ClosedCase, TO Transaction) WITH REVERSE_EDGE="CC_INVOLVED_IN";
   ADD DIRECTED EDGE CC_ON_CARD   (FROM ClosedCase, TO Card)        WITH REVERSE_EDGE="CC_CARD_OF";
@@ -256,30 +262,30 @@ CREATE SCHEMA_CHANGE JOB fraud_schema FOR GRAPH FraudGraph {
   ADD DIRECTED EDGE CC_MATCHED_PATTERN (FROM ClosedCase, TO Pattern) WITH REVERSE_EDGE="PATTERN_SEEN_IN";
 
   /* ---------------------------------------------------- case subgraph ---- */
-  ADD DIRECTED EDGE INVESTIGATES_TXN    (FROM Case, TO Transaction)   WITH REVERSE_EDGE="TXN_IN_CASE";
-  ADD DIRECTED EDGE INVESTIGATES_CARD   (FROM Case, TO Card)          WITH REVERSE_EDGE="CARD_IN_CASE";
-  ADD DIRECTED EDGE INVESTIGATES_CUSTOMER (FROM Case, TO Customer)    WITH REVERSE_EDGE="CUSTOMER_IN_CASE";
-  ADD DIRECTED EDGE INVESTIGATES_DEVICE (FROM Case, TO DeviceProfile) WITH REVERSE_EDGE="DEVICE_IN_CASE";
-  ADD DIRECTED EDGE CONNECTED_CARD      (FROM Case, TO Card)          WITH REVERSE_EDGE="CARD_CONNECTED_TO_CASE";
-  ADD DIRECTED EDGE HAS_EVIDENCE        (FROM Case, TO Evidence)      WITH REVERSE_EDGE="EVIDENCE_OF";
+  ADD DIRECTED EDGE INVESTIGATES_TXN    (FROM FraudCase, TO Transaction)   WITH REVERSE_EDGE="TXN_IN_CASE";
+  ADD DIRECTED EDGE INVESTIGATES_CARD   (FROM FraudCase, TO Card)          WITH REVERSE_EDGE="CARD_IN_CASE";
+  ADD DIRECTED EDGE INVESTIGATES_CUSTOMER (FROM FraudCase, TO Customer)    WITH REVERSE_EDGE="CUSTOMER_IN_CASE";
+  ADD DIRECTED EDGE INVESTIGATES_DEVICE (FROM FraudCase, TO DeviceProfile) WITH REVERSE_EDGE="DEVICE_IN_CASE";
+  ADD DIRECTED EDGE CONNECTED_CARD      (FROM FraudCase, TO Card)          WITH REVERSE_EDGE="CARD_CONNECTED_TO_CASE";
+  ADD DIRECTED EDGE HAS_EVIDENCE        (FROM FraudCase, TO Evidence)      WITH REVERSE_EDGE="EVIDENCE_OF";
   ADD DIRECTED EDGE EVIDENCE_ON         (FROM Evidence, TO Transaction) WITH REVERSE_EDGE="EVIDENCE_ABOUT";
   ADD DIRECTED EDGE SUPPORTS            (FROM Evidence, TO Finding, weight DOUBLE) WITH REVERSE_EDGE="SUPPORTED_BY";
   ADD DIRECTED EDGE CONTRADICTS         (FROM Evidence, TO Finding, weight DOUBLE) WITH REVERSE_EDGE="CONTRADICTED_BY";
-  ADD DIRECTED EDGE PRODUCED_FINDING    (FROM Case, TO Finding)       WITH REVERSE_EDGE="FINDING_OF";
-  ADD DIRECTED EDGE DECIDED             (FROM Case, TO Decision)      WITH REVERSE_EDGE="DECISION_OF";
-  ADD DIRECTED EDGE RECOMMENDS          (FROM Case, TO RecommendedAction) WITH REVERSE_EDGE="RECOMMENDED_IN";
-  ADD DIRECTED EDGE REQUESTED           (FROM Case, TO EvidenceRequest)   WITH REVERSE_EDGE="REQUESTED_BY";
+  ADD DIRECTED EDGE PRODUCED_FINDING    (FROM FraudCase, TO Finding)       WITH REVERSE_EDGE="FINDING_OF";
+  ADD DIRECTED EDGE DECIDED             (FROM FraudCase, TO Decision)      WITH REVERSE_EDGE="DECISION_OF";
+  ADD DIRECTED EDGE RECOMMENDS          (FROM FraudCase, TO RecommendedAction) WITH REVERSE_EDGE="RECOMMENDED_IN";
+  ADD DIRECTED EDGE REQUESTED           (FROM FraudCase, TO EvidenceRequest)   WITH REVERSE_EDGE="REQUESTED_BY";
   ADD DIRECTED EDGE ANSWERED_BY         (FROM EvidenceRequest, TO Evidence) WITH REVERSE_EDGE="ANSWERS";
-  ADD DIRECTED EDGE MATCHED_PATTERN     (FROM Case, TO Pattern, match_score DOUBLE) WITH REVERSE_EDGE="PATTERN_MATCHED_BY";
-  ADD DIRECTED EDGE CITES_POLICY        (FROM Case, TO PolicyDoc)     WITH REVERSE_EDGE="POLICY_CITED_BY";
+  ADD DIRECTED EDGE MATCHED_PATTERN     (FROM FraudCase, TO Pattern, match_score DOUBLE) WITH REVERSE_EDGE="PATTERN_MATCHED_BY";
+  ADD DIRECTED EDGE CITES_POLICY        (FROM FraudCase, TO PolicyDoc)     WITH REVERSE_EDGE="POLICY_CITED_BY";
   ADD DIRECTED EDGE ACTION_CITES_POLICY (FROM RecommendedAction, TO PolicyDoc) WITH REVERSE_EDGE="POLICY_CITED_BY_ACTION";
-  ADD DIRECTED EDGE FILED               (FROM Case, TO SAR)           WITH REVERSE_EDGE="SAR_OF";
+  ADD DIRECTED EDGE FILED               (FROM FraudCase, TO SAR)           WITH REVERSE_EDGE="SAR_OF";
   ADD DIRECTED EDGE SAR_CITES_REGULATION (FROM SAR, TO PolicyDoc)     WITH REVERSE_EDGE="REGULATION_CITED_BY";
   ADD DIRECTED EDGE APPROVED_BY         (FROM RecommendedAction, TO Analyst, approved_at DATETIME, approved BOOL)
                                                                       WITH REVERSE_EDGE="APPROVED";
-  ADD DIRECTED EDGE RECALLED_CASE       (FROM Case, TO ClosedCase,
+  ADD DIRECTED EDGE RECALLED_CASE       (FROM FraudCase, TO ClosedCase,
       similarity DOUBLE, shared_entities INT, fused_score DOUBLE)     WITH REVERSE_EDGE="RECALLED_BY";
-  ADD UNDIRECTED EDGE SIMILAR_TO        (FROM Case, TO Case,
+  ADD UNDIRECTED EDGE SIMILAR_TO        (FROM FraudCase, TO FraudCase,
       cosine DOUBLE, shared_entities INT, computed_at DATETIME);
 }
 

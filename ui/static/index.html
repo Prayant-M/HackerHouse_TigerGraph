@@ -3,81 +3,308 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>Fraud Investigation Console</title>
+<title>Fraud Investigation Agent · TigerGraph</title>
+<meta name="description" content="An agent that investigates card-fraud alerts on TigerGraph, asks for evidence when it isn't sure, and explains every decision.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&family=Plus+Jakarta+Sans:wght@500;600;700;800&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="/static/styles.css">
 </head>
 <body>
-<header class="topbar">
-  <div class="brand">
-    <span class="mark"></span>
-    <div>
-      <h1>Agentic Fraud Investigation</h1>
-      <p id="health">connecting…</p>
+
+<a class="skip" href="#main">Skip to content</a>
+
+<!-- ─────────────────────────────────────────────────────────── nav ── -->
+<header class="nav" id="nav">
+  <div class="nav-inner">
+    <a class="logo" href="#/" aria-label="Home">
+      <span class="logo-mark" aria-hidden="true">
+        <svg viewBox="0 0 32 32"><circle cx="16" cy="16" r="5"/><circle cx="6" cy="8" r="3"/><circle cx="26" cy="9" r="3"/><circle cx="8" cy="25" r="3"/><circle cx="25" cy="24" r="3"/><path d="M16 16 6 8M16 16l10-7M16 16 8 25M16 16l9 8"/></svg>
+      </span>
+      <span class="logo-text">Fraud<span>Graph</span> Agent</span>
+    </a>
+
+    <nav class="nav-links" id="nav-links" aria-label="Primary">
+      <a href="#/" data-route="home">Home</a>
+      <a href="#/cases" data-route="cases">Cases</a>
+      <a href="#/scoreboard" data-route="scoreboard">Scoreboard</a>
+      <a href="#/approvals" data-route="approvals">Approvals <span class="badge" id="approval-count" hidden></span></a>
+      <a href="#/monitoring" data-route="monitoring">Monitoring</a>
+      <a href="#/insights" data-route="insights">Insights</a>
+    </nav>
+
+    <div class="nav-right">
+      <span class="status" id="status" title="Graph backend">
+        <span class="status-dot"></span><span class="status-text">Connecting…</span>
+      </span>
+      <button class="menu-btn" id="menu-btn" aria-label="Open menu" aria-expanded="false" aria-controls="nav-links">
+        <span></span><span></span><span></span>
+      </button>
     </div>
   </div>
-  <nav class="tabs" role="tablist">
-    <button class="tab active" data-view="inbox">Case inbox</button>
-    <button class="tab" data-view="approvals">Approval queue <span id="approval-count" class="pill"></span></button>
-    <button class="tab" data-view="calibration">Calibration</button>
-    <button class="tab" data-view="policy">Policy</button>
-  </nav>
 </header>
 
-<main>
-  <!-- ─────────────────────────────────────────────────────── inbox ── -->
-  <section id="view-inbox" class="view active">
-    <aside class="inbox">
-      <div class="inbox-head">
-        <h2>Alerts</h2>
-        <div class="filters">
-          <button class="chip active" data-filter="all">all</button>
-          <button class="chip" data-filter="fraud">fraud</button>
-          <button class="chip" data-filter="uncertain">uncertain</button>
-          <button class="chip" data-filter="legitimate">legitimate</button>
+<main id="main">
+
+  <!-- ═══════════════════════════════════════════════════════ HOME ══ -->
+  <section class="view" id="view-home" data-view="home">
+
+    <div class="hero">
+      <div class="blob b1"></div><div class="blob b2"></div><div class="blob b3"></div>
+      <div class="container hero-grid">
+        <div class="hero-copy">
+          <span class="eyebrow reveal">TigerGraph × Hacker House Goa 2026</span>
+          <h1 class="reveal">Fraud investigations that know when they <em>don't know enough.</em></h1>
+          <p class="lead reveal">An AI agent that works a card-fraud alert like an analyst would. It searches the transaction graph, recalls similar past cases, asks the customer a question only when it's worth it, and explains every decision it makes.</p>
+          <div class="hero-cta reveal">
+            <a class="btn btn-primary btn-lg" href="#/cases">Explore the 20 cases <span aria-hidden="true">→</span></a>
+            <a class="btn btn-ghost btn-lg" href="#how">How it works</a>
+          </div>
+          <ul class="hero-points reveal">
+            <li>Graph + vector search in one database</li>
+            <li>Agent reaches the graph through TigerGraph MCP</li>
+            <li>Humans approve every block and filing</li>
+            <li>Every decision is audited</li>
+          </ul>
+        </div>
+
+        <div class="hero-art reveal" aria-hidden="true">
+          <svg class="net" viewBox="0 0 460 400">
+            <defs>
+              <radialGradient id="g-core" cx="50%" cy="50%" r="50%">
+                <stop offset="0%" stop-color="#818cf8"/><stop offset="100%" stop-color="#4f46e5"/>
+              </radialGradient>
+            </defs>
+            <g class="edges">
+              <path d="M230 200 L110 90"/><path d="M230 200 L360 80"/><path d="M230 200 L390 230"/>
+              <path d="M230 200 L300 340"/><path d="M230 200 L120 320"/><path d="M230 200 L70 200"/>
+              <path d="M110 90 L60 40"/><path d="M360 80 L420 40"/><path d="M390 230 L440 300"/>
+              <path d="M120 320 L60 370"/><path d="M300 340 L380 380"/><path d="M70 200 L20 150"/>
+            </g>
+            <g class="nodes">
+              <circle class="n-card" cx="110" cy="90" r="11"/><circle class="n-txn" cx="360" cy="80" r="9"/>
+              <circle class="n-dev" cx="390" cy="230" r="12"/><circle class="n-card" cx="300" cy="340" r="10"/>
+              <circle class="n-txn" cx="120" cy="320" r="9"/><circle class="n-mem" cx="70" cy="200" r="10"/>
+              <circle class="n-dim" cx="60" cy="40" r="5"/><circle class="n-dim" cx="420" cy="40" r="5"/>
+              <circle class="n-dim" cx="440" cy="300" r="5"/><circle class="n-dim" cx="60" cy="370" r="5"/>
+              <circle class="n-dim" cx="380" cy="380" r="5"/><circle class="n-dim" cx="20" cy="150" r="5"/>
+              <circle class="pulse" cx="230" cy="200" r="30"/>
+              <circle cx="230" cy="200" r="30" fill="url(#g-core)"/>
+              <text x="230" y="205" text-anchor="middle">CASE</text>
+            </g>
+          </svg>
+          <div class="float-card fc1"><span class="fc-k">Fraud likelihood</span><span class="fc-v t-fraud">97%</span></div>
+          <div class="float-card fc2"><span class="fc-k">Pattern</span><span class="fc-v">Device ring · 19 cards</span></div>
+          <div class="float-card fc3"><span class="fc-k">Asked customer?</span><span class="fc-v t-legit">Only when worth it</span></div>
         </div>
       </div>
-      <ul id="case-list" class="case-list"></ul>
-    </aside>
+    </div>
 
-    <article id="detail" class="detail">
-      <div class="empty">Select a case to open the investigation record.</div>
-    </article>
+    <div class="container">
+      <div class="stats-strip reveal" id="home-stats">
+        <div class="stat-big"><span class="num" data-count="0">–</span><span class="lbl">Alerts investigated</span></div>
+        <div class="stat-big"><span class="num" data-count="0">–</span><span class="lbl">Confirmed as fraud</span></div>
+        <div class="stat-big"><span class="num" data-count="0">–</span><span class="lbl">Changed decision after evidence</span></div>
+        <div class="stat-big"><span class="num" data-count="0">–</span><span class="lbl">Regulatory reports (SARs)</span></div>
+        <div class="stat-big"><span class="num" data-count="0">–</span><span class="lbl">Transactions in the graph</span></div>
+      </div>
+    </div>
+
+    <section class="section" id="how">
+      <div class="container">
+        <div class="section-head reveal">
+          <span class="eyebrow">How it works</span>
+          <h2>From alert to explained decision in five steps</h2>
+          <p>The AI plans and writes the explanations. The decisions come from the graph and the bank's policy, in code the AI can't touch.</p>
+        </div>
+        <ol class="steps">
+          <li class="step reveal"><span class="step-ico">⚡</span><h3>Alert arrives</h3><p>From the bank's risk model, a customer saying "that wasn't me", or an analyst's question.</p></li>
+          <li class="step reveal"><span class="step-ico">🕸️</span><h3>Search the graph</h3><p>Cards, devices, regions and past behaviour, all capped at the alert's timestamp. No peeking into the future.</p></li>
+          <li class="step reveal"><span class="step-ico">🧠</span><h3>Recall past cases</h3><p>Finds similar closed investigations by meaning <em>and</em> by shared cards or devices, in one TigerGraph query.</p></li>
+          <li class="step reveal"><span class="step-ico">❓</span><h3>Ask only if worth it</h3><p>Unsure? It recommends a safe first step, then picks the question with the most information per unit of customer hassle.</p></li>
+          <li class="step reveal"><span class="step-ico">✅</span><h3>Decide & explain</h3><p>Final actions with the policy rule cited. Blocks and filings wait for a human to approve.</p></li>
+        </ol>
+      </div>
+    </section>
+
+    <section class="section section-tint">
+      <div class="container">
+        <div class="section-head reveal">
+          <span class="eyebrow">Start here</span>
+          <h2>Three cases that show what it can do</h2>
+        </div>
+        <div class="feature-cases" id="featured"></div>
+      </div>
+    </section>
+
+    <section class="section">
+      <div class="container">
+        <div class="section-head reveal">
+          <span class="eyebrow">Why TigerGraph</span>
+          <h2>Some fraud only exists as a shape in the graph</h2>
+        </div>
+        <div class="why-grid">
+          <div class="why-card reveal"><div class="why-ico">🔗</div><h3>Hybrid memory in one query</h3><p>Vector search over 5,565 past case narratives, fused with a traversal to the cases that touched the same cards and devices, in a single GSQL query.</p></div>
+          <div class="why-card reveal"><div class="why-ico">🧮</div><h3>Graph algorithms find the ring</h3><p>WCC and PageRank from TigerGraph's GDS library run on the anonymous-proxy slice of the card network. The HHG-014 ring is its own 54-card component; ordinary cards stand alone.</p></div>
+          <div class="why-card reveal"><div class="why-ico">🧩</div><h3>Every case becomes part of the graph</h3><p>Each investigation is written back as a <code>FraudCase</code> linked to its evidence, decisions and actions, so the next analyst can find it.</p></div>
+          <div class="why-card reveal"><div class="why-ico">🛡️</div><h3>Guardrails the AI can't argue past</h3><p>Probabilities, actions and approval routes come from deterministic code. A test fails the build if that code ever imports an AI model.</p></div>
+        </div>
+        <div class="cta-band reveal">
+          <div><h3>See the reasoning behind every call</h3><p>Open any case to see the evidence, the graph, and exactly why the agent stopped.</p></div>
+          <a class="btn btn-primary btn-lg" href="#/cases">Open the case inbox <span aria-hidden="true">→</span></a>
+        </div>
+      </div>
+    </section>
+
+    <footer class="footer">
+      <div class="container footer-inner">
+        <span>FraudGraph Agent · built on TigerGraph Savanna + TigerVector</span>
+        <span class="muted" id="footer-backend"></span>
+      </div>
+    </footer>
   </section>
 
-  <!-- ────────────────────────────────────────────────── approvals ── -->
-  <section id="view-approvals" class="view">
-    <div class="panel wide">
-      <h2>Actions awaiting human approval</h2>
-      <p class="note">The agent executes only <code>auto</code>-routed actions. Everything
-        here was recommended with its route stated and is waiting on a person. A decision
-        writes an <code>APPROVED_BY</code> edge onto the case — including a rejection, which
-        is the most useful signal the memory layer gets.</p>
-      <div id="approval-list"></div>
+  <!-- ══════════════════════════════════════════════════════ CASES ══ -->
+  <section class="view" id="view-cases" data-view="cases">
+    <div class="container page">
+      <div class="page-head">
+        <div>
+          <h1>Case inbox</h1>
+          <p class="muted">20 alerts, each fully investigated. Pick one to see how the agent reached its decision.</p>
+        </div>
+      </div>
+
+      <div class="toolbar" role="search">
+        <label class="search">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
+          <input id="q" type="search" placeholder="Search case id, card, pattern…" aria-label="Search cases">
+        </label>
+        <label class="select"><span>Verdict</span>
+          <select id="f-verdict">
+            <option value="all">All verdicts</option><option value="fraud">Fraud</option>
+            <option value="uncertain">Uncertain</option><option value="legitimate">Legitimate</option>
+          </select></label>
+        <label class="select"><span>Trigger</span>
+          <select id="f-trigger">
+            <option value="all">All triggers</option><option value="risk_score">Risk-model alert</option>
+            <option value="customer_report">Customer report</option><option value="analyst_request">Analyst request</option>
+          </select></label>
+        <label class="select"><span>Sort</span>
+          <select id="f-sort">
+            <option value="id">Case number</option><option value="p">Fraud likelihood ↓</option>
+            <option value="exp">Money at risk ↓</option>
+          </select></label>
+        <div class="toggles">
+          <button class="toggle" id="t-revised" aria-pressed="false">Changed decision</button>
+          <button class="toggle" id="t-sar" aria-pressed="false">SAR filed</button>
+        </div>
+      </div>
+
+      <div class="cases-layout" id="cases-layout">
+        <aside class="case-list-wrap">
+          <div class="list-meta" id="list-meta"></div>
+          <ul class="case-list" id="case-list" aria-label="Cases"></ul>
+        </aside>
+        <article class="case-detail" id="detail" aria-live="polite">
+          <div class="empty-state">
+            <div class="empty-ico">🔎</div>
+            <h3>Select a case</h3>
+            <p>Choose an alert on the left to open its investigation.</p>
+          </div>
+        </article>
+      </div>
     </div>
   </section>
 
-  <!-- ──────────────────────────────────────────────── calibration ── -->
-  <section id="view-calibration" class="view">
-    <div class="panel wide">
-      <h2>Measured likelihood ratios</h2>
-      <p class="note">Every closed investigation replayed through the same extractor the agent
-        uses, under its own <code>as_of</code>. These are measured from outcomes, not chosen.</p>
-      <div id="calibration-head" class="stat-row"></div>
-      <div id="calibration-table"></div>
+  <!-- ═════════════════════════════════════════════════ SCOREBOARD ══ -->
+  <section class="view" id="view-scoreboard" data-view="scoreboard">
+    <div class="container page">
+      <div class="page-head">
+        <div>
+          <h1>Scoreboard</h1>
+          <p class="muted">All 20 decisions side by side, each checked against the raw data and the bank's policy.</p>
+        </div>
+        <div class="head-actions">
+          <label class="select"><span>Verdict</span>
+            <select id="sb-verdict"><option value="all">All</option><option value="fraud">Fraud</option>
+              <option value="uncertain">Uncertain</option><option value="legitimate">Legitimate</option></select></label>
+          <button class="btn btn-ghost" id="sb-csv">⬇ CSV</button>
+        </div>
+      </div>
+      <div class="kpis" id="sb-kpis"></div>
+      <div class="card" style="padding:0">
+        <div class="table-wrap sb-wrap"><table class="sb" id="sb-table"></table></div>
+      </div>
+      <p class="muted small" style="margin-top:10px">Audit = <code>eval/audit_answers.py</code>: data integrity, approval routes (§2), case and SAR rules (§3a), exposure (§4), R1, R2, R3, R7, stopping (§6) and graph read-back. There is no answer key, so this proves consistency, not correctness.</p>
     </div>
   </section>
 
-  <!-- ───────────────────────────────────────────────────── policy ── -->
-  <section id="view-policy" class="view">
-    <div class="panel wide">
-      <h2>Compiled policy</h2>
-      <p class="note">The bank's fraud policy as executable rules. The agent may only choose
-        from the actions these rules permit; anything else is dropped before it reaches an
-        answer file.</p>
-      <div id="policy-list"></div>
+  <!-- ═════════════════════════════════════════════════ MONITORING ══ -->
+  <section class="view" id="view-monitoring" data-view="monitoring">
+    <div class="container page">
+      <div class="page-head">
+        <div>
+          <h1>Proactive monitoring</h1>
+          <p class="muted">Alerts nobody raised. The agent swept November–December on its own and investigated what it found, end to end, under the same policy.</p>
+        </div>
+        <label class="select"><span>Found by</span>
+          <select id="mon-source"><option value="all">Every sweep</option></select></label>
+      </div>
+      <div class="source-grid" id="mon-sources"></div>
+      <div class="approval-list" id="mon-list"></div>
     </div>
   </section>
+
+  <!-- ══════════════════════════════════════════════════ APPROVALS ══ -->
+  <section class="view" id="view-approvals" data-view="approvals">
+    <div class="container page">
+      <div class="page-head">
+        <div>
+          <h1>Approval queue</h1>
+          <p class="muted">The agent carries out low-risk actions itself. Blocking a card or filing a regulatory report waits here for a person.</p>
+        </div>
+        <label class="select"><span>Show</span>
+          <select id="f-approval">
+            <option value="pending">Waiting for approval</option><option value="decided">Already decided</option><option value="all">Everything</option>
+          </select></label>
+      </div>
+      <div class="approval-summary" id="approval-summary"></div>
+      <div class="approval-list" id="approval-list"></div>
+    </div>
+  </section>
+
+  <!-- ═══════════════════════════════════════════════════ INSIGHTS ══ -->
+  <section class="view" id="view-insights" data-view="insights">
+    <div class="container page">
+      <div class="page-head">
+        <div>
+          <h1>Insights</h1>
+          <p class="muted">How the agent was calibrated, and the bank policy it has to follow.</p>
+        </div>
+      </div>
+      <div class="seg" role="tablist" id="insight-tabs">
+        <button role="tab" class="active" data-tab="calibration" aria-selected="true">Calibration</button>
+        <button role="tab" data-tab="policy" aria-selected="false">Bank policy</button>
+      </div>
+      <div class="insight-pane" id="pane-calibration"></div>
+      <div class="insight-pane" id="pane-policy" hidden></div>
+    </div>
+  </section>
+
 </main>
+
+<!-- live re-run drawer -->
+<div class="drawer-backdrop" id="drawer-backdrop" hidden></div>
+<aside class="drawer" id="drawer" aria-hidden="true" aria-label="Live investigation">
+  <div class="drawer-head">
+    <div><span class="eyebrow">Live re-run</span><h3 id="drawer-title">Investigating…</h3></div>
+    <button class="icon-btn" id="drawer-close" aria-label="Close">✕</button>
+  </div>
+  <div class="drawer-gauge" id="drawer-gauge"></div>
+  <ol class="live-steps" id="live-steps"></ol>
+</aside>
+
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
 
 <script src="/static/app.js"></script>
 </body>

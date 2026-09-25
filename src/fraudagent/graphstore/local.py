@@ -22,6 +22,7 @@ import pandas as pd
 
 from ..config import PATHS
 from ..memory.embeddings import Embedder, cosine_top_k
+from .matchers import recurrence_from_rows
 from .base import GraphStore, RecalledCase, TxnRow
 
 ROUND_THRESHOLDS = (100.0, 200.0, 250.0, 500.0, 1000.0, 2000.0, 5000.0)
@@ -385,6 +386,22 @@ class LocalGraphStore(GraphStore):
                         best = cand
         return {"card_id": card_id, **best}
 
+    def peer_purchases(self, device_profile: str, card_id: str, amount: float,
+                       as_of: datetime, window_days: int = 7) -> dict[str, Any]:
+        """Mirror of graph/queries/peer_purchases.gsql."""
+        self._count()
+        idx = self.ds.device_rows.get(device_profile) if device_profile else None
+        if idx is None or not len(idx):
+            return {"peers": [], "n_peer_cards": 0}
+        df = self.ds.tx.iloc[idx]
+        tol = max(2.0, 0.05 * abs(amount))
+        hit = df[(df["ts"] >= as_of - timedelta(days=window_days)) & (df["ts"] <= as_of)
+                 & (df["card_id"] != card_id) & ((df["amount"] - amount).abs() <= tol)]
+        hit = hit.sort_values("ts").head(50)
+        peers = [{"txn_id": str(r.txn_id), "card_id": str(r.card_id), "amount": float(r.amount),
+                  "ts": str(r.ts)[:19], "channel": str(r.channel)} for r in hit.itertuples()]
+        return {"peers": peers, "n_peer_cards": len({p["card_id"] for p in peers})}
+
     def device_fanout(self, device_profile: str, as_of: datetime,
                       window_days: int = 30) -> dict[str, Any]:
         self._count()
@@ -538,29 +555,17 @@ class LocalGraphStore(GraphStore):
     def recurring_charge_probe(self, card_id: str, as_of: datetime, amount: float,
                                product_cd: str,
                                baseline_cutoff: datetime | None = None) -> dict[str, Any]:
-        """Policy R7. Same merchant category, same amount, monthly cadence."""
+        """Policy R7 — the cadence rule lives in matchers.recurrence_from_rows,
+        shared with the TigerGraph backend."""
         self._count()
         df = self._card_slice(card_id, baseline_cutoff or as_of)
         # A subscription bills the *same* amount, not a similar one. Loose
         # tolerance turns every busy card into a false recurrence.
         same = df[(df["product_cd"] == product_cd)
                   & ((df["amount"] - amount).abs() <= 0.011)].sort_values("ts")
-        gaps: list[float] = []
-        if len(same) > 1:
-            gaps = [round(float(g), 1) for g in
-                    same["ts"].diff().dropna().dt.total_seconds() / 86400.0]
-        monthly = [g for g in gaps if 26.0 <= g <= 35.0]
-        n_prior = int(max(len(same) - 1, 0))
-        return {
-            "card_id": card_id,
-            "amount": amount,
-            "n_prior_same_amount": n_prior,
-            "gaps_days": gaps[-6:],
-            "n_monthly_gaps": len(monthly),
-            "recurring": bool(n_prior >= 2 and len(monthly) >= 2),
-            "near_recurring": bool(n_prior >= 1 and len(monthly) >= 1),
-            "matched_txn_ids": same["txn_id"].tolist()[-6:],
-        }
+        rows = [{"ts": r.ts.to_pydatetime(), "txn_id": str(r.txn_id)}
+                for r in same.itertuples()]
+        return {"card_id": card_id, "amount": amount, **recurrence_from_rows(rows)}
 
     def episode_window(self, card_id: str, as_of: datetime,
                        window_hours: float = 72.0) -> dict[str, Any]:

@@ -17,12 +17,22 @@ Endpoints:
     POST /api/approvals/{case}/{n}    approve or reject one, writing the edge
     GET  /api/calibration             the measured likelihood-ratio table
     GET  /api/policy                  the compiled policy rules with clause text
+    GET  /api/audit                   eval/audit_answers.py over the answer files
+    GET  /api/autonomous              alerts the agent raised itself (benchmark/monitor.py)
+    GET  /api/autonomous/{case_id}    one of those investigations in full
+
+Read-only mode (CONSOLE_READONLY=1) is for public hosting: it serves the
+answer files and a snapshot of the graph health and audit taken from the last
+live run, needs no TigerGraph credentials, no LLM key and none of the staged
+data, and refuses live re-runs. Approvals are kept in memory and never written
+to a graph. `python deploy/build_space.py` assembles such a bundle.
 """
 
 from __future__ import annotations
 
 import asyncio
 import json
+import os
 import sys
 import threading
 import time
@@ -53,6 +63,8 @@ from fraudagent.graphstore import get_store  # noqa: E402
 from fraudagent.mcp_servers.simulated_actions import read_log  # noqa: E402
 
 STATIC = Path(__file__).parent / "static"
+SNAPSHOT = Path(__file__).parent / "snapshot"
+READONLY = os.environ.get("CONSOLE_READONLY", "").strip().lower() in {"1", "true", "yes"}
 app = FastAPI(title="TigerGraph Agentic Fraud Investigation — Analyst Console")
 
 _approvals: dict[str, dict[str, Any]] = {}
@@ -71,10 +83,22 @@ def _load(case_id: str) -> dict[str, Any]:
     return json.loads(path.read_text(encoding="utf-8"))
 
 
+def _snapshot(name: str) -> dict[str, Any] | None:
+    path = SNAPSHOT / f"{name}.json"
+    return json.loads(path.read_text(encoding="utf-8")) if path.exists() else None
+
+
 @app.get("/api/health")
 def health() -> dict[str, Any]:
+    if READONLY:
+        snap = _snapshot("health") or {}
+        return {"ok": True, "readonly": True,
+                "graph": {**snap.get("graph", {}), "backend": "snapshot"},
+                "captured_at": snap.get("captured_at"),
+                "answer_files": len(_case_files()),
+                "calibration": PATHS.lr_table_json.exists()}
     store = get_store()
-    return {"ok": True, "graph": store.health(),
+    return {"ok": True, "readonly": False, "graph": store.health(),
             "answer_files": len(_case_files()),
             "calibration": PATHS.lr_table_json.exists(),
             "cases_dir": str(PATHS.cases_out)}
@@ -176,6 +200,10 @@ async def investigate(case_id: str) -> StreamingResponse:
     posterior moves on screen, the provisional recommendation lands before the
     evidence request goes out, and the revision arrives after it.
     """
+    if READONLY:
+        raise HTTPException(403, "Live re-runs are disabled on this read-only deployment. "
+                                 "Clone the repository and run `python ui/server.py` "
+                                 "to watch the agent investigate against TigerGraph.")
     pack = pd.read_csv(PATHS.case_pack_csv)
     pack["opened_at"] = pd.to_datetime(pack["opened_at"])
     row = pack[pack["case_id"] == case_id]
@@ -266,15 +294,18 @@ def decide(case_id: str, index: int, payload: dict[str, Any]) -> dict[str, Any]:
     with _lock:
         _approvals[f"{case_id}:{index}"] = record
 
+    if READONLY:
+        record["graph_write"] = "skipped: read-only deployment"
+        return record
     store = get_store()
     if getattr(store, "backend", "") == "tigergraph":
         try:                                               # pragma: no cover
             d = _load(case_id)
             aid = f"{d['case']['graph_case_id']}-FIN-{index + 1:02d}"
-            store.conn.upsertVertex("Analyst", analyst,
+            store.graph.upsertVertex("Analyst", analyst,
                                     {"role": d["next_best_actions"]["final"][index]["route"],
                                      "approval_ceiling": 0.0})
-            store.conn.upsertEdge("RecommendedAction", aid, "APPROVED_BY",
+            store.graph.upsertEdge("RecommendedAction", aid, "APPROVED_BY",
                                   "Analyst", analyst,
                                   {"approved": approved, "approved_at": record["at"]})
         except Exception as exc:
@@ -305,6 +336,53 @@ def policy() -> list[dict[str, Any]]:
     return [{"rule": k, "text": v} for k, v in sorted(clause_text().items())]
 
 
+_audit_cache: dict[str, Any] = {}
+
+
+@app.get("/api/audit")
+def answer_audit() -> dict[str, Any]:
+    """The policy and data audit over the answer files, cached until they change."""
+    if READONLY and (snap := _snapshot("audit")) is not None:
+        return snap
+    files = _case_files()
+    stamp = str(max((p.stat().st_mtime for p in files), default=0)) + str(len(files))
+    if _audit_cache.get("stamp") != stamp:
+        sys.path.insert(0, str(ROOT / "eval"))
+        from audit_answers import audit  # noqa: WPS433 - local tool, imported lazily
+        rows, total = audit(PATHS.cases_out)
+        _audit_cache.update(stamp=stamp, data={"rows": rows, "issues": total})
+    return _audit_cache["data"]
+
+
+AUTONOMOUS = ROOT / "benchmark" / "autonomous"
+
+
+@app.get("/api/autonomous")
+def autonomous() -> list[dict[str, Any]]:
+    """Alerts nobody raised: the agent's own sweep of the exam period."""
+    out = []
+    for p in sorted(AUTONOMOUS.glob("AUTO-*.json")):
+        d = json.loads(p.read_text(encoding="utf-8"))
+        c = d["case"]
+        out.append({"case_id": d["case_id"], "found_by": d.get("found_by", ""),
+                    "verdict": c["verdict"], "pattern": c["pattern"],
+                    "fraud_probability": c["fraud_probability"],
+                    "exposure_usd": c["exposure_usd"], "sar": d["sar"]["file"],
+                    "n_connected": len(c["connected_card_ids"]),
+                    "flagged_txn_id": d.get("agent_record", {}).get("trigger", {}).get("flagged_txn_id", ""),
+                    "summary": c["summary"],
+                    "final": [a["action"] for a in d["next_best_actions"]["final"]]})
+    return out
+
+
+@app.get("/api/autonomous/{case_id}")
+def autonomous_detail(case_id: str) -> dict[str, Any]:
+    path = AUTONOMOUS / f"{case_id}.json"
+    if not path.exists():
+        raise HTTPException(404, f"{case_id} not found")
+    return json.loads(path.read_text(encoding="utf-8"))
+
+
 @app.get("/")
 def index() -> FileResponse:
     return FileResponse(STATIC / "index.html")
@@ -315,5 +393,7 @@ if STATIC.exists():
 
 
 if __name__ == "__main__":
-    print("Analyst console → http://127.0.0.1:8080")
-    uvicorn.run(app, host="127.0.0.1", port=8080, log_level="warning")
+    host = os.environ.get("HOST", "127.0.0.1")
+    port = int(os.environ.get("PORT", "8080"))
+    print(f"Analyst console → http://{host}:{port}" + ("  (read-only)" if READONLY else ""))
+    uvicorn.run(app, host=host, port=port, log_level="warning")

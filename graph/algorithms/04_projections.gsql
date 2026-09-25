@@ -43,12 +43,12 @@ FOR GRAPH FraudGraph SYNTAX v2 {
   devices = {DeviceProfile.*};
   devices = SELECT d FROM devices:d WHERE d.n_cards > 1 AND d.n_cards <= max_device_cards;
 
-  touched = SELECT d FROM devices:d -(DEVICE_USED_IN:e)- Transaction:t -(MADE_WITH:e2)- Card:c
+  touched = SELECT d FROM devices:d -(DEVICE_USED_IN>:e)- Transaction:t -(MADE_WITH>:e2)- Card:c
             ACCUM
               d.@cards += c,
               d.@first_ts += t.ts,
               d.@last_ts  += t.ts,
-              CASE WHEN t.proxy LIKE "%ANONYMOUS%" OR t.proxy LIKE "%HIDDEN%"
+              CASE WHEN t.proxy_type LIKE "%ANONYMOUS%" OR t.proxy_type LIKE "%HIDDEN%"
                    THEN d.@anon_cards += c END;
 
   linked = SELECT d FROM touched:d
@@ -67,22 +67,24 @@ FOR GRAPH FraudGraph SYNTAX v2 {
 }
 
 /* --------------------------------------------------------------------------
-   Communities and hubs over the projection, materialised onto Card.
+   The anonymous-proxy slice: CO_OCCURS_WITH edges where both cards reached the
+   shared device through an anonymising proxy. Input to the GDS algorithms.
    -------------------------------------------------------------------------- */
-RUN QUERY tg_wcc(
-  ["Card"], ["CO_OCCURS_WITH"],
-  /* print_results */ FALSE, /* result_attribute */ "community_id",
-  /* file_path */ "", /* maximum_iteration */ 20)
+CREATE OR REPLACE QUERY build_anon_projection() FOR GRAPH FraudGraph SYNTAX v2 {
+  SumAccum<INT> @@n;
+  cards = {Card.*};
+  linked = SELECT b FROM cards:a -(CO_OCCURS_WITH:e)- Card:b
+           WHERE e.via_anon_proxy AND getvid(a) < getvid(b)
+           ACCUM INSERT INTO ANON_CO_OCCURS VALUES (a, b, e.weight, e.shared_device),
+                 @@n += 1;
+  PRINT @@n AS anon_edges;
+}
 
-RUN QUERY tg_pagerank(
-  ["Card"], ["CO_OCCURS_WITH"],
-  /* max_change */ 0.001, /* max_iter */ 25, /* damping */ 0.85,
-  /* top_k */ 100, /* print_accum */ FALSE,
-  /* result_attribute */ "hub_rank", /* file_path */ "", /* display_edges */ FALSE)
-
-RUN QUERY tg_louvain(["Card"], ["CO_OCCURS_WITH"], 10, 1, 1, "", FALSE, FALSE)
-
-RUN QUERY tg_kcore(["Card"], ["CO_OCCURS_WITH"], 3, 1000, "", FALSE, FALSE)
+/* --------------------------------------------------------------------------
+   Communities and hubs (Card.community_id, Card.hub_rank) come from the GDS
+   library's WCC and PageRank in 05_graph_algorithms.gsql, run after the two
+   projections above are built.
+   -------------------------------------------------------------------------- */
 
 /* --------------------------------------------------------------------------
    A ring, in the sense policy R6 means it: a connected component holding more
@@ -98,7 +100,7 @@ FOR GRAPH FraudGraph SYNTAX v2 {
           WHERE c.community_id != 0
           ACCUM @@component_cards += (c.community_id -> c.card_id);
 
-  fraud = SELECT cc FROM cards:c -(CC_CARD_OF:e)- ClosedCase:cc
+  fraud = SELECT cc FROM cards:c -(CC_CARD_OF>:e)- ClosedCase:cc
           WHERE cc.outcome == "confirmed_fraud" AND cc.opened_at < as_of
           ACCUM @@component_fraud_cases += (c.community_id -> 1);
 

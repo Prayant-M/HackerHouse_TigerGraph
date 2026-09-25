@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+import os
+
 from ..config import graph_backend
 from .base import GraphStore, RecalledCase, TxnRow
 
@@ -23,6 +25,10 @@ def get_store(backend: str | None = None) -> GraphStore:
 
             store: GraphStore = TigerGraphStore()
         except Exception as exc:  # pragma: no cover - depends on deployment
+            # Fail closed on request: a demo should not present mirror results as
+            # graph results because the workspace happened to be asleep.
+            if os.environ.get("GRAPH_STRICT", "0").lower() in {"1", "true", "yes"}:
+                raise RuntimeError(f"GRAPH_STRICT=1 and TigerGraph is unavailable: {exc}") from exc
             print(f"[graphstore] TigerGraph unavailable ({exc}); falling back to local mirror")
             from .local import LocalGraphStore
 

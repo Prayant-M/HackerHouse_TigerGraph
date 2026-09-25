@@ -21,24 +21,28 @@ FOR GRAPH FraudGraph SYNTAX v2 {
   SumAccum<INT>     @@n_fraud, @@n_cleared;
   SumAccum<DOUBLE>  @@sim_total;
   ListAccum<STRING> @@neighbour_ids;
+  ListAccum<FLOAT>  @@qv;
+  MapAccum<VERTEX, FLOAT> @@dist;
+  SumAccum<DOUBLE>  @similarity;
 
   src = {Transaction.*};
-  src = SELECT t FROM src:t WHERE t.txn_id == txn_id;
-  LIST<DOUBLE> qv = getvalue(src, "behaviour_emb");
+  src = SELECT t FROM src:t WHERE t.txn_id == txn_id
+        ACCUM @@qv += t.behaviour_emb;
 
-  cand = vectorSearch({Transaction.behaviour_emb}, qv, k * 6);
-  scored = SELECT t FROM cand:t -(CC_INVOLVED_IN:e)- ClosedCase:c
+  cand = vectorSearch({Transaction.behaviour_emb}, @@qv, k * 6, {distance_map: @@dist});
+  scored = SELECT t FROM cand:t -(CC_INVOLVED_IN>:e)- ClosedCase:c
            WHERE c.opened_at < as_of AND t.txn_id != txn_id
            ACCUM
-             @@sim_total += t.@distance,
+             t.@similarity = 1.0 - @@dist.get(t),
+             @@sim_total += 1.0 - @@dist.get(t),
              @@neighbour_ids += t.txn_id,
              CASE WHEN c.outcome == "confirmed_fraud"
                   THEN @@n_fraud += 1 ELSE @@n_cleared += 1 END
-           ORDER BY t.@distance DESC
+           ORDER BY t.@similarity DESC
            LIMIT k;
 
   PRINT @@n_fraud AS n_fraud, @@n_cleared AS n_cleared,
         @@neighbour_ids AS neighbours,
         scored[scored.txn_id, scored.amount, scored.ts,
-               scored.@distance AS similarity];
+               scored.@similarity AS similarity];
 }

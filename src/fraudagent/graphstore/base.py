@@ -139,6 +139,17 @@ class GraphStore(ABC):
     def shared_entity_ring(self, card_id: str, as_of: datetime,
                            window_days: int = 30) -> dict[str, Any]: ...
 
+    def peer_purchases(self, device_profile: str, card_id: str, amount: float,
+                       as_of: datetime, window_days: int = 7) -> dict[str, Any]:
+        """Purchases on *other* cards from the same device, near the flagged
+        amount, inside the window. Rarity is judged by the caller."""
+        return {"peers": [], "n_peer_cards": 0}
+
+    def card_community(self, card_id: str) -> dict[str, Any]:
+        """GDS algorithm output for a card (WCC component, PageRank position).
+        Only the TigerGraph backend runs the algorithms; elsewhere it is empty."""
+        return {}
+
     @abstractmethod
     def fraud_proximity(self, entity_ids: Sequence[str], as_of: datetime,
                         max_hops: int = 2) -> dict[str, Any]: ...

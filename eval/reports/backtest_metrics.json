@@ -1,108 +1,108 @@
 {
   "as_seen": {
     "n": 400,
-    "tp": 239,
-    "fp": 18,
-    "fn": 5,
-    "tn": 138,
-    "precision": 0.93,
-    "recall": 0.98,
-    "f1": 0.954,
-    "brier": 0.0559,
-    "ece": 0.028,
+    "tp": 236,
+    "fp": 29,
+    "fn": 8,
+    "tn": 127,
+    "precision": 0.891,
+    "recall": 0.967,
+    "f1": 0.927,
+    "brier": 0.0825,
+    "ece": 0.036,
     "reliability": [
       {
         "bin": "0.0\u20130.1",
-        "n": 130,
-        "predicted": 0.035,
-        "observed": 0.038
+        "n": 124,
+        "predicted": 0.037,
+        "observed": 0.065
       },
       {
         "bin": "0.1\u20130.2",
-        "n": 13,
-        "predicted": 0.111,
+        "n": 11,
+        "predicted": 0.136,
         "observed": 0.0
       },
       {
         "bin": "0.7\u20130.8",
-        "n": 25,
-        "predicted": 0.77,
-        "observed": 0.88
+        "n": 23,
+        "predicted": 0.759,
+        "observed": 0.739
       },
       {
         "bin": "0.8\u20130.9",
-        "n": 58,
-        "predicted": 0.867,
-        "observed": 0.948
+        "n": 45,
+        "predicted": 0.869,
+        "observed": 0.889
       },
       {
         "bin": "0.9\u20131.0",
-        "n": 174,
-        "predicted": 0.942,
-        "observed": 0.931
+        "n": 197,
+        "predicted": 0.95,
+        "observed": 0.909
       }
     ],
-    "auc": 0.936,
-    "pattern_accuracy": 0.561,
-    "pattern_accuracy_given_fraud_called": 0.573,
-    "n_caught": 239,
-    "txn_overlap": 0.613,
-    "sar_agreement": 0.925,
-    "requests": 0.307,
-    "changed": 0.307,
+    "auc": 0.921,
+    "pattern_accuracy": 0.492,
+    "pattern_accuracy_given_fraud_called": 0.508,
+    "n_caught": 236,
+    "txn_overlap": 0.587,
+    "sar_agreement": 0.9,
+    "requests": 0.287,
+    "changed": 0.287,
     "uncertain": 0
   },
   "graph_only": {
     "n": 400,
-    "tp": 41,
-    "fp": 18,
-    "fn": 203,
-    "tn": 138,
-    "precision": 0.695,
-    "recall": 0.168,
-    "f1": 0.271,
-    "brier": 0.5015,
-    "ece": 0.4984,
+    "tp": 51,
+    "fp": 29,
+    "fn": 193,
+    "tn": 127,
+    "precision": 0.637,
+    "recall": 0.209,
+    "f1": 0.315,
+    "brier": 0.4951,
+    "ece": 0.4966,
     "reliability": [
       {
         "bin": "0.0\u20130.1",
-        "n": 296,
-        "predicted": 0.033,
-        "observed": 0.578
+        "n": 274,
+        "predicted": 0.035,
+        "observed": 0.577
       },
       {
         "bin": "0.1\u20130.2",
-        "n": 45,
-        "predicted": 0.12,
-        "observed": 0.711
+        "n": 46,
+        "predicted": 0.132,
+        "observed": 0.761
       },
       {
         "bin": "0.7\u20130.8",
         "n": 11,
-        "predicted": 0.76,
-        "observed": 0.727
+        "predicted": 0.75,
+        "observed": 0.455
       },
       {
         "bin": "0.8\u20130.9",
-        "n": 7,
-        "predicted": 0.818,
-        "observed": 0.571
+        "n": 16,
+        "predicted": 0.866,
+        "observed": 0.688
       },
       {
         "bin": "0.9\u20131.0",
-        "n": 41,
-        "predicted": 0.935,
-        "observed": 0.707
+        "n": 53,
+        "predicted": 0.945,
+        "observed": 0.66
       }
     ],
-    "auc": 0.531,
-    "pattern_accuracy": 0.094,
-    "pattern_accuracy_given_fraud_called": 0.561,
-    "n_caught": 41,
-    "txn_overlap": 0.117,
-    "sar_agreement": 0.922,
-    "requests": 0.61,
-    "changed": 0.61,
+    "auc": 0.52,
+    "pattern_accuracy": 0.098,
+    "pattern_accuracy_given_fraud_called": 0.471,
+    "n_caught": 51,
+    "txn_overlap": 0.141,
+    "sar_agreement": 0.907,
+    "requests": 0.505,
+    "changed": 0.505,
     "uncertain": 0
   }
 }

@@ -1,0 +1,26 @@
+/* ===========================================================================
+   Graph algorithms from TigerGraph's GDS library (the GDBMS_ALGO package on
+   4.x), run over ANON_CO_OCCURS — the anonymous-proxy slice of the card
+   projection built by 04_projections.gsql — with results written onto Card.
+   (Over the full projection WCC finds one 6,125-card component held together
+   by ordinary shared browser strings, which says nothing.)
+
+     community_id   weakly connected components — cards joined through shared
+                    device profiles through a proxy share a component; a ring
+                    is its own component, everyone else a singleton
+     hub_rank       PageRank — how central a card is in that device-sharing
+                    network; ring hubs rank at the top
+
+   Both run over the whole six-month projection, so they are all-time
+   structure. The agent cites them as context next to the time-bounded ring
+   evidence (`card_community` query) and never feeds them into the fraud
+   probability, which only ever sees data before the alert.
+
+   Run:  python graph/install.py --step algorithms
+   =========================================================================== */
+
+USE GRAPH FraudGraph
+
+CALL GDBMS_ALGO.community.wcc(["Card"], ["ANON_CO_OCCURS"], 0, FALSE, "community_id", "")
+
+CALL GDBMS_ALGO.centrality.pagerank("Card", "ANON_CO_OCCURS", 0.001, 25, 0.85, 0, FALSE, "hub_rank", "", FALSE)

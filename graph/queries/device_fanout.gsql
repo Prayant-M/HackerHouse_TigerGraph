@@ -22,33 +22,44 @@ CREATE OR REPLACE QUERY device_fanout(STRING device_profile, DATETIME as_of,
 FOR GRAPH FraudGraph SYNTAX v2 {
   DATETIME since = epoch_to_datetime(datetime_to_epoch(as_of) - window_days * 86400);
   SetAccum<STRING> @@cards_window, @@cards_before, @@cards_anon, @@cards_new_status;
-  SetAccum<STRING> @@customers, @@proxies;
+  SetAccum<STRING> @@customers, @@proxies, @@cards_new_in_window;
+  SetAccum<STRING> @@anon_before, @@cards_all, @@anon_all;
   SumAccum<INT>    @@n_txns_window;
 
   start = {DeviceProfile.*};
   start = SELECT d FROM start:d WHERE d.device_profile == device_profile;
 
-  win = SELECT t FROM start:d -(DEVICE_USED_IN:e)- Transaction:t
-        WHERE t.ts > since AND t.ts <= as_of
+  win = SELECT t FROM start:d -(DEVICE_USED_IN>:e)- Transaction:t
+        WHERE t.ts >= since AND t.ts <= as_of
         ACCUM @@n_txns_window += 1,
               @@cards_window += t.card_id,
               @@customers += t.customer_id,
-              CASE WHEN t.proxy LIKE "%ANONYMOUS%" OR t.proxy LIKE "%HIDDEN%"
-                   THEN @@cards_anon += t.card_id, @@proxies += t.proxy END,
+              CASE WHEN t.proxy_type LIKE "%ANONYMOUS%" OR t.proxy_type LIKE "%HIDDEN%"
+                   THEN @@cards_anon += t.card_id, @@proxies += t.proxy_type END,
               CASE WHEN t.device_status == "New"
                    THEN @@cards_new_status += t.card_id END;
 
-  before = SELECT t FROM start:d -(DEVICE_USED_IN:e)- Transaction:t
-           WHERE t.ts <= since
-           ACCUM @@cards_before += t.card_id;
+  before = SELECT t FROM start:d -(DEVICE_USED_IN>:e)- Transaction:t
+           WHERE t.ts < since
+           ACCUM @@cards_before += t.card_id,
+                 CASE WHEN t.proxy_type LIKE "%ANONYMOUS%" OR t.proxy_type LIKE "%HIDDEN%"
+                      THEN @@anon_before += t.card_id END;
+
+  @@cards_new_in_window = @@cards_window MINUS @@cards_before;
+  /* "All time" stops at as_of, like every other read: the vertex's own
+     n_cards spans the whole dataset and would leak past the temporal wall. */
+  @@cards_all = @@cards_window UNION @@cards_before;
+  @@anon_all  = @@cards_anon UNION @@anon_before;
 
   PRINT device_profile, @@n_txns_window AS n_txns_window,
         @@cards_window.size() AS n_cards,
         @@customers.size() AS n_customers,
-        (@@cards_window MINUS @@cards_before).size() AS n_cards_new_in_window,
-        (@@cards_window MINUS @@cards_before) AS new_card_ids,
+        @@cards_new_in_window.size() AS n_cards_new_in_window,
+        @@cards_new_in_window AS new_card_ids,
         @@cards_anon.size() AS n_cards_anon_proxy,
         @@cards_anon AS anon_proxy_card_ids,
         @@cards_new_status.size() AS n_cards_marked_new,
-        @@cards_window AS card_ids, @@proxies AS proxy_values;
+        @@cards_window AS card_ids, @@proxies AS proxy_values,
+        @@cards_all.size() AS n_cards_all_time,
+        @@anon_all.size() AS n_cards_anon_all_time;
 }

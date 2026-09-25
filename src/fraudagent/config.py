@@ -153,6 +153,10 @@ class TigerGraphConfig:
     restpp_port: str = field(default_factory=lambda: _env("TG_RESTPP_PORT", "9000"))
     gsql_port: str = field(default_factory=lambda: _env("TG_GSQL_PORT", "14240"))
     version: str = field(default_factory=lambda: _env("TG_VERSION", "4.2.0"))
+    # Route the agent's graph reads and writes through the TigerGraph MCP server
+    # (tigergraph-mcp over stdio). Off, or if the server cannot start, the store
+    # talks to TigerGraph directly with pyTigerGraph.
+    via_mcp: bool = field(default_factory=lambda: _env_bool("TG_VIA_MCP", True))
 
     @property
     def configured(self) -> bool:

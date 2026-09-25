@@ -26,12 +26,12 @@ FOR GRAPH FraudGraph SYNTAX v2 {
   start = {Card.*};
   start = SELECT c FROM start:c WHERE c.card_id == card_id;
 
-  small = SELECT t FROM start:c -(MADE:e)- Transaction:t
+  small = SELECT t FROM start:c -(MADE>:e)- Transaction:t
           WHERE t.ts > since AND t.ts <= as_of
             AND t.channel == "online" AND t.amount < small_amount
           ORDER BY t.ts ASC;
 
-  larger = SELECT t FROM start:c -(MADE:e)- Transaction:t
+  larger = SELECT t FROM start:c -(MADE>:e)- Transaction:t
            WHERE t.ts > since AND t.ts <= as_of
              AND t.channel == "online" AND t.amount >= 20.0
            ORDER BY t.ts ASC;
@@ -61,7 +61,7 @@ FOR GRAPH FraudGraph SYNTAX v2 {
   start = {Card.*};
   start = SELECT c FROM start:c WHERE c.card_id == card_id;
 
-  online = SELECT t FROM start:c -(MADE:e)- Transaction:t
+  online = SELECT t FROM start:c -(MADE>:e)- Transaction:t
            WHERE t.ts > since AND t.ts <= as_of AND t.channel == "online"
            ORDER BY t.ts ASC;
 
@@ -90,11 +90,11 @@ FOR GRAPH FraudGraph SYNTAX v2 {
   start = {Card.*};
   start = SELECT c FROM start:c WHERE c.card_id == card_id;
 
-  base = SELECT t FROM start:c -(MADE:e)- Transaction:t
+  base = SELECT t FROM start:c -(MADE>:e)- Transaction:t
          WHERE t.ts <= baseline_cutoff
          ACCUM @@baseline_regions += (t.region -> 1);
 
-  win = SELECT t FROM start:c -(MADE:e)- Transaction:t
+  win = SELECT t FROM start:c -(MADE>:e)- Transaction:t
         WHERE t.ts > baseline_cutoff AND t.ts <= as_of
         ACCUM
           CASE WHEN t.region == region
@@ -127,14 +127,14 @@ FOR GRAPH FraudGraph SYNTAX v2 {
   start = {Card.*};
   start = SELECT c FROM start:c WHERE c.card_id == card_id;
 
-  win = SELECT t FROM start:c -(MADE:e)- Transaction:t
+  win = SELECT t FROM start:c -(MADE>:e)- Transaction:t
         WHERE t.ts > cutoff AND t.ts <= as_of
         ACCUM @@mismatches += t.m_mismatch_count,
               CASE WHEN t.channel == "online"
                    THEN @@w_online += 1 ELSE @@w_in_person += 1 END,
               CASE WHEN t.device_status != "" THEN @@window_devices += t.device_status END;
 
-  base = SELECT t FROM start:c -(MADE:e)- Transaction:t
+  base = SELECT t FROM start:c -(MADE>:e)- Transaction:t
          WHERE t.ts <= cutoff
          ACCUM @@b_total += 1,
                CASE WHEN t.channel == "online" THEN @@b_online += 1 END;
@@ -156,7 +156,7 @@ FOR GRAPH FraudGraph SYNTAX v2 {
   start = {Card.*};
   start = SELECT c FROM start:c WHERE c.card_id == card_id;
 
-  same = SELECT t FROM start:c -(MADE:e)- Transaction:t
+  same = SELECT t FROM start:c -(MADE>:e)- Transaction:t
          WHERE t.ts <= baseline_cutoff
            AND t.product_cd == product_cd
            AND abs(t.amount - amount) <= 0.011

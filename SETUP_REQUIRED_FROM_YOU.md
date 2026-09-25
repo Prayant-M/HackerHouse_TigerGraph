@@ -79,8 +79,30 @@ Then:
 
 ```bash
 python ingest/06_stage_graph_csv.py     # writes the CSVs the loading jobs read
-python graph/install.py --step all      # schema, vectors, load, queries, GDS, verify
+python graph/install.py --step all      # schema, vectors, load, queries, projections, GDS algorithms, verify
+python graph/install.py --from load     # resume from any step after a failure
 ```
+
+**Before any long run, wake the workspace.** Savanna auto-stops when idle, and a
+sleeping workspace answers with an HTML "Starting workspace" page instead of
+data. Ping until you see `pong`:
+
+```bash
+curl -s https://your-workspace.i.tgcloud.io/api/ping
+```
+
+**How the agent reaches the graph.** `pip install -r requirements.txt` installs
+the official TigerGraph MCP server (`tigergraph-mcp`). With `TG_VIA_MCP=1` (the
+default) the agent starts it over stdio and sends every query and case write
+through its tools; the same `.env` credentials are passed to it. Set
+`GRAPH_STRICT=1` to make an unreachable graph an error rather than a fallback to
+the local mirror.
+
+**Things 4.2 will refuse, already handled in this repo:** reserved words (`Case`,
+`proxy`, `cost` → `FraudCase`, `proxy_type`, `friction_cost`), directed edges
+without a direction in SYNTAX v2, loading jobs that read a server-side header
+(Savanna has no local files, so headers are declared), and the 3.x `tg_*`
+algorithm queries (4.x ships them as `GDBMS_ALGO`).
 
 `--step verify` is the one to watch. TigerGraph builds the HNSW index
 asynchronously, and vectors that have not finished indexing silently return no
@@ -114,7 +136,7 @@ Savanna. Loading 590k transactions repeatedly over the network wastes hours.
 |---|---|---|
 | Anthropic | `ANTHROPIC_API_KEY` | `console.anthropic.com` |
 | OpenAI | `OPENAI_API_KEY` | `platform.openai.com` |
-| Google | `GOOGLE_API_KEY` | `aistudio.google.com` (generous free tier — good as the fallback) |
+| Google | `GOOGLE_API_KEY` | `aistudio.google.com`. Use a current model id (`LLM_MODEL=gemini-3.6-flash` at the time of writing); older ids return 404 for new users. Free-tier quotas are small — the agent backs off and retries on 429, and the run footer prints `llm errors:` if calls still fall back to templates. |
 
 ```bash
 LLM_PROVIDER=anthropic

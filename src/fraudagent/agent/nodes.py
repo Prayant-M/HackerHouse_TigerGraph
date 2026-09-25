@@ -385,7 +385,12 @@ def evidence_gap_resolver(state: InvestigationState, store: GraphStore,
     action = next(a for a in voi.CATALOGUE if a.key == chosen["type"])
 
     before = ledger.snapshot()
-    sim = respond(state["case_id"], action, ledger.posterior)
+    ctx = state["ctx"]
+    recurring = (ctx.probes.get("recurring", {})
+                 if ctx.trigger_type == "customer_report" and ctx.fired("recurring_charge")
+                 else None)
+    sim = respond(state["case_id"], action, ledger.posterior, recurring=recurring,
+                  amount=ctx.flagged.amount)
     ledger.add_solicited(sim.outcome_key,
                          claim=sim.assumed_response,
                          ref=f"evidence_request:{len(state['requests']) + 1}",
@@ -539,7 +544,11 @@ def case_writer(state: InvestigationState, store: GraphStore,
 
     answer, graph_payload = build_answer(state, store)
     gid = store.write_case(graph_payload)
-    answer["case"]["written_to_graph"] = True
+    check = _verify_write(store, gid, answer)
+    # A write that returned is not a write that happened: the case only counts
+    # as written once it reads back from the graph.
+    answer["case"]["written_to_graph"] = check["read_back"]
+    answer.setdefault("agent_record", {})["write_verification"] = check
     answer["case"]["graph_case_id"] = gid
     state["graph_case_id"] = gid
     state.setdefault("result", {}).update(answer)
@@ -547,6 +556,31 @@ def case_writer(state: InvestigationState, store: GraphStore,
                                   "affected_txns": len(answer["case"]["affected_txn_ids"]),
                                   "sar_filed": answer["sar"]["file"]})
     return state
+
+
+def _verify_write(store: GraphStore, gid: str, answer: dict[str, Any]) -> dict[str, Any]:
+    """Read the case back with `case_chain` and compare what landed against what
+    was sent: the affected transactions, the connected cards and the SAR."""
+    try:
+        chain = store.case_chain(gid) or {}
+    except Exception as exc:                            # pragma: no cover - network
+        return {"read_back": False, "error": str(exc)}
+    if "investigation" not in chain:                    # local mirror: the case record itself
+        return {"read_back": bool(chain), "checks": {}, "mismatches": []}
+    count = lambda k: len(chain.get(k) or [])
+    case = answer["case"]
+    checks = {
+        "case_vertex": count("investigation") == 1,
+        "affected_transactions": count("affected_transactions") == len(case["affected_txn_ids"]),
+        "connected_cards": count("connected_cards") == len(case["connected_card_ids"]),
+        "sar_linked": (count("suspicious_activity_report") >= 1) if answer["sar"]["file"] else True,
+        "evidence_linked": count("evidence") >= 1,
+    }
+    return {"read_back": checks["case_vertex"], "checks": checks,
+            "mismatches": [k for k, ok in checks.items() if not ok],
+            "counts": {k: count(k) for k in ("evidence", "decisions", "recommended_actions",
+                                               "affected_transactions", "connected_cards",
+                                               "prior_cases_used", "policy_cited")}}
 
 
 # -------------------------------------------------------------------------- 15
@@ -675,6 +709,7 @@ def _evidence_entries(state: InvestigationState) -> list[dict[str, Any]]:
             "entity_ids": [str(e) for e in entry.entity_ids][:12],
             "delta_fraud_probability": round(entry.delta_fraud, 4),
             "reliability": entry.reliability,
+            "claim_type": _claim_type(entry),
         })
         if len(out) >= 10:
             break
@@ -685,8 +720,26 @@ def _evidence_entries(state: InvestigationState) -> list[dict[str, Any]]:
             "source": "document",
             "ref": f"policy:{doc.get('doc_id', '')}",
             "entity_ids": [],
+            "claim_type": "policy_text",
         })
     return out
+
+
+def _claim_type(entry: Any) -> str:
+    """What kind of statement an evidence item is, so a reader never mistakes an
+    inference for an observation: a fact retrieved from the graph, a conclusion a
+    detector drew from several facts, the bank's model score, the customer's own
+    statement, or a simulated reply."""
+    label = entry.label or ""
+    if entry.source == "solicited":
+        return "simulated_response"
+    if "risk_score" in label:
+        return "model_score"
+    if label == "customer_disputed":
+        return "customer_statement"
+    if entry.source == "memory":
+        return "observed_fact"
+    return "derived_inference"
 
 
 def _what_changed(state: InvestigationState) -> str:

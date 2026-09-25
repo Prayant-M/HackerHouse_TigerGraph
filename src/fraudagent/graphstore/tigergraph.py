@@ -1,7 +1,9 @@
 """TigerGraph-backed store — the production path.
 
 Every read here calls an installed GSQL query from `graph/queries/`; every
-write goes through RESTPP upserts plus `case_write_links` to stitch the edges.
+write goes through upserts plus `case_write_links` to stitch the edges. Both
+travel through the TigerGraph MCP server (`mcp_client.py`) when it is running,
+and over a direct pyTigerGraph connection when it is not.
 The window matchers are the *same* functions the local mirror uses
 (`graphstore/matchers.py`), so the two backends answer the same question rather
 than merely similar ones, and `tests/test_backend_parity.py` asserts that on a
@@ -40,6 +42,47 @@ def _fmt(value: datetime) -> str:
     return value.strftime(DT)
 
 
+class _Gateway:
+    """The agent's route to the graph: the TigerGraph MCP server when it is up,
+    the direct pyTigerGraph connection otherwise, decided per call so a server
+    that dies mid-run degrades to direct access instead of failing the case."""
+
+    def __init__(self, conn: Any, mcp: Any) -> None:
+        self.conn, self.mcp = conn, mcp
+        self.fallbacks = 0
+        self.last_error = ""
+
+    @property
+    def transport(self) -> str:
+        return "mcp" if self.mcp is not None else "direct"
+
+    def _call(self, name: str, *args: Any, **kwargs: Any) -> Any:
+        if self.mcp is not None:
+            try:
+                return getattr(self.mcp, name)(*args, **kwargs)
+            except Exception as exc:
+                self.fallbacks += 1
+                self.last_error = f"{name}: {exc}"
+                if self.fallbacks in (1, 10, 100):
+                    print(f"[graphstore] MCP {name} failed ({exc}); using the direct connection")
+        return getattr(self.conn, name)(*args, **kwargs)
+
+    def runInstalledQuery(self, *a: Any, **k: Any) -> Any:
+        return self._call("runInstalledQuery", *a, **k)
+
+    def getVerticesById(self, *a: Any, **k: Any) -> Any:
+        return self._call("getVerticesById", *a, **k)
+
+    def getEdges(self, *a: Any, **k: Any) -> Any:
+        return self._call("getEdges", *a, **k)
+
+    def upsertVertex(self, *a: Any, **k: Any) -> Any:
+        return self._call("upsertVertex", *a, **k)
+
+    def upsertEdge(self, *a: Any, **k: Any) -> Any:
+        return self._call("upsertEdge", *a, **k)
+
+
 class TigerGraphStore(GraphStore):
     backend = "tigergraph"
 
@@ -64,13 +107,39 @@ class TigerGraphStore(GraphStore):
             except Exception:
                 pass                       # username/password auth is enough on CE
         self.conn.echo()                   # fails loudly if the workspace is asleep
+        self._mcp = None
+        if TG.via_mcp:
+            try:
+                from .mcp_client import TigerGraphMCPClient
+
+                self._mcp = TigerGraphMCPClient()
+            except Exception as exc:
+                print(f"[graphstore] TigerGraph MCP unavailable ({exc}); "
+                      "using the direct pyTigerGraph connection")
+        self.graph = _Gateway(self.conn, self._mcp)
         self.call_count = 0
         self._embedder: Embedder | None = None
 
     # -------------------------------------------------------- internals ----
     def _run(self, name: str, params: dict[str, Any] | None = None) -> list[dict[str, Any]]:
         self.call_count += 1
-        return self.conn.runInstalledQuery(name, params or {}, timeout=60_000)
+        return self._strip_set_prefix(
+            self.graph.runInstalledQuery(name, params or {}, timeout=60_000))
+
+    @classmethod
+    def _strip_set_prefix(cls, value: Any) -> Any:
+        """`PRINT window[window.ts]` comes back keyed "window.ts" on 4.x; the
+        readers below expect the bare attribute name."""
+        if isinstance(value, list):
+            return [cls._strip_set_prefix(v) for v in value]
+        if isinstance(value, dict):
+            out = {}
+            for k, v in value.items():
+                if isinstance(v, dict) and k == "attributes":
+                    v = {a.split(".", 1)[1] if "." in a else a: x for a, x in v.items()}
+                out[k] = cls._strip_set_prefix(v)
+            return out
+        return value
 
     @staticmethod
     def _first(result: list[dict[str, Any]], key: str, default: Any = None) -> Any:
@@ -94,7 +163,7 @@ class TigerGraphStore(GraphStore):
             region=str(attr.get("region", "")), country=str(attr.get("country", "")),
             device_profile=str(attr.get("device_profile", "")),
             device_status=str(attr.get("device_status", "")),
-            proxy=str(attr.get("proxy", "")),
+            proxy=str(attr.get("proxy_type", attr.get("proxy", ""))),
             email_p=str(attr.get("email_p", "")), email_r=str(attr.get("email_r", "")),
             dist1=attr.get("dist1"), dist2=attr.get("dist2"),
             amt_zscore_card=float(attr.get("amt_zscore_card") or 0.0),
@@ -117,7 +186,7 @@ class TigerGraphStore(GraphStore):
     # ------------------------------------------------------------ reads ----
     def get_transaction(self, txn_id: str) -> TxnRow | None:
         self.call_count += 1
-        rows = self.conn.getVerticesById("Transaction", str(txn_id))
+        rows = self.graph.getVerticesById("Transaction", str(txn_id))
         if not rows:
             return None
         attr = dict(rows[0].get("attributes", {}))
@@ -125,7 +194,7 @@ class TigerGraphStore(GraphStore):
         # the device profile lives on the edge target, not on Transaction
         try:
             self.call_count += 1
-            devs = self.conn.getEdges("Transaction", str(txn_id), "FROM_DEVICE")
+            devs = self.graph.getEdges("Transaction", str(txn_id), "FROM_DEVICE")
             if devs:
                 attr["device_profile"] = str(devs[0]["to_id"])
         except Exception:
@@ -133,7 +202,7 @@ class TigerGraphStore(GraphStore):
         for side, edge in (("email_p", "PURCHASER_EMAIL"), ("email_r", "RECIPIENT_EMAIL")):
             try:
                 self.call_count += 1
-                e = self.conn.getEdges("Transaction", str(txn_id), edge)
+                e = self.graph.getEdges("Transaction", str(txn_id), edge)
                 attr[side] = str(e[0]["to_id"]) if e else ""
             except Exception:
                 attr[side] = ""
@@ -182,7 +251,7 @@ class TigerGraphStore(GraphStore):
     def customer_cards(self, customer_id: str, as_of: datetime) -> list[str]:
         self.call_count += 1
         try:
-            edges = self.conn.getEdges("Customer", customer_id, "OWNS")
+            edges = self.graph.getEdges("Customer", customer_id, "OWNS")
             return sorted(str(e["to_id"]) for e in edges)
         except Exception:
             return []
@@ -241,6 +310,23 @@ class TigerGraphStore(GraphStore):
         rows = self._txn_rows(self._first(res, "online_window", []) or [])
         return {"card_id": card_id, **detect_threshold_structuring(rows, window_minutes)}
 
+    def peer_purchases(self, device_profile: str, card_id: str, amount: float,
+                       as_of: datetime, window_days: int = 7) -> dict[str, Any]:
+        if not device_profile:
+            return {"peers": [], "n_peer_cards": 0}
+        res = self._run("peer_purchases", {
+            "device_profile": device_profile, "exclude_card": card_id, "amount": amount,
+            "tolerance": max(2.0, 0.05 * abs(amount)), "since": _fmt(as_of - timedelta(days=window_days)),
+            "as_of": _fmt(as_of)})
+        rows = self._first(res, "peers", []) or []
+        peers = []
+        for r in rows:
+            a = r.get("attributes", r)
+            peers.append({"txn_id": str(a.get("txn_id") or r.get("v_id")),
+                          "card_id": str(a.get("card_id", "")), "amount": float(a.get("amount", 0.0)),
+                          "ts": str(a.get("ts", ""))[:19], "channel": str(a.get("channel", ""))})
+        return {"peers": peers, "n_peer_cards": len({p["card_id"] for p in peers})}
+
     def device_fanout(self, device_profile: str, as_of: datetime,
                       window_days: int = 30) -> dict[str, Any]:
         if not device_profile:
@@ -251,8 +337,9 @@ class TigerGraphStore(GraphStore):
         res = self._run("device_fanout", {"device_profile": device_profile,
                                           "as_of": _fmt(as_of), "window_days": window_days})
         self.call_count += 1
-        node = self.conn.getVerticesById("DeviceProfile", device_profile)
-        all_time = int(node[0]["attributes"].get("n_cards", 0)) if node else 0
+        node = self.graph.getVerticesById("DeviceProfile", device_profile)
+        all_time = int(self._first(res, "n_cards_all_time", 0) or 0)
+        anon_all = int(self._first(res, "n_cards_anon_all_time", 0) or 0)
         return {
             "device_profile": device_profile, "window_days": window_days,
             "n_txns_window": int(self._first(res, "n_txns_window", 0) or 0),
@@ -265,6 +352,8 @@ class TigerGraphStore(GraphStore):
             "anon_proxy_card_ids": list(self._first(res, "anon_proxy_card_ids", []) or []),
             "n_cards_marked_new": int(self._first(res, "n_cards_marked_new", 0) or 0),
             "n_cards_all_time": all_time,
+            "n_cards_anon_all_time": anon_all,
+            "anon_proxy_ratio": round(anon_all / all_time, 3) if all_time else 0.0,
             "proxy_values": list(self._first(res, "proxy_values", []) or []),
             "device_type": str(node[0]["attributes"].get("device_type", "")) if node else "",
         }
@@ -275,11 +364,17 @@ class TigerGraphStore(GraphStore):
             return {"known_on_card": None, "first_seen_on_card": "", "n_prior_txns": 0,
                     "n_devices_on_card": 0}
         cutoff = baseline_cutoff or as_of
-        base = self.card_baseline(card_id, cutoff)
-        known = device_profile in set(base.get("known_devices", []))
+        # From the card's own history, not card_baseline's known_devices: that
+        # list is trimmed for display, and a busy card has hundreds of profiles.
+        history = self.card_history(card_id, as_of)
+        prior = [t for t in history if t.ts <= cutoff and t.device_profile == device_profile]
+        in_window = [t for t in history if t.ts > cutoff and t.device_profile == device_profile]
+        n_devices = len({t.device_profile for t in history if t.ts <= cutoff and t.device_profile})
         return {"card_id": card_id, "device_profile": device_profile,
-                "known_on_card": known, "n_prior_txns": 1 if known else 0,
-                "n_devices_on_card": int(base.get("n_devices", 0)),
+                "known_on_card": bool(prior), "n_prior_txns": len(prior),
+                "first_seen_on_card": str(min(t.ts for t in prior)) if prior else "",
+                "n_txns_in_window": len(in_window),
+                "n_devices_on_card": n_devices,
                 "baseline_cutoff": str(cutoff)}
 
     def region_profile(self, card_id: str, as_of: datetime, region: str,
@@ -299,29 +394,35 @@ class TigerGraphStore(GraphStore):
 
     def out_of_region_probe(self, card_id: str, as_of: datetime, region: str,
                             baseline_cutoff: datetime | None = None) -> dict[str, Any]:
+        # Computed from the card's history with the local mirror's exact window
+        # semantics; the out_of_region_probe query drifted from them at the
+        # window boundaries and on transactions with no billing region.
         cutoff = baseline_cutoff or as_of
-        res = self._run("out_of_region_probe",
-                        {"card_id": card_id, "as_of": _fmt(as_of), "region": region,
-                         "baseline_cutoff": _fmt(cutoff)})
-        counts = self._first(res, "baseline_region_counts", {}) or {}
-        home = max(counts, key=counts.get) if counts else ""
-        prior = int(counts.get(region, 0))
-        first = self._first(res, "region_first_ts", "")
-        last = self._first(res, "region_last_ts", "")
+        full = self.card_history(card_id, as_of)
+        if not full or not region:
+            return {"matched": False}
+        base = [x for x in full if x.ts <= cutoff]
+        counts: dict[str, int] = {}
+        for x in base:
+            counts[x.region] = counts.get(x.region, 0) + 1
+        # value_counts order: count descending, first appearance on ties
+        home = max(counts, key=lambda r: counts[r]) if counts else ""
+        prior = counts.get(region, 0)
+        window = [x for x in full if x.ts > cutoff]
+        in_region = [x for x in window if x.region == region]
+        home_same = [x for x in window if x.region == home and x.region != region]
         span = 0.0
-        if first and last:
-            span = (_dt(last) - _dt(first)).total_seconds() / 86400.0
-        n_home = int(self._first(res, "n_home_txns_window", 0) or 0)
-        n_in = int(self._first(res, "n_in_region_window", 0) or 0)
-        n_cp = int(self._first(res, "n_card_present_in_region", 0) or 0)
+        if len(in_region) > 1:
+            span = (max(x.ts for x in in_region) - min(x.ts for x in in_region)).total_seconds() / 86400.0
         return {"card_id": card_id, "region": region, "home_region": home,
-                "matched": bool(prior == 0 and region and region != home),
-                "n_prior_in_region": prior, "n_in_region_window": n_in,
+                "matched": bool(prior == 0 and region != home and region != ""),
+                "n_prior_in_region": prior, "n_in_region_window": len(in_region),
                 "in_region_span_days": round(span, 2),
-                "home_activity_continues": bool(n_home > 0),
-                "n_home_txns_window": n_home,
-                "interleaved": bool(n_home > 0 and n_in > 0),
-                "card_present_share": round(n_cp / n_in, 3) if n_in else 0.0}
+                "home_activity_continues": bool(home_same),
+                "n_home_txns_window": len(home_same),
+                "interleaved": bool(home_same and in_region),
+                "card_present_share": round(sum(x.channel == "in_person" for x in in_region)
+                                            / len(in_region), 3) if in_region else 0.0}
 
     def recurring_charge_probe(self, card_id: str, as_of: datetime, amount: float,
                                product_cd: str,
@@ -367,18 +468,66 @@ class TigerGraphStore(GraphStore):
 
     def shared_entity_ring(self, card_id: str, as_of: datetime,
                            window_days: int = 30) -> dict[str, Any]:
-        res = self._run("shared_entity_ring", {"card_id": card_id, "as_of": _fmt(as_of),
-                                               "window_days": window_days, "min_weight": 1})
-        by_device = self._first(res, "shared_devices", {}) or {}
-        members = sorted({c for v in by_device.values() for c in v})
-        hub = max(by_device, key=lambda d: len(by_device[d])) if by_device else ""
+        """Policy R6, with the same hub test as the local mirror: the card's
+        most-used device profiles in the window, fanned out, and only a profile
+        reached anonymously by most of its cards counts as a ring."""
+        window = self.card_history(card_id, as_of, window_days=window_days)
+        counts: dict[str, int] = {}
+        for t in window:
+            if t.device_profile:
+                counts[t.device_profile] = counts.get(t.device_profile, 0) + 1
+        devices = sorted(counts, key=lambda d: (-counts[d], d))[:8]
+        members: dict[str, set[str]] = {}
+        anon_members: dict[str, set[str]] = {}
+        fanouts: dict[str, dict[str, Any]] = {}
+        for d in devices:
+            fan = self.device_fanout(d, as_of, window_days)
+            fanouts[d] = fan
+            others = {c for c in fan["card_ids"] if c != card_id}
+            if others:
+                members[d] = others
+            anon_others = {c for c in fan["anon_proxy_card_ids"] if c != card_id}
+            if anon_others:
+                anon_members[d] = anon_others
+
+        def is_ring(d: str) -> bool:
+            return (len(anon_members.get(d, ())) >= 2
+                    and float(fanouts[d].get("anon_proxy_ratio", 0.0)) >= 0.5)
+
+        ring_devices = [d for d in members if is_ring(d)]
+        all_members = sorted({c for d in ring_devices for c in members[d]})
+        regions: dict[str, int] = {}
+        for t in window:
+            if t.region:
+                regions[t.region] = regions.get(t.region, 0) + 1
+        hub = max(ring_devices, key=lambda d: len(members[d])) if ring_devices else ""
         return {"card_id": card_id, "window_days": window_days,
-                "shared_devices": by_device, "connected_card_ids": members,
-                "ring_size": len(members) + 1, "hub_device": hub,
-                "hub_fanout": self.device_fanout(hub, as_of, window_days) if hub else {},
-                "anon_proxy_ring": bool(self._first(res, "anon_proxy_ring", False)),
-                "all_shared_device_cards": members,
-                "home_region": ""}
+                "shared_devices": {d: sorted(members[d])[:40] for d in ring_devices},
+                "connected_card_ids": all_members[:60],
+                "ring_size": len(all_members) + 1, "hub_device": hub,
+                "hub_fanout": fanouts.get(hub, {}),
+                "anon_proxy_ring": bool(hub and len(anon_members.get(hub, ())) >= 2),
+                "all_shared_device_cards": sorted({c for s in members.values() for c in s})[:60],
+                "home_region": max(regions, key=regions.get) if regions else "",
+                "community": self.card_community(card_id) if ring_devices else {}}
+
+    def card_community(self, card_id: str) -> dict[str, Any]:
+        """WCC component and PageRank position over the anonymous-proxy card
+        projection (graph/algorithms/05_graph_algorithms.gsql). All-time
+        structure: cited as context, never folded into the probability."""
+        try:
+            res = self._run("card_community", {"card_id": card_id})
+        except Exception:
+            return {}
+        row = res[0] if res else {}
+        if not row or int(row.get("community_size", 0) or 0) <= 1:
+            return {}
+        return {"community_id": row.get("community_id"),
+                "community_size": int(row.get("community_size", 0)),
+                "rank_in_community": int(row.get("rank_in_community", 0)),
+                "hub_rank": round(float(row.get("hub_rank", 0.0)), 4),
+                "top_hub_cards": list(row.get("top_hub_cards", []) or [])[:3],
+                "algorithms": "GDBMS_ALGO.community.wcc + GDBMS_ALGO.centrality.pagerank"}
 
     def fraud_proximity(self, entity_ids: Sequence[str], as_of: datetime,
                         max_hops: int = 2) -> dict[str, Any]:
@@ -452,7 +601,7 @@ class TigerGraphStore(GraphStore):
         self.call_count += 1
         gid = case_doc.get("graph_case_id") or f"CASE-{case_doc['case_id']}"
         c = case_doc
-        self.conn.upsertVertex("Case", gid, {
+        self.graph.upsertVertex("FraudCase", gid, {
             "source_case_id": c.get("case_id", ""), "status": c.get("status", ""),
             "verdict": c.get("verdict", ""), "trigger_type": c.get("trigger_type", ""),
             "opened_at": c.get("opened_at", ""), "as_of": c.get("as_of", ""),
@@ -468,66 +617,66 @@ class TigerGraphStore(GraphStore):
             "latency_s": float(c.get("latency_s", 0.0)),
         })
         if c.get("narrative_emb"):
-            self.conn.upsertVertex("Case", gid, {"narrative_emb": c["narrative_emb"]})
+            self.graph.upsertVertex("FraudCase", gid, {"narrative_emb": c["narrative_emb"]})
 
         for i, ev in enumerate(c.get("evidence", []), 1):
             eid = f"{gid}-E{i:02d}"
-            self.conn.upsertVertex("Evidence", eid, {
+            self.graph.upsertVertex("Evidence", eid, {
                 "kind": ev.get("source", "graph"), "claim": ev.get("claim", ""),
                 "source_tool": ev.get("ref", ""), "collected_at": c.get("as_of", ""),
                 "reliability": float(ev.get("reliability", 1.0)),
                 "delta_fraud_probability": float(ev.get("delta_fraud_probability", 0.0)),
             })
-            self.conn.upsertEdge("Case", gid, "HAS_EVIDENCE", "Evidence", eid)
+            self.graph.upsertEdge("FraudCase", gid, "HAS_EVIDENCE", "Evidence", eid)
             for tid in ev.get("entity_ids", []):
                 if str(tid).isdigit():
-                    self.conn.upsertEdge("Evidence", eid, "EVIDENCE_ON", "Transaction", str(tid))
+                    self.graph.upsertEdge("Evidence", eid, "EVIDENCE_ON", "Transaction", str(tid))
 
         for d in c.get("decisions", []):
-            self.conn.upsertVertex("Decision", d["decision_id"], {
+            self.graph.upsertVertex("Decision", d["decision_id"], {
                 "step": int(d.get("step", 0)), "node": d.get("node", ""),
                 "posterior_before": float(d.get("p_fraud_before", 0.0)),
                 "posterior_after": float(d.get("p_fraud_after", 0.0)),
                 "rationale": d.get("rationale", ""),
                 "prev_hash": d.get("prev_hash", ""), "hash": d.get("hash", ""),
             })
-            self.conn.upsertEdge("Case", gid, "DECIDED", "Decision", d["decision_id"])
+            self.graph.upsertEdge("FraudCase", gid, "DECIDED", "Decision", d["decision_id"])
 
         for phase in ("initial", "final"):
             for i, a in enumerate(c.get("actions", {}).get(phase, []), 1):
                 aid = f"{gid}-{phase[:3].upper()}-{i:02d}"
-                self.conn.upsertVertex("RecommendedAction", aid, {
+                self.graph.upsertVertex("RecommendedAction", aid, {
                     "action_type": a["action"], "phase": phase, "approval_route": a["route"],
                     "reason": a.get("reason", ""),
                     "policy_rule": a.get("reason", "").split(":", 1)[0],
                     "executed": bool(a.get("executed", False)),
                 })
-                self.conn.upsertEdge("Case", gid, "RECOMMENDS", "RecommendedAction", aid)
+                self.graph.upsertEdge("FraudCase", gid, "RECOMMENDS", "RecommendedAction", aid)
 
         for i, r in enumerate(c.get("evidence_requests", []), 1):
             rid = f"{gid}-R{i:02d}"
-            self.conn.upsertVertex("EvidenceRequest", rid, {
+            self.graph.upsertVertex("EvidenceRequest", rid, {
                 "request_type": r.get("type", ""), "channel": r.get("channel", ""),
                 "question": r.get("question", ""),
                 "expected_info_gain": float(r.get("expected_info_gain", 0.0)),
-                "cost": float(r.get("cost", 0.0)),
+                "friction_cost": float(r.get("cost", 0.0)),
                 "asked_after_step": int(r.get("asked_after_step", 0)),
                 "simulated": True, "simulation_seed": int(r.get("simulation_seed", 0)),
                 "response": r.get("assumed_response", ""),
             })
-            self.conn.upsertEdge("Case", gid, "REQUESTED", "EvidenceRequest", rid)
+            self.graph.upsertEdge("FraudCase", gid, "REQUESTED", "EvidenceRequest", rid)
 
         sar = c.get("sar") or {}
         if sar.get("file"):
             sid = f"{gid}-SAR"
-            self.conn.upsertVertex("SAR", sid, {
+            self.graph.upsertVertex("SAR", sid, {
                 "filed": True, "reason": sar.get("reason", ""),
                 "narrative": sar.get("narrative", ""),
                 "total_amount_usd": float(sar.get("total_amount_usd", 0.0)),
                 "activity_start": (sar.get("activity_dates") or ["", ""])[0],
                 "activity_end": (sar.get("activity_dates") or ["", ""])[-1],
             })
-            self.conn.upsertEdge("Case", gid, "FILED", "SAR", sid)
+            self.graph.upsertEdge("FraudCase", gid, "FILED", "SAR", sid)
 
         self._run("case_write_links", {
             "graph_case_id": gid, "card_id": c.get("card_id", ""),
@@ -551,6 +700,11 @@ class TigerGraphStore(GraphStore):
             stats = self.conn.getVertexCount("*")
         except Exception as exc:                       # pragma: no cover
             return {"backend": "tigergraph", "ok": False, "error": str(exc)}
+        mcp = self._mcp
         return {"backend": "tigergraph", "ok": True, "host": TG.host,
+                "transport": self.graph.transport,
+                "mcp_tools": len(mcp.tools) if mcp else 0,
+                "mcp_calls": mcp.calls if mcp else 0,
+                "mcp_fallbacks": self.graph.fallbacks,
                 "graph": TG.graph, "vertex_counts": stats,
                 "embedding_dim": EMBED.dim}

@@ -17,17 +17,17 @@ FOR GRAPH FraudGraph SYNTAX v2 {
   start = {Card.*};
   start = SELECT c FROM start:c WHERE c.card_id == card_id;
 
-  win = SELECT t FROM start:c -(MADE:e)- Transaction:t
+  win = SELECT t FROM start:c -(MADE>:e)- Transaction:t
         WHERE t.ts > cutoff AND t.ts <= as_of
         ACCUM @@n_window += 1, @@window_value += t.amount,
               @@window_txns += t.txn_id, @@window_regions += t.region,
               CASE WHEN t.channel == "online"
                    THEN @@w_online += 1 ELSE @@w_in_person += 1 END;
 
-  wdev = SELECT d FROM win:t -(FROM_DEVICE:e)- DeviceProfile:d
+  wdev = SELECT d FROM win:t -(FROM_DEVICE>:e)- DeviceProfile:d
          ACCUM @@window_devices += d.device_profile;
 
-  base = SELECT t FROM start:c -(MADE:e)- Transaction:t
+  base = SELECT t FROM start:c -(MADE>:e)- Transaction:t
          WHERE t.ts <= cutoff
          ACCUM @@n_baseline += 1, @@base_sum += t.amount;
 

@@ -12,7 +12,11 @@ langchain-core>=0.3
 
 # TigerGraph. Only needed when running against a live workspace; the local
 # mirror over the staged parquet needs none of it.
-pyTigerGraph>=1.6
+pyTigerGraph>=2.0
+# The agent reaches the graph through the official TigerGraph MCP server
+# (TG_VIA_MCP=1, the default). Without it the store connects directly.
+tigergraph-mcp>=1.0
+mcp>=1.0
 
 # Analyst console
 fastapi>=0.110
@@ -28,4 +32,4 @@ sentence-transformers>=3.0
 # Optional LLM providers — install only the one you use.
 anthropic>=0.40
 # openai>=1.40
-# google-generativeai>=0.8
+google-generativeai>=0.8

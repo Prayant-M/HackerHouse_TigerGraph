@@ -182,6 +182,14 @@ def apply_lr(posterior: dict[str, float], lrs: dict[str, float],
     return _normalise(out)
 
 
+# Rare structural signals whose *absence* is not evidence. `peer_purchases` fires
+# on 8.5% of confirmed fraud and 0.4% of cleared cases, so its presence is a
+# measured 22x; but folding in "did not fire" on every other case nudged each
+# one away from card-not-present fraud, and on the October holdout that cost
+# nineteen correct pattern calls. Absence of a rare hub is not a finding.
+FIRED_ONLY: frozenset[str] = frozenset({"peer_purchases"})
+
+
 class EvidenceLedger:
     """Append-only belief state. Every entry records the posterior on both sides
     of its own update, so the case file can show exactly what moved the needle."""
@@ -242,6 +250,8 @@ class EvidenceLedger:
                    for h, v in structural.items()}
             return self.add(sig.name, "structural", lrs, RELIABILITY["structural"],
                             sig.claim, sig.ref, sig.entity_ids)
+        if not sig.fired and sig.name in FIRED_ONLY:
+            return None
         lrs = self.measured_lr(sig.name, sig.fired)
         if lrs is None:
             return None

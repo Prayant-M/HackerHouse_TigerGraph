@@ -61,8 +61,8 @@ def seed_for(case_id: str, action_key: str) -> int:
     return int.from_bytes(hashlib.sha256(blob).digest()[:4], "big")
 
 
-def respond(case_id: str, action: EvidenceAction,
-            posterior: dict[str, float]) -> SimulatedResponse:
+def respond(case_id: str, action: EvidenceAction, posterior: dict[str, float],
+            recurring: dict[str, Any] | None = None, amount: float = 0.0) -> SimulatedResponse:
     """Sample a channel response from the agent's *own* predictive distribution.
 
     Using the agent's belief as the response model is the honest choice
@@ -74,6 +74,23 @@ def respond(case_id: str, action: EvidenceAction,
     dist = action.outcome_distribution(posterior)
     if not dist:
         return SimulatedResponse("", "UNKNOWN", "No channel response available.", 0)
+
+    # R7. The question put to the cardholder is "is this your recurring charge?",
+    # and the card itself answers most of it: the same amount and product code,
+    # again and again, for months. The closed history cannot teach this reply,
+    # because every one of its 4,665 customer reports was fraud; the posterior
+    # alone would assume a denial. Recognition is the reply the evidence supports.
+    if (recurring and recurring.get("recurring") and action.key == "customer_validation"
+            and "customer_confirmed" in dist):
+        n = int(recurring.get("n_prior_same_amount", 0))
+        assumed = (f"Simulated: asked whether the ${amount:,.2f} charge is their own recurring "
+                   f"charge, the cardholder recognises it. Assumed because the card shows {n} "
+                   f"earlier charges of the same amount and product code over "
+                   f"{recurring.get('span_days', 0):.0f} days ({recurring.get('cadence', '')} "
+                   f"cadence), which is what policy R7 describes; no real reply was available "
+                   f"for this round.")
+        return SimulatedResponse(outcome_key="customer_confirmed", response_text="CONFIRMED",
+                                 assumed_response=assumed, seed=seed_for(case_id, action.key))
 
     if SIM.mode == "sample":
         u = _uniform(case_id, action.key)

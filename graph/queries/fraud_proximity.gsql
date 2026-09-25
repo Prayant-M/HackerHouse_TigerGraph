@@ -16,28 +16,49 @@ USE GRAPH FraudGraph
 CREATE OR REPLACE QUERY fraud_proximity(SET<STRING> entity_ids, DATETIME as_of,
                                         INT max_hops = 2)
 FOR GRAPH FraudGraph SYNTAX v2 {
+  /* A closed case is reached from its customer, its card, its transactions,
+     its connected cards and the device profiles its transactions used — the
+     same index the local mirror keeps. The walk back out of a case goes to
+     everything but devices: a device profile is a browser fingerprint shared
+     by thousands of cards, and expanding through it would reach everything.
+     Customers have no edge to ClosedCase, so they travel as ids. */
   SumAccum<DOUBLE> @@proximity;
   SetAccum<STRING> @@contributing;
+  SetAccum<STRING> @@cust_frontier, @@cust_seen;
   OrAccum          @visited;
 
-  seeds = {Card.*, Customer.*, Transaction.*, DeviceProfile.*};
-  seeds = SELECT v FROM seeds:v
-          WHERE entity_ids.contains(v.card_id) OR entity_ids.contains(v.customer_id)
-             OR entity_ids.contains(v.txn_id) OR entity_ids.contains(v.device_profile)
-          ACCUM v.@visited += TRUE;
+  /* Seed by id and type: Transaction also carries card_id and customer_id,
+     so matching attributes across types would seed a card's whole history. */
+  cards    = to_vertex_set(entity_ids, "Card");
+  txns     = to_vertex_set(entity_ids, "Transaction");
+  devices  = to_vertex_set(entity_ids, "DeviceProfile");
+  frontier = cards UNION txns UNION devices;
+  frontier = SELECT v FROM frontier:v ACCUM v.@visited += TRUE;
+  @@cust_frontier += entity_ids;
+  @@cust_seen += entity_ids;
 
-  frontier = seeds;
   FOREACH hop IN RANGE[1, max_hops] DO
-    cases = SELECT c FROM frontier:f
-                 -((CC_CARD_OF|CC_CONNECTED_FROM|CC_INVOLVED_IN|CC_DEVICE_OF):e)- ClosedCase:c
-            WHERE c.opened_at < as_of AND c.@visited == FALSE
-            ACCUM c.@visited += TRUE
+    by_edge = SELECT c FROM frontier:f
+                   -((CC_CARD_OF>|CC_CONNECTED_FROM>|CC_INVOLVED_IN>|CC_DEVICE_OF>):e)- ClosedCase:c
+              WHERE c.opened_at < as_of AND c.@visited == FALSE;
+    by_cust = SELECT c FROM ClosedCase:c
+              WHERE @@cust_frontier.contains(c.customer_id)
+                AND c.opened_at < as_of AND c.@visited == FALSE;
+    cases = by_edge UNION by_cust;
+    cases = SELECT c FROM cases:c
             POST-ACCUM
+              c.@visited += TRUE,
               CASE WHEN c.outcome == "confirmed_fraud"
                    THEN @@proximity += pow(0.5, hop), @@contributing += c.case_id END;
 
+    @@cust_frontier.clear();
+    step = SELECT c FROM cases:c
+           WHERE NOT @@cust_seen.contains(c.customer_id)
+           ACCUM @@cust_frontier += c.customer_id;
+    @@cust_seen += @@cust_frontier;
+
     frontier = SELECT v FROM cases:c
-                    -((CC_ON_CARD|CC_CONNECTED_TO|CC_INVOLVES|CC_ON_DEVICE):e)- :v
+                    -((CC_ON_CARD>|CC_CONNECTED_TO>|CC_INVOLVES>):e)- :v
                WHERE v.@visited == FALSE
                ACCUM v.@visited += TRUE;
   END;

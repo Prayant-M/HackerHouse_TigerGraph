@@ -44,19 +44,23 @@ from fraudagent.config import PATHS, TG  # noqa: E402
 GRAPH_DIR = ROOT / "graph"
 STAGED_CSV = PATHS.staged / "graph_csv"
 
-STEPS = ["schema", "vectors", "load", "queries", "projections", "verify"]
+STEPS = ["schema", "vectors", "load", "queries", "projections", "algorithms", "verify"]
 
+# (job, [(DEFINE FILENAME variable, staged csv), ...]). RESTPP routes each
+# upload to the job's filename variable, so the tag must match the GSQL.
 LOADING_JOBS = [
-    ("load_entities", ["customers.csv", "cards.csv", "devices.csv", "regions.csv",
-                       "email_domains.csv"]),
-    ("load_transactions", ["transactions.csv"]),
-    ("load_card_ownership", ["cards.csv"]),
-    ("load_next_txn", ["next_txn.csv"]),
-    ("load_closed_cases", ["closed_cases.csv", "closed_case_txns.csv",
-                           "closed_case_connected.csv", "closed_case_devices.csv"]),
-    ("load_policy", ["policy_docs.csv", "patterns.csv"]),
-    ("load_behaviour_vectors", ["behaviour_emb.csv"]),
-    ("load_analysts", ["analysts.csv"]),
+    ("load_entities", [("f_customer", "customers.csv"), ("f_card", "cards.csv"),
+                       ("f_device", "devices.csv"), ("f_region", "regions.csv"),
+                       ("f_email", "email_domains.csv")]),
+    ("load_transactions", [("f_txn", "transactions.csv")]),
+    ("load_card_ownership", [("f_card", "cards.csv")]),
+    ("load_next_txn", [("f_next", "next_txn.csv")]),
+    ("load_closed_cases", [("f_cc", "closed_cases.csv"), ("f_cc_txn", "closed_case_txns.csv"),
+                           ("f_cc_conn", "closed_case_connected.csv"),
+                           ("f_cc_dev", "closed_case_devices.csv")]),
+    ("load_policy", [("f_doc", "policy_docs.csv"), ("f_pattern", "patterns.csv")]),
+    ("load_behaviour_vectors", [("f_beh", "behaviour_emb.csv")]),
+    ("load_analysts", [("f_a", "analysts.csv")]),
 ]
 
 
@@ -85,9 +89,21 @@ def run_gsql(conn, path: Path, dry: bool) -> None:
     log(f"  {path.relative_to(ROOT)}  ({len(text.splitlines())} lines)")
     if dry:
         return
-    out = conn.gsql(text)
-    lowered = str(out).lower()
-    if "error" in lowered or "failed" in lowered:
+    try:
+        out = conn.gsql(text)
+    except Exception as exc:  # pyTigerGraph raises on some failures itself
+        out = f"failed: {exc}"
+    # an install summary reports "failed: 0" on success
+    lowered = str(out).lower().replace("failed: 0", "")
+    # GSQL reports refusals as plain prose, not as errors: a missing privilege,
+    # a reserved word or a graph that was never created would otherwise pass
+    # silently. Plain "error" is too broad — float-comparison warnings say
+    # "error margin" on queries that compiled fine.
+    markers = ("syntax error", "check error", "semantic check fails", "failed",
+               "does not have the permission", "does not exist", "reserved keyword",
+               "encountered \"", "was expecting", "no viable alternative",
+               "saved as draft", "type check error")
+    if any(m in lowered for m in markers):
         log(f"  !! {path.name}:\n{out}")
         raise SystemExit(f"GSQL failed in {path.name}")
 
@@ -117,31 +133,75 @@ def step_load(conn, dry: bool) -> None:
     log("loading jobs")
     run_gsql(conn, GRAPH_DIR / "loading" / "03_loading_jobs.gsql", dry)
     for job, files in LOADING_JOBS:
-        paths = [STAGED_CSV / f for f in files]
-        missing = [p.name for p in paths if not p.exists()]
+        paths = [(tag, STAGED_CSV / f) for tag, f in files]
+        missing = [p.name for _, p in paths if not p.exists()]
         if missing:
             log(f"  skipping {job}: missing {missing}")
             continue
-        size = sum(p.stat().st_size for p in paths) / 1e6
+        size = sum(p.stat().st_size for _, p in paths) / 1e6
         log(f"  {job}  ({size:.1f} MB)")
         if dry:
             continue
         t0 = time.time()
         # A job with several DEFINE FILENAME sources is fed one file at a time
         # through the same job; RESTPP matches each upload to its filename.
-        for path in paths:
-            conn.runLoadingJobWithFile(str(path), "ANY", job, timeout=3_600_000,
-                                       sizeLimit=2_000_000_000)
+        for tag, path in paths:
+            upload(conn, job, tag, path)
         log(f"    done in {time.time()-t0:.0f}s")
+
+
+CHUNK_BYTES = 48_000_000
+
+
+def upload(conn, job: str, tag: str, path: Path) -> None:
+    """Post one staged CSV to a loading job, without its header row.
+
+    The jobs name columns through DEFINE HEADER (Savanna has no server-side
+    file to read a header from), and with a user-defined header the first
+    line would otherwise be loaded as data. Large files are sent in chunks
+    split on line boundaries — only the numeric files are that large, so no
+    quoted field spans a chunk boundary."""
+    def post(data: str) -> None:
+        res = conn.runLoadingJobWithData(data, tag, job, timeout=3_600_000,
+                                         sizeLimit=2_000_000_000)
+        stats = res[0].get("statistics", res[0]) if isinstance(res, list) and res else res
+        log(f"      {tag}: {str(stats)[:160]}")
+
+    with path.open(encoding="utf-8", newline="") as fh:
+        fh.readline()  # header
+        if path.stat().st_size <= CHUNK_BYTES:
+            post(fh.read())
+            return
+        buf, size = [], 0
+        for line in fh:
+            buf.append(line)
+            size += len(line)
+            if size >= CHUNK_BYTES:
+                post("".join(buf))
+                buf, size = [], 0
+        if buf:
+            post("".join(buf))
 
 
 def step_projections(conn, dry: bool) -> None:
     log("derived projections and graph data science")
     run_gsql(conn, GRAPH_DIR / "algorithms" / "04_projections.gsql", dry)
     if not dry:
+        log("  installing projection queries…")
+        print(conn.gsql(f"USE GRAPH {TG.graph}\n"
+                        "INSTALL QUERY build_card_co_occurrence, build_anon_projection, ring_candidates"))
         log("  building CO_OCCURS_WITH…")
         print(conn.runInstalledQuery("build_card_co_occurrence",
                                      {"max_device_cards": 150}, timeout=3_600_000))
+
+
+def step_algorithms(conn, dry: bool) -> None:
+    """GDS library WCC + PageRank over the anonymous-proxy card projection."""
+    log("graph algorithms (GDBMS_ALGO: WCC, PageRank)")
+    if not dry:
+        log("  building ANON_CO_OCCURS…")
+        print(conn.runInstalledQuery("build_anon_projection", {}, timeout=3_600_000))
+    run_gsql(conn, GRAPH_DIR / "algorithms" / "05_graph_algorithms.gsql", dry)
 
 
 def step_verify(conn, dry: bool) -> None:
@@ -182,13 +242,18 @@ def step_verify(conn, dry: bool) -> None:
 def main() -> int:
     ap = argparse.ArgumentParser()
     ap.add_argument("--step", default="all", choices=STEPS + ["all"])
+    ap.add_argument("--from", dest="from_step", choices=STEPS,
+                    help="resume: run this step and every step after it")
     ap.add_argument("--dry-run", action="store_true")
     args = ap.parse_args()
 
     conn = None if args.dry_run else connect()
     steps = STEPS if args.step == "all" else [args.step]
+    if args.from_step:
+        steps = STEPS[STEPS.index(args.from_step):]
     handlers = {"schema": step_schema, "vectors": step_vectors, "load": step_load,
                 "queries": step_queries, "projections": step_projections,
+                "algorithms": step_algorithms,
                 "verify": step_verify}
     for s in steps:
         handlers[s](conn, args.dry_run)

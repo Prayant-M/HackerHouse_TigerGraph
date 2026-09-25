@@ -138,6 +138,12 @@ def main() -> int:
     if llm.available:
         log(f"llm tokens: {llm.usage.total_tokens:,} across {llm.usage.calls} calls "
             f"({llm.usage.cached} served from cache)")
+        if llm.usage.errors:
+            # Failed calls fall back to template prose silently; say so here.
+            first = dict.fromkeys(e[:200] for e in llm.usage.errors)
+            log(f"llm errors: {len(llm.usage.errors)} calls fell back to templates")
+            for e in list(first)[:3]:
+                log(f"  {e}")
 
     report = PATHS.eval_out / "benchmark_summary.md"
     report.parent.mkdir(parents=True, exist_ok=True)
