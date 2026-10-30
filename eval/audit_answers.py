@@ -1,4 +1,4 @@
-"""Audit the twenty answer files against the raw data and the Fraud Policy.
+"""Audit every answer file against the raw data and the Fraud Policy.
 
 There is no answer key, so correctness cannot be proven here. What can be
 checked is everything that is mechanically true or false:
@@ -39,6 +39,27 @@ from fraudagent.config import PATHS  # noqa: E402
 from fraudagent.report.answer import validate  # noqa: E402
 
 ROUTE = {"DECLINE_TRANSACTION": "L1", "BLOCK_ALL_CARDS": "L2", "FILE_REPORT": "L2"}
+ANSWER_GLOBS = ("HHF-*.json", "HHG-*.json")
+
+
+def load_packs() -> dict[str, dict]:
+    """Every case pack present, keyed by case id. The final-round pack holds only
+    the HHF cases, so a Round 1 answer may have no pack row on this machine."""
+    frames = [pd.read_csv(f, dtype=str) for f in PATHS.case_pack_files()]
+    if not frames:
+        return {}
+    return pd.concat(frames).drop_duplicates("case_id", keep="last").set_index(
+        "case_id").to_dict("index")
+
+
+def alert_for(case_id: str, packs: dict[str, dict], rec: dict) -> tuple[dict, str]:
+    """The alert to audit against: the case pack when it has this case, otherwise
+    the trigger saved in the answer file, and which of the two was used."""
+    if case_id in packs:
+        return packs[case_id], "case pack"
+    t = rec["trigger"]
+    return {"opened_at": t["opened_at"], "card_id": t["card_id"],
+            "flagged_txn_id": t["flagged_txn_id"], "trigger_type": t["type"]}, "answer file"
 
 
 def audit(case_dir: Path, graph_ids: set[str] | None = None) -> tuple[list[dict], int]:
@@ -50,13 +71,14 @@ def audit(case_dir: Path, graph_ids: set[str] | None = None) -> tuple[list[dict]
     txns = tx.set_index("txn_id")
     cards = set(tx["card_id"])
     closed = pd.read_parquet(PATHS.staged / "closed_cases.parquet").set_index("case_id")
-    pack = pd.read_csv(PATHS.case_pack_csv, dtype=str).set_index("case_id")
+    packs = load_packs()
 
     rows, total = [], 0
-    for path in sorted(case_dir.glob("HHG-*.json")):
+    for path in sorted(f for pattern in ANSWER_GLOBS for f in case_dir.glob(pattern)):
         d = json.loads(path.read_text(encoding="utf-8"))
-        cid, c, p = d["case_id"], d["case"], pack.loc[d["case_id"]]
+        cid, c = d["case_id"], d["case"]
         rec = d.get("agent_record", {})
+        p, alert_source = alert_for(cid, packs, rec)
         issues = list(validate(d, set(txns.index), cards, set(closed.index)))
         opened = pd.Timestamp(p["opened_at"])
         aff = c["affected_txn_ids"]
@@ -123,18 +145,22 @@ def audit(case_dir: Path, graph_ids: set[str] | None = None) -> tuple[list[dict]
         total += len(issues)
         rows.append({"case": cid, "trigger": p["trigger_type"], "verdict": c["verdict"],
                      "p": pr, "pattern": c["pattern"], "exposure": c["exposure_usd"],
-                     "sar": d["sar"]["file"], "final": " → ".join(acts), "issues": issues})
+                     "sar": d["sar"]["file"], "final": " → ".join(acts),
+                     "alert_source": alert_source, "issues": issues})
     return rows, total
 
 
 def main() -> int:
     case_dir = Path(sys.argv[1]) if len(sys.argv) > 1 else PATHS.cases_out
     rows, total = audit(case_dir)
+    from_pack = sum(r["alert_source"] == "case pack" for r in rows)
     lines = ["# Answer audit", "",
              f"{len(rows)} answer files in `{case_dir.name}/`, **{total} issue(s)**. "
              "Checks: data integrity, §2 routing, §3a case/SAR, §4 exposure, R1, R2, R3, R7, "
              "§6 stopping, graph read-back. There is no answer key; this proves consistency, "
-             "not correctness.", "",
+             "not correctness.",
+             "", f"Alert details came from the case pack for {from_pack} file(s) and from the "
+             f"trigger saved in the answer file for {len(rows) - from_pack}.", "",
              "| case | trigger | verdict | p | pattern | exposure | SAR | final actions | audit |",
              "|---|---|---|---:|---|---:|---|---|---|"]
     for r in rows:

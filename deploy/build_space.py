@@ -4,7 +4,7 @@
     python deploy/build_space.py --out some/dir
 
 The bundle is a Docker app (Hugging Face Spaces, Render, Railway, Fly — any
-host that builds a Dockerfile). It contains the twenty answer files, the
+host that builds a Dockerfile). It contains the answer files, the
 autonomous-monitoring results, the policy text, the measured likelihood ratios
 and a snapshot of graph health and the answer audit, taken now from this
 machine. It contains no credentials, no `.env`, and none of the 700 MB of
@@ -68,11 +68,11 @@ short_description: Agentic fraud investigation on TigerGraph, read-only demo
 # FraudGraph Agent: analyst console (read-only)
 
 A public, read-only copy of the analyst console from the TigerGraph × Hacker
-House Goa 2026 agentic fraud investigation project. It shows the twenty
-benchmark investigations exactly as the agent wrote them: evidence and how
+House Goa 2026 agentic fraud investigation project. It shows the benchmark
+investigations exactly as the agent wrote them: evidence and how
 each piece moved the probability, the case subgraph, similar past cases, the
-hash-chained audit trail, the approval queue, the scoreboard with its answer
-audit, and the cases the agent raised on its own.
+hash-chained audit trail, the approval queue, and the cases the agent raised
+on its own.
 
 The agent itself ran against TigerGraph Savanna through the TigerGraph MCP
 server. This copy serves a snapshot of those results, so it needs no graph
@@ -137,7 +137,7 @@ def build(out: Path) -> None:
                     ignore=shutil.ignore_patterns("__pycache__", "*.pyc"))
     shutil.copytree(ROOT / "ui", out / "ui",
                     ignore=shutil.ignore_patterns("__pycache__", "*.pyc", "_probe.html"))
-    copy_tree(ROOT / "cases", out / "cases", ("HHG-*.json",))
+    copy_tree(ROOT / "cases", out / "cases", ("HHF-*.json", "HHG-*.json"))
     copy_tree(ROOT / "benchmark" / "autonomous", out / "benchmark" / "autonomous", ("AUTO-*.json",))
     copy_tree(ROOT / "data" / "policy", out / "data" / "policy")
     (out / "data" / "staged").mkdir(parents=True)
@@ -174,6 +174,7 @@ def build_static(out: Path) -> None:
     page = (ROOT / "ui" / "static" / "index.html").read_text(encoding="utf-8")
     page = page.replace('href="/static/', 'href="static/').replace('src="/static/', 'src="static/')
     page = page.replace("<html ", '<html data-static="1" ', 1)
+    page = page.replace('href="/docs"', 'href="api-docs/"')
     assert 'data-static="1"' in page, "index.html has no <html ...> tag to mark"
     (out / "index.html").write_text(page, encoding="utf-8")
 
@@ -198,6 +199,9 @@ def build_static(out: Path) -> None:
     for c in cases:
         dump(f"api/cases/{c['case_id']}", server.case_detail(c["case_id"]))
         dump(f"api/graph/{c['case_id']}", server.case_graph(c["case_id"]))
+        dump(f"api/replay/{c['case_id']}", server.regulator_replay(c["case_id"]))
+        dump(f"api/lifecycle/{c['case_id']}", server.lifecycle_view(c["case_id"]))
+        dump(f"api/ring/{c['case_id']}", server.ring_replay(c["case_id"]))
     dump("api/approvals", server.approvals())
     dump("api/calibration", server.calibration())
     dump("api/policy", server.policy())
