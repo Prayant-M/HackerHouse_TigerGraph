@@ -8,6 +8,12 @@ info:
     page and this API: saved investigations, the proof behind each decision,
     human approvals, analyst feedback, detector governance and live re-runs.
 
+    ## Reading this on the hosted site
+
+    The hosted site is read-only. It shows the saved [investigation results](/)
+    and this reference, with no backend behind it, so the requests below work
+    only against a console you run yourself.
+
     ## Run it
 
     ```bash
@@ -566,21 +572,12 @@ paths:
       description: |
         Runs `eval/audit_answers.py` and caches the result until the files change.
         Read-only mode returns the saved snapshot.
-
-        **Known issue:** in live mode this returns 500 when `case_pack_final.csv`
-        is present. The audit looks up `HHG-*` cases in that file, which holds only
-        the final-round cases.
       responses:
         '200':
           description: Audit result per case.
           content:
             application/json:
               schema: { $ref: '#/components/schemas/Audit' }
-        '500':
-          description: The audit failed. The body is plain text. See the known issue above.
-          content:
-            text/plain:
-              schema: { type: string }
   /:
     get:
       tags: [System]
@@ -692,6 +689,10 @@ components:
         answer_files: { type: integer }
         calibration: { type: boolean, description: Whether the likelihood-ratio table exists. }
         cases_dir: { type: string, description: Live mode only. }
+        graph_case_ids:
+          type: [array, 'null']
+          description: FraudCase ids in the graph now, or null when unknown.
+          items: { type: string }
         captured_at: { type: [string, 'null'], description: Read-only mode only. }
     CaseSummary:
       type: object
@@ -734,6 +735,10 @@ components:
         tainted: { type: boolean, description: Whether data quality checks tainted the case. }
         origin: { type: [string, 'null'], description: Entity type of the compromise origin on ring cases. }
         at_risk: { type: integer }
+        in_graph: { $ref: '#/components/schemas/InGraph' }
+    InGraph:
+      type: [boolean, 'null']
+      description: Whether this case is in the graph now. Null when that is unknown, such as on the local mirror.
     Answer:
       type: object
       description: One saved investigation. `agent_record` holds the full audit trail.
@@ -758,6 +763,7 @@ components:
           items: { $ref: '#/components/schemas/PendingAction' }
         audit_chain: { $ref: '#/components/schemas/AuditChain' }
         agent_record: { $ref: '#/components/schemas/AgentRecord' }
+        in_graph: { $ref: '#/components/schemas/InGraph' }
     AutonomousAnswer:
       allOf:
         - $ref: '#/components/schemas/Answer'
@@ -1305,6 +1311,10 @@ components:
               exposure: { type: number }
               sar: { type: boolean }
               final: { type: string }
+              alert_source:
+                type: string
+                enum: [case pack, answer file]
+                description: Where the alert details came from.
               issues:
                 type: array
                 items: { type: string }

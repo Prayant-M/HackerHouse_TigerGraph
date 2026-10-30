@@ -12,8 +12,8 @@ short_description: Agentic fraud investigation on TigerGraph, read-only demo
 # FraudGraph Agent: analyst console (read-only)
 
 A public, read-only copy of the analyst console from the TigerGraph × Hacker
-House Goa 2026 agentic fraud investigation project. It shows the twenty
-benchmark investigations exactly as the agent wrote them: evidence and how
+House Goa 2026 agentic fraud investigation project. It shows the benchmark
+investigations exactly as the agent wrote them: evidence and how
 each piece moved the probability, the case subgraph, similar past cases, the
 hash-chained audit trail, the approval queue, the scoreboard with its answer
 audit, and the cases the agent raised on its own.

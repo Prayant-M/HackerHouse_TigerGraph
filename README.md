@@ -613,7 +613,7 @@ There is no answer key, so correctness cannot be proven. What can be checked is
 everything mechanical: `python eval/audit_answers.py` verifies every ID against
 the dataset, that nothing postdates the alert, exposure (§4), approval routes
 (§2), case and SAR rules (§3a), R1, R2, R3, R7, the stop rule (§6) and graph
-read-back. Current result: **0 issues across 20 files**
+read-back. Current result: **0 issues across 38 files**
 (`eval/reports/answer_audit.md`). The console's Scoreboard shows the same audit
 per case.
 
