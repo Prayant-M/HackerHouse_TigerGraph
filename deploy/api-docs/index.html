@@ -1,0 +1,41 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>FraudGraph API Reference</title>
+  <meta name="description" content="OpenAPI 3.1 reference for the FraudGraph analyst console.">
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;600&family=IBM+Plex+Sans:wght@400;600&display=swap">
+  <style>
+    body { margin: 0; background: #F5F7F7; color: #17242A; font-family: "IBM Plex Sans", system-ui, "Segoe UI", sans-serif }
+    noscript, #fallback { display: block; padding: 24px 16px }
+  </style>
+</head>
+<body>
+  <div id="redoc"><p id="fallback">Loading the API reference. If it does not appear, <a href="openapi.yaml">open the OpenAPI file</a>.</p></div>
+  <script src="https://cdn.jsdelivr.net/npm/redoc@2.1.5/bundles/redoc.standalone.js"></script>
+  <script>
+    Redoc.init("openapi.yaml", {
+      hideDownloadButton: false,
+      expandResponses: "200",
+      requiredPropsFirst: true,
+      pathInMiddlePanel: true,
+      jsonSampleExpandLevel: 2,
+      theme: {
+        colors: {
+          primary: { main: "#0A6A86" }, success: { main: "#23753B" }, warning: { main: "#BC4A06" },
+          error: { main: "#B3261E" }, text: { primary: "#17242A", secondary: "#55666D" },
+          http: { get: "#0A6A86", post: "#BC4A06" }
+        },
+        typography: {
+          fontSize: "15px", lineHeight: "1.55em", fontFamily: '"IBM Plex Sans", system-ui, "Segoe UI", sans-serif',
+          headings: { fontFamily: '"IBM Plex Sans", system-ui, "Segoe UI", sans-serif', fontWeight: "600" },
+          code: { fontFamily: '"IBM Plex Mono", ui-monospace, Consolas, monospace', fontSize: "13px" }
+        },
+        sidebar: { backgroundColor: "#E9EEEE", textColor: "#17242A", activeTextColor: "#0A6A86" },
+        rightPanel: { backgroundColor: "#17242A", textColor: "#E6EEF0" }
+      }
+    }, document.getElementById("redoc"));
+  </script>
+</body>
+</html>
