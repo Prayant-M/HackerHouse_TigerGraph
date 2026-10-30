@@ -48,7 +48,7 @@ TOOL_METHODS = frozenset({
     "fraud_proximity", "hybrid_case_recall", "behavioural_neighbours", "policy_retrieve",
     "mixed_channel_probe", "write_case", "case_chain", "ring_at_asof", "origin_counts",
     "origin_touchers", "ring_exposure", "precedent_by_facts", "compromise_watch", "data_gaps",
-    "behaviour_vector",
+    "behaviour_vector", "recipient_window",
 })
 WRITE_METHODS = frozenset({"write_case"})
 

@@ -147,6 +147,9 @@ def assign_card_ids(tx: pd.DataFrame, pins: dict[int, str]) -> pd.Series:
 
 # ------------------------------------------------------------------ main ----
 def main() -> None:
+    from fraudagent.governance.drift_gate import require_open
+
+    require_open("normalise")
     t0 = time.time()
     PATHS.ensure()
     files = PATHS.transaction_files()

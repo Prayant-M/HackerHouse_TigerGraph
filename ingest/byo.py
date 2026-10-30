@@ -123,6 +123,62 @@ def _norm(name: str) -> str:
     return re.sub(r"[^a-z0-9_]", "", re.sub(r"([a-z])([A-Z])", r"\1_\2", name).lower())
 
 
+# Canonical numbered families and their sizes. A source family is a set of
+# columns sharing one prefix with a numeric suffix (x1..x339, sig_01..sig_38);
+# it is matched to the canonical family of the same size, or by a name hint,
+# then mapped member by member by index. Size is strong evidence: the five
+# canonical families all have different sizes.
+FAMILY_SIZES = {"V": 339, "C": 14, "D": 15, "M": 9, "id_": 38}
+MIN_FAMILY = 5
+# Only money columns may be rescaled (cents, thousands). A time offset or a
+# count that "matches at x0.01" is a coincidence, not a unit change.
+SCALABLE = frozenset({"TransactionAmt", "exposure_usd"})
+
+
+def source_families(columns: list[str]) -> dict[str, dict[int, str]]:
+    fams: dict[str, dict[int, str]] = {}
+    for c in columns:
+        m = re.match(r"^([a-z_]*?[a-z])_?0*(\d+)$", _norm(c))
+        if m:
+            fams.setdefault(m.group(1), {})[int(m.group(2))] = c
+    return fams
+
+
+def match_families(columns: list[str], canonical: list[str]) -> list[dict]:
+    """[{prefix, family, members: {canonical_col: source_col}, why}]"""
+    out, taken = [], set()
+    for prefix, members in sorted(source_families(columns).items(), key=lambda kv: -len(kv[1])):
+        best = None
+        for fam, size in FAMILY_SIZES.items():
+            if fam in taken:
+                continue
+            rx = FAMILIES[fam][0]
+            hint = bool(re.match(rx, f"{prefix}_1"))
+            # A name hint (vesta_007, cnt_3) is enough on its own; matching by
+            # size alone needs a real family, not two stray numbered columns.
+            if not (hint or (len(members) >= MIN_FAMILY and len(members) == size
+                             and max(members) == size)):
+                continue
+            if max(members) > size:
+                continue
+            why = ("name hint" if hint else "") + (" + " if hint and len(members) == size else "") +                   (f"same size ({size} members, 1..{size})" if len(members) == size else "")
+            cand = (hint, len(members) == size, fam, why)
+            if best is None or cand[:2] > best[:2]:
+                best = cand
+        if best is None:
+            continue
+        fam = best[2]
+        mapped = {}
+        for i, c in members.items():
+            dst = f"id_{i:02d}" if fam == "id_" else f"{fam}{i}"
+            if dst in canonical:
+                mapped[dst] = c
+        if mapped:
+            taken.add(fam)
+            out.append({"prefix": prefix, "family": fam, "members": mapped, "why": best[3]})
+    return out
+
+
 def family_of(name: str) -> str | None:
     n = _norm(name)
     for fam, (rx, top) in FAMILIES.items():
@@ -133,7 +189,7 @@ def family_of(name: str) -> str | None:
     return None
 
 
-def value_score(s: pd.Series, p: dict) -> tuple[float, str, float]:
+def value_score(s: pd.Series, p: dict, dst: str = "") -> tuple[float, str, float]:
     v = s.dropna()
     if v.empty:
         return 0.0, "no values", 1.0
@@ -142,7 +198,7 @@ def value_score(s: pd.Series, p: dict) -> tuple[float, str, float]:
         qa = np.quantile(v.astype(float), [0.1, 0.5, 0.9])
         qb = np.asarray(p["q"])
         best, best_s = 0.0, 1.0
-        for scale in (1.0, 0.01, 100.0, 0.001, 1000.0):
+        for scale in ((1.0, 0.01, 100.0, 0.001, 1000.0) if dst in SCALABLE else (1.0,)):
             rel = np.abs(qa * scale - qb) / (np.abs(qb) + 1e-9)
             sim = float(np.clip(1 - rel.mean(), 0, 1))
             if sim > best:
@@ -154,6 +210,15 @@ def value_score(s: pd.Series, p: dict) -> tuple[float, str, float]:
         sh = _shape(v.astype(str).head(200).tolist())
         if sh and sh == p.get("shape"):
             return 0.9, f"same value shape ({sh})", 1.0
+        # Free text (analyst notes, trigger text): values never repeat, but the
+        # vocabulary does. Compare word sets of the two samples.
+        src_txt = v.astype(str).head(300).tolist()
+        if p["top"] and np.median([len(x) for x in src_txt]) > 40                 and np.median([len(x) for x in p["top"]]) > 40:
+            wa = {w for x in src_txt for w in re.findall(r"[a-z]{3,}", x.lower())}
+            wb = {w for x in p["top"] for w in re.findall(r"[a-z]{3,}", x.lower())}
+            jac = len(wa & wb) / max(1, len(wa | wb))
+            if jac >= 0.2:
+                return min(0.9, 0.4 + jac), f"free text, shared vocabulary {jac:.0%}", 1.0
         return min(1.0, len(shared) / max(1, min(len(sv), len(p["top"]), 20))), \
             f"{len(shared)} shared values", 1.0
     if k == p.get("kind"):
@@ -169,13 +234,15 @@ SYNONYMS = {"notes": "analyst_notes", "note": "analyst_notes", "linked": "connec
 def map_file(df: pd.DataFrame, role: str, spec: dict) -> dict:
     cols = spec[role]["columns"]
     mapping, used_src, used_dst = [], set(), set()
-    for c in df.columns:                                   # numbered families first
-        f = family_of(c)
-        if f and f in spec[role]["all_columns"] and f not in used_dst:
-            mapping.append({"from": c, "to": f, "score": 0.9, "transform": "identity",
-                            "evidence": {"family": f}})
+    for fm in match_families(list(df.columns), spec[role]["all_columns"]):   # families first
+        for dst, c in fm["members"].items():
+            if c in used_src or dst in used_dst:
+                continue
+            mapping.append({"from": c, "to": dst, "score": 0.9, "transform": "identity",
+                            "evidence": {"family": f"{fm['prefix']}* -> {fm['family']}* "
+                                                   f"({fm['why']}), member {dst}"}})
             used_src.add(c)
-            used_dst.add(f)
+            used_dst.add(dst)
     scored = []
     for c in df.columns:
         if c in used_src:
@@ -187,7 +254,7 @@ def map_file(df: pd.DataFrame, role: str, spec: dict) -> dict:
             nt = tc & (tokens(dst) | {dst})
             name = len(nt) / max(1, len(tokens(dst)))
             exact = _norm(c) == _norm(dst)
-            vs, why, scale = value_score(df[c], p)
+            vs, why, scale = value_score(df[c], p, dst)
             if vs < 0.3 and name >= 0.5 and kind(df[c]) in {p.get("kind"), "empty"}:
                 vs, why = 0.3, "name and type agree; values sparse or free text"
             score = (1.0 if exact else 0.35 * name) + 0.65 * vs
@@ -461,6 +528,7 @@ def main() -> int:
                # isolate every side effect from the main dataset's records
                RECORDINGS_DIR=str(staged / "recordings"), LIFECYCLE_DIR=str(staged / "lifecycle"),
                LOGS_DIR=str(staged / "logs"), EVAL_OUTPUT_DIR=str(rep_dir),
+               DRIFT_GATE="off",     # this dataset's own mapping approval gates it
                GRAPH_BACKEND="tigergraph" if args.graph else "local", AGENT_USE_LLM=os.environ.get(
                    "AGENT_USE_LLM", "0"))
     py = sys.executable

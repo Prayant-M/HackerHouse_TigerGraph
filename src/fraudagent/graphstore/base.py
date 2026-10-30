@@ -293,6 +293,12 @@ class GraphStore(ABC):
     def data_gaps(self, txn_ids: Sequence[str]) -> dict[str, Any]:
         return {"n": 0, "no_identity": [], "empty_region": [], "placeholder_email": []}
 
+    def recipient_window(self, txn_id: str, as_of: datetime,
+                         window_hours: int = 24) -> dict[str, Any]:
+        """C1: the flagged txn's recipient domain and every txn paying it in the
+        window, as [{txn_id, card_id, email_r}]."""
+        return {"domain": "", "rows": []}
+
     # ----------------------------------------------------------- health ----
     def health(self) -> dict[str, Any]:
         return {"backend": self.backend, "ok": True}

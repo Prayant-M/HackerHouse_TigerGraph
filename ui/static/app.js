@@ -1201,11 +1201,12 @@ async function tabContainment(d, pane) {
     const rr = await getJSON(`/api/ring/${encodeURIComponent(d.case_id)}`);
     const f = rr.frames || [];
     if (!f.length) { $("#ring-replay").innerHTML = `<p class="muted">${esc(rr.note || "No shared-device transactions to replay.")}</p>`; return; }
-    $("#ring-replay").innerHTML = `<input type="range" id="rr" min="0" max="${f.length - 1}" value="${f.length - 1}" style="width:100%">
+    $("#ring-replay").innerHTML = `<p class="muted">${esc(rr.summary || "")}</p>
+      <input type="range" id="rr" min="0" max="${f.length - 1}" value="${f.length - 1}" style="width:100%">
       <div id="rr-out"></div>`;
     const show = i => { const x = f[i];
-      $("#rr-out").innerHTML = `<p><b>${esc(x.ts)}</b> · card <code>${esc(x.card_id)}</code>${x.new_card ? " <b>joins</b>" : ""} · ${money(x.amount)} via <code>${esc((x.device || "").slice(0, 48))}</code>
-        <br>Cards in ring: <b>${x.cards_in_ring}</b> · cumulative loss: <b>${money(x.cumulative_usd)}</b> · txn <code>${esc(x.txn_id)}</code> (attested)</p>`; };
+      $("#rr-out").innerHTML = `<p><b>${esc(x.ts)}</b> · ${esc(x.story || "")}
+        <br>Cards in ring: <b>${x.cards_in_ring}</b> · attested suspect loss so far: <b>${money(x.cumulative_suspect_usd)}</b> · all shared-device activity: ${money(x.cumulative_activity_usd)} · txn <code>${esc(x.txn_id)}</code>${x.suspect ? " (suspect)" : ""} · device <code>${esc((x.device || "").slice(0, 48))}</code></p>`; };
     $("#rr").oninput = e => show(+e.target.value); show(f.length - 1);
   } catch { $("#ring-replay").innerHTML = `<p class="muted">Ring replay needs the live console.</p>`; }
 }
@@ -1242,6 +1243,11 @@ async function tabLifecycle(d, pane) {
       Waiting on: ${(h.waiting_on || []).map(esc).join("; ") || "nothing"}.
       Decided by the agent: ${(h.decided_by_agent || []).map(humanize).map(esc).join(", ") || "—"}.
       What changed: ${esc(h.what_changed || "—")}</div></div>
+    ${lc.status ? `<p><b>Owner:</b> ${esc(lc.status.owner || "unassigned")} ·
+      <b>In state</b> ${esc(lc.status.state)}${lc.status.hours_in_state != null ? ` for ${lc.status.hours_in_state} h` : ""}
+      ${lc.status.sla_hours ? ` · <b>due</b> ${esc(lc.status.due_at || "—")} (${lc.status.sla_hours} h, ${esc(lc.status.sla_source)})` : " · closed, no SLA"}
+      ${lc.status.overdue ? ` · <b style="color:var(--bad, #c0392b)">OVERDUE</b>` : ""}
+      <button id="lc-take" class="btn">Take / hand over</button></p>` : ""}
     <h3>State changes</h3>
     <ol>${(lc.state_changes || []).map(s => `<li><b>${esc(s.from || "∅")} → ${esc(s.to)}</b> · ${esc(s.actor)} (${esc(s.role)}) · ${esc(s.reason)}
       <code>${esc((s.evidence_ids || []).join(", "))}</code></li>`).join("")}</ol>
@@ -1251,6 +1257,16 @@ async function tabLifecycle(d, pane) {
     <h3>Runs across sittings</h3>
     <ul>${(lc.history || []).map(x => `<li>v${x.version} · ${esc(x.kind)} · ${esc(x.logged_at)} ${x.changed_since_last_run ? "· <b>decision changed</b>" : ""}</li>`).join("") || "<li>—</li>"}</ul>
     ${(lc.watch_children || []).length ? `<h3>WATCH child cases</h3><p>${lc.watch_children.map(w => `<code title="${esc(w.reason)}">${esc(w.id)}</code>`).join(" ")}</p>` : ""}`;
+  const take = $("#lc-take");
+  if (take) take.onclick = async () => {
+    const to = prompt("Assign to (actor id; leave empty to take it yourself):") || "";
+    const r = await fetch(`/api/cases/${encodeURIComponent(d.case_id)}/assign`, {
+      method: "POST", headers: { "Content-Type": "application/json", Authorization: `Bearer ${approvalToken()}` },
+      body: JSON.stringify({ to }) });
+    const j = await r.json().catch(() => ({}));
+    if (!r.ok) { alert(j.error || `refused (${r.status})`); return; }
+    tabLifecycle(d, pane);
+  };
 }
 
 function approvalToken() {

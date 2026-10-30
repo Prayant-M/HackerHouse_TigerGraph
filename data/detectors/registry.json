@@ -230,8 +230,8 @@
     "status": "proposed",
     "approved_by": "",
     "backtest": {
-      "agree": 7065,
-      "disagree": 58,
+      "agree": 7074,
+      "disagree": 59,
       "rule_only": [
         "NEG-3076567",
         "NEG-3079800",
@@ -279,7 +279,7 @@
         "CC-5285",
         "NEG-3396594"
       ],
-      "rule_only_fraud_rate": 0.275
+      "rule_only_fraud_rate": 0.293
     }
   },
   {
@@ -300,18 +300,197 @@
     "status": "proposed",
     "approved_by": "",
     "backtest": {
-      "agree": 7117,
-      "disagree": 6,
+      "agree": 7126,
+      "disagree": 7,
       "rule_only": [
         "CC-0856",
         "CC-1118",
         "CC-3925",
         "CC-3959",
         "CC-3995",
-        "CC-4002"
+        "CC-4002",
+        "CC-5579"
       ],
       "agent_only": [],
-      "rule_only_fraud_rate": 0.833
+      "rule_only_fraud_rate": 0.857
+    }
+  },
+  {
+    "id": "DISC-known_-online",
+    "name": "known_device_and_region + online_burst_2_to_4",
+    "origin": "discovered",
+    "status": "proposed",
+    "approved_by": "",
+    "spec": {
+      "type": "facts",
+      "all_of": [
+        "known_device_and_region",
+        "online_burst_2_to_4"
+      ],
+      "claim": "the conjunction known_device_and_region + online_burst_2_to_4 was 87% confirmed fraud across 110 cases (July-August, held on September)"
+    },
+    "mined_on": "2016-07-20..2016-08-31",
+    "support": 110,
+    "precision": 0.8727,
+    "dominant_pattern": "card_not_present_fraud",
+    "dominant_pattern_share": 0.76,
+    "validation": {
+      "month": "2016-09",
+      "fires": 79,
+      "precision": 0.8354,
+      "lift": 1.29
+    },
+    "backtest_october": {
+      "fires": 68,
+      "precision": 0.8824,
+      "caught": 60,
+      "missed": 1178,
+      "legit_touched": 8,
+      "fraud_the_core_missed": 59,
+      "caught_ids": [
+        "CC-4195",
+        "CC-4247",
+        "CC-4253",
+        "CC-4264",
+        "CC-4314",
+        "CC-4319",
+        "CC-4327",
+        "CC-4336",
+        "CC-4358",
+        "CC-4384",
+        "CC-4403",
+        "CC-4410",
+        "CC-4415",
+        "CC-4416",
+        "CC-4425",
+        "CC-4457",
+        "CC-4500",
+        "CC-4506",
+        "CC-4508",
+        "CC-4524"
+      ],
+      "missed_ids": [
+        "CC-4194",
+        "CC-4196",
+        "CC-4198",
+        "CC-4200",
+        "CC-4201",
+        "CC-4202",
+        "CC-4203",
+        "CC-4204",
+        "CC-4207",
+        "CC-4209",
+        "CC-4210",
+        "CC-4211",
+        "CC-4212",
+        "CC-4213",
+        "CC-4214",
+        "CC-4215",
+        "CC-4216",
+        "CC-4218",
+        "CC-4219",
+        "CC-4220"
+      ],
+      "legit_ids": [
+        "NEG-3319676",
+        "NEG-3328282",
+        "NEG-3343223",
+        "NEG-3349617",
+        "NEG-3372710",
+        "NEG-3392215",
+        "NEG-3397056",
+        "NEG-3411179"
+      ],
+      "core_missed_ids": [
+        "CC-4195",
+        "CC-4247",
+        "CC-4253",
+        "CC-4264",
+        "CC-4314",
+        "CC-4319",
+        "CC-4327",
+        "CC-4336",
+        "CC-4358",
+        "CC-4384",
+        "CC-4403",
+        "CC-4410",
+        "CC-4415",
+        "CC-4416",
+        "CC-4425",
+        "CC-4457",
+        "CC-4500",
+        "CC-4506",
+        "CC-4508",
+        "CC-4524"
+      ]
+    }
+  },
+  {
+    "id": "POL-R7",
+    "name": "R7 recurring charge (compiled from policy text)",
+    "origin": "policy",
+    "spec": {
+      "type": "recurring_charge",
+      "same_merchant": true,
+      "same_amount": true,
+      "period_days": 30,
+      "do_not_block": true,
+      "assumed": {
+        "period_tolerance_days": 5,
+        "amount_tolerance_usd": 0.01,
+        "min_prior_occurrences": 2,
+        "merchant": "product code (the schema has no merchant id)"
+      },
+      "source_text": "R7. Disputed but legitimate. When the customer disputes a charge that matches their own recurring pattern (same merchant, same amount, monthly), recommend `CREATE_CASE`, `VERIFY_WITH_CUSTOMER`, and `WARN_CUSTOMER`. Do not block."
+    },
+    "status": "proposed",
+    "approved_by": "",
+    "backtest": {
+      "agree": 7015,
+      "disagree": 118,
+      "rule_only": [
+        "NEG-3223309",
+        "CC-2915",
+        "NEG-3228105",
+        "NEG-3230162",
+        "NEG-3229756",
+        "NEG-3231915",
+        "NEG-3233164",
+        "CC-3022",
+        "CC-3039",
+        "NEG-3236120",
+        "CC-3047",
+        "NEG-3236215",
+        "NEG-3237103",
+        "NEG-3238383",
+        "NEG-3238393",
+        "NEG-3244357",
+        "CC-3166",
+        "CC-3170",
+        "CC-3189",
+        "CC-3206",
+        "CC-3224",
+        "NEG-3252780",
+        "CC-3320",
+        "CC-3389",
+        "CC-3470"
+      ],
+      "agent_only": [
+        "CC-3592",
+        "CC-3833",
+        "CC-3998",
+        "CC-4509",
+        "CC-4902",
+        "CC-4990",
+        "NEG-3378109",
+        "NEG-3393084",
+        "NEG-3396402",
+        "CC-5363",
+        "CC-5364",
+        "CC-5521",
+        "CC-5583"
+      ],
+      "rule_only_fraud_rate": 0.505
     }
   }
 ]

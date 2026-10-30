@@ -79,11 +79,17 @@ def attest_answer(state, answer: dict[str, Any]) -> dict[str, Any]:
                 "query:ring_exposure", kind="containment",
                 extra_calls=att.calls_for("ring_exposure"))
     for det in rec.get("typology_detections") or []:
+        if det["detector"] == "recipient_fanin":
+            how = (f"query:recipient_window(txn_id={state['trigger'].flagged_txn_id}, "
+                   f"as_of={state['as_of']}, window_hours=24)")
+            calls = att.calls_for("recipient_window")[:2]
+        else:
+            how = f"query:card_window(card_id={state['trigger'].card_id}, as_of={state['as_of']})"
+            calls = att.calls_for("card_history")[:2]
         det["attestation_id"] = att.add(
             f"Detector {det['detector']}: {det.get('claim', '')}",
             list(det.get("txn_ids", [])) + list(det.get("card_ids", [])),
-            f"query:card_window(card_id={state['trigger'].card_id}, as_of={state['as_of']})",
-            kind="typology", extra_calls=att.calls_for("card_history")[:2])
+            how, kind="typology", extra_calls=calls)
     for q in (rec.get("quality") or {}).get("issues", []):
         att.add(f"Data gap {q['kind']}: {q['detail']}", q["record_ids"],
                 "query:data_gaps", kind="data_quality")

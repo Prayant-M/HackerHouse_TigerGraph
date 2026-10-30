@@ -80,8 +80,14 @@ def run_all(store, card_id: str, as_of: datetime, flagged,
     """The detectors the agent runs on every case. Evidence only."""
     hist = store.card_history(card_id, as_of, window_days=120)
     out = []
+    fanin = {"fired": False}
+    if flagged is not None and getattr(flagged, "email_r", "") not in COMMON_RECIPIENTS:
+        rw = store.recipient_window(flagged.txn_id, as_of, window_hours=24)
+        if rw.get("domain"):
+            fanin = recipient_fanin(rw["rows"], rw["domain"])
     for name, res in (("dormant_wake", dormant_wake(hist, as_of)),
-                      ("micro_charges", micro_charges(hist, as_of))):
+                      ("micro_charges", micro_charges(hist, as_of)),
+                      ("recipient_fanin", fanin)):
         if res.get("fired"):
             out.append({"detector": name, **res})
     # Evasion-frontier detectors (eval/attacks.py): the relative-rule versions

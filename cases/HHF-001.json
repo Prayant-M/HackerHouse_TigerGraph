@@ -9,7 +9,7 @@
       "executed": true,
       "simulated": true,
       "reference": "SIM-B6C31417F3",
-      "executed_at": "2026-10-30T07:56:16Z",
+      "executed_at": "2026-10-30T14:58:00Z",
       "effect": "Fraud case opened and written to the graph.",
       "customer_impact": "none"
     }
@@ -170,9 +170,9 @@
     ]
   },
   "stop_reason": "Fraud probability 0.91 is at or above the 0.85 ceiling in policy §6, supported by 4 independent pieces of evidence, with card_not_present_new_device leading card_not_present_fraud by 0.51.",
-  "tool_calls": 51,
+  "tool_calls": 59,
   "tokens": 6067,
-  "latency_s": 15.75,
+  "latency_s": 6.2,
   "agent_record": {
     "trigger": {
       "type": "analyst_request",
@@ -563,7 +563,7 @@
         "executed": true,
         "simulated": true,
         "reference": "SIM-B6C31417F3",
-        "executed_at": "2026-10-30T07:56:16Z",
+        "executed_at": "2026-10-30T14:58:00Z",
         "effect": "Fraud case opened and written to the graph.",
         "customer_impact": "none"
       }
@@ -596,7 +596,9 @@
       "tokens": 6067,
       "cached": 3,
       "errors": [],
-      "template_fallbacks": 0
+      "template_fallbacks": 0,
+      "breaker_skips": 0,
+      "backoff_s": 0.0
     },
     "prose_source": "llm",
     "transport_degraded": false,
@@ -628,16 +630,16 @@
       "alpha": 0.1,
       "p_fraud_graph_only": 0.9088,
       "quantiles": {
-        "fraud": 0.91292,
-        "legit": 0.742317
+        "fraud": 0.943713,
+        "legit": 0.690813
       },
       "base_set": [
         "fraud"
       ],
-      "calibrated_on": "2016-08-01..2016-09-30",
+      "calibrated_on": "2016-08-01..2016-10-31",
       "widened_by": [],
       "support_distance": 0.3389,
-      "support_threshold": 0.8105,
+      "support_threshold": 0.7993,
       "outside_support": false,
       "set": [
         "fraud"
@@ -799,7 +801,7 @@
     "trace": [
       {
         "node": "trigger_intake",
-        "at": 0.004,
+        "at": 0.011,
         "trigger_type": "analyst_request",
         "flagged_txn_id": "3660108",
         "as_of": "2017-01-15 01:25:19",
@@ -809,13 +811,13 @@
       },
       {
         "node": "case_opener",
-        "at": 0.005,
+        "at": 0.012,
         "graph_case_id": "CASE-HHF-001",
         "prior_fraud": 0.65
       },
       {
         "node": "evidence_planner",
-        "at": 0.005,
+        "at": 0.013,
         "planned_tools": [
           "episode_window",
           "card_baseline",
@@ -826,7 +828,7 @@
       },
       {
         "node": "graph_retrieval",
-        "at": 12.802,
+        "at": 5.146,
         "signals_fired": [
           "device_new_on_account",
           "anonymising_proxy",
@@ -838,7 +840,7 @@
       },
       {
         "node": "memory_recall",
-        "at": 14.786,
+        "at": 5.394,
         "recalled": [
           "CC-2420",
           "CC-2674",
@@ -852,7 +854,7 @@
       },
       {
         "node": "policy_grounding",
-        "at": 15.232,
+        "at": 5.46,
         "retrieved": [
           "PATTERN-out_of_region_use",
           "PATTERN-card_not_present_new_device",
@@ -864,7 +866,7 @@
       },
       {
         "node": "ledger_update",
-        "at": 15.233,
+        "at": 5.462,
         "folded": 24,
         "p_fraud": 0.9088,
         "posterior": {
@@ -902,7 +904,7 @@
       },
       {
         "node": "uncertainty_assessor",
-        "at": 15.233,
+        "at": 5.464,
         "p_fraud": 0.9088,
         "margin": 0.5051,
         "entropy": 0.8224,
@@ -962,7 +964,7 @@
       },
       {
         "node": "action_recommender",
-        "at": 15.741,
+        "at": 6.191,
         "verdict": "fraud",
         "pattern": "card_not_present_new_device",
         "exposure": 1338.74,
@@ -1000,7 +1002,7 @@
       },
       {
         "node": "permission_gate",
-        "at": 15.743,
+        "at": 6.192,
         "executed": [
           "CREATE_CASE"
         ],
@@ -1019,20 +1021,20 @@
       },
       {
         "node": "explainer",
-        "at": 15.745,
+        "at": 6.194,
         "summary_chars": 766,
         "llm_used": true
       },
       {
         "node": "case_writer",
-        "at": 16.486,
+        "at": 7.243,
         "graph_case_id": "CASE-HHF-001",
         "affected_txns": 2,
         "sar_filed": true
       },
       {
         "node": "memory_consolidator",
-        "at": 16.487,
+        "at": 7.244,
         "audit_chain_intact": true,
         "decisions": 3
       }
@@ -1116,7 +1118,7 @@
             "digest": "291e08c299ca8c4b1f03bbd6882f8ec98808dcda4974c97530f338d7a1873fdc"
           }
         ],
-        "ran_at": "2026-10-30T07:56:16Z",
+        "ran_at": "2026-10-30T14:58:00Z",
         "data_snapshot": "bc3011b15aff8ad88490fd4e127bf3de",
         "kind": "derived_inference"
       },
@@ -1170,7 +1172,7 @@
             "digest": "ede77fb9c5dd1ca8e9913246e94104bdf68599046582d597ee0ae1a2d2b0240d"
           }
         ],
-        "ran_at": "2026-10-30T07:56:16Z",
+        "ran_at": "2026-10-30T14:58:00Z",
         "data_snapshot": "bc3011b15aff8ad88490fd4e127bf3de",
         "kind": "derived_inference"
       },
@@ -1188,7 +1190,7 @@
           "max_hops": "2"
         },
         "tool_calls": [],
-        "ran_at": "2026-10-30T07:56:16Z",
+        "ran_at": "2026-10-30T14:58:00Z",
         "data_snapshot": "bc3011b15aff8ad88490fd4e127bf3de",
         "kind": "derived_inference"
       },
@@ -1240,7 +1242,7 @@
             "digest": "291e08c299ca8c4b1f03bbd6882f8ec98808dcda4974c97530f338d7a1873fdc"
           }
         ],
-        "ran_at": "2026-10-30T07:56:16Z",
+        "ran_at": "2026-10-30T14:58:00Z",
         "data_snapshot": "bc3011b15aff8ad88490fd4e127bf3de",
         "kind": "derived_inference"
       },
@@ -1260,7 +1262,7 @@
           "as_of": "2017-01-15 01:25:19"
         },
         "tool_calls": [],
-        "ran_at": "2026-10-30T07:56:16Z",
+        "ran_at": "2026-10-30T14:58:00Z",
         "data_snapshot": "bc3011b15aff8ad88490fd4e127bf3de",
         "kind": "observed_fact"
       },
@@ -1271,7 +1273,7 @@
         "query": "policy:PATTERN-out_of_region_use",
         "params": {},
         "tool_calls": [],
-        "ran_at": "2026-10-30T07:56:16Z",
+        "ran_at": "2026-10-30T14:58:00Z",
         "data_snapshot": "bc3011b15aff8ad88490fd4e127bf3de",
         "kind": "policy_text"
       },
@@ -1282,7 +1284,7 @@
         "query": "policy:PATTERN-card_not_present_new_device",
         "params": {},
         "tool_calls": [],
-        "ran_at": "2026-10-30T07:56:16Z",
+        "ran_at": "2026-10-30T14:58:00Z",
         "data_snapshot": "bc3011b15aff8ad88490fd4e127bf3de",
         "kind": "policy_text"
       },
@@ -1342,7 +1344,7 @@
             "digest": "c27588d3e6137f38673f1869536c841af736c9767d0cf95dc58de273a077dd5d"
           }
         ],
-        "ran_at": "2026-10-30T07:56:16Z",
+        "ran_at": "2026-10-30T14:58:00Z",
         "data_snapshot": "bc3011b15aff8ad88490fd4e127bf3de",
         "kind": "exposure"
       },
@@ -1400,7 +1402,7 @@
             "digest": "291e08c299ca8c4b1f03bbd6882f8ec98808dcda4974c97530f338d7a1873fdc"
           }
         ],
-        "ran_at": "2026-10-30T07:56:16Z",
+        "ran_at": "2026-10-30T14:58:00Z",
         "data_snapshot": "bc3011b15aff8ad88490fd4e127bf3de",
         "kind": "proof"
       },
@@ -1434,7 +1436,7 @@
             "digest": "40c31ab5237892d867c953e67c2fe64df3da0758ad34532f948bd956509f857b"
           }
         ],
-        "ran_at": "2026-10-30T07:56:16Z",
+        "ran_at": "2026-10-30T14:58:00Z",
         "data_snapshot": "bc3011b15aff8ad88490fd4e127bf3de",
         "kind": "precedent"
       },
@@ -1485,7 +1487,7 @@
             "digest": "eb39f7b8f31f1e6ad9ee1d03ce1d0e6b1a1563f7cc8ab8e1af4af6eab2f9e3a8"
           }
         ],
-        "ran_at": "2026-10-30T07:56:16Z",
+        "ran_at": "2026-10-30T14:58:00Z",
         "data_snapshot": "bc3011b15aff8ad88490fd4e127bf3de",
         "kind": "sar_sentence"
       },
@@ -1536,7 +1538,7 @@
             "digest": "291e08c299ca8c4b1f03bbd6882f8ec98808dcda4974c97530f338d7a1873fdc"
           }
         ],
-        "ran_at": "2026-10-30T07:56:16Z",
+        "ran_at": "2026-10-30T14:58:00Z",
         "data_snapshot": "bc3011b15aff8ad88490fd4e127bf3de",
         "kind": "sar_sentence"
       },
@@ -1586,7 +1588,7 @@
             "digest": "291e08c299ca8c4b1f03bbd6882f8ec98808dcda4974c97530f338d7a1873fdc"
           }
         ],
-        "ran_at": "2026-10-30T07:56:16Z",
+        "ran_at": "2026-10-30T14:58:00Z",
         "data_snapshot": "bc3011b15aff8ad88490fd4e127bf3de",
         "kind": "sar_sentence"
       },
@@ -1636,7 +1638,7 @@
             "digest": "eb39f7b8f31f1e6ad9ee1d03ce1d0e6b1a1563f7cc8ab8e1af4af6eab2f9e3a8"
           }
         ],
-        "ran_at": "2026-10-30T07:56:16Z",
+        "ran_at": "2026-10-30T14:58:00Z",
         "data_snapshot": "bc3011b15aff8ad88490fd4e127bf3de",
         "kind": "sar_sentence"
       },
@@ -1686,7 +1688,7 @@
             "digest": "eb39f7b8f31f1e6ad9ee1d03ce1d0e6b1a1563f7cc8ab8e1af4af6eab2f9e3a8"
           }
         ],
-        "ran_at": "2026-10-30T07:56:16Z",
+        "ran_at": "2026-10-30T14:58:00Z",
         "data_snapshot": "bc3011b15aff8ad88490fd4e127bf3de",
         "kind": "sar_sentence"
       },
@@ -1701,7 +1703,7 @@
         "query": "sar_sentence",
         "params": {},
         "tool_calls": [],
-        "ran_at": "2026-10-30T07:56:16Z",
+        "ran_at": "2026-10-30T14:58:00Z",
         "data_snapshot": "bc3011b15aff8ad88490fd4e127bf3de",
         "kind": "sar_sentence"
       }
@@ -1783,6 +1785,261 @@
     "unattested": [],
     "data_snapshot": "bc3011b15aff8ad88490fd4e127bf3de",
     "n_attestations": 16,
+    "sar_package": {
+      "five_ws": {
+        "who": {
+          "subjects": [
+            "C05061",
+            "C05061-K1",
+            "RCT6303W87M7 Build/MRA58K | Windows 7 | ie 11.0 for desktop"
+          ],
+          "attestations": [
+            "HHF-001-A002",
+            "HHF-001-A011",
+            "HHF-001-A014",
+            "HHF-001-A015"
+          ]
+        },
+        "what": {
+          "pattern": "card_not_present_new_device",
+          "description": "",
+          "n_transactions": 2,
+          "total_usd": 1338.74
+        },
+        "when": {
+          "first": "2017-01-13 22:09:55",
+          "last": "2017-01-14 20:25:19",
+          "first_suspicious_txn_id": "3660107"
+        },
+        "where": {
+          "channels": [
+            "online"
+          ],
+          "regions": [
+            "264.0",
+            "492.0"
+          ],
+          "devices": [
+            "RCT6303W87M7 Build/MRA58K | Windows 10 | ie 11.0 for tablet | 1920x1080",
+            "RCT6303W87M7 Build/MRA58K | Windows 7 | ie 11.0 for desktop"
+          ]
+        },
+        "why": {
+          "reason": "§3a: exposure $1,338.74 exceeds the $1,000 threshold.",
+          "evidence": [
+            {
+              "claim": "2 online transactions inside 48 hours, the burst shape the bank's card-not-present typology describes",
+              "ref": "query:velocity_burst(card_id=C05061-K1, window_hours=48)",
+              "attestations": [
+                "HHF-001-A001",
+                "HHF-001-A002",
+                "HHF-001-A004",
+                "HHF-001-A008",
+                "HHF-001-A009",
+                "HHF-001-A012"
+              ]
+            },
+            {
+              "claim": "Transaction came from device profile 'RCT6303W87M7 Build/MRA58K | Windows 7 | ie 11.0 for desktop' which the identity record marks 'New' for this account and which has no prior use on this card",
+              "ref": "query:device_first_use(card_id=C05061-K1, device_profile=...)",
+              "attestations": [
+                "HHF-001-A001",
+                "HHF-001-A002",
+                "HHF-001-A004",
+                "HHF-001-A008",
+                "HHF-001-A009",
+                "HHF-001-A012"
+              ]
+            },
+            {
+              "claim": "3 confirmed-fraud closed cases sit within two hops of this card, device or customer (distance-decayed proximity 1.5)",
+              "ref": "query:fraud_proximity(entity_ids=..., max_hops=2)",
+              "attestations": [
+                "HHF-001-A003",
+                "HHF-001-A005",
+                "HHF-001-A016"
+              ]
+            },
+            {
+              "claim": "Connection carried proxy classification 'IP_PROXY:ANONYMOUS'",
+              "ref": "query:tx_identity(txn_id=3660108)",
+              "attestations": [
+                "HHF-001-A001",
+                "HHF-001-A002",
+                "HHF-001-A004",
+                "HHF-001-A008",
+                "HHF-001-A009",
+                "HHF-001-A012"
+              ]
+            }
+          ],
+          "fraud_probability": 0.909,
+          "proof_margin_k": 2
+        }
+      },
+      "timeline": [
+        {
+          "txn_id": "3660107",
+          "ts": "2017-01-13 22:09:55",
+          "amount_usd": 890.79,
+          "channel": "online",
+          "card_id": "C05061-K1",
+          "region": "264.0",
+          "device_profile": "RCT6303W87M7 Build/MRA58K | Windows 10 | ie 11.0 for tablet | 1920x1080",
+          "proxy": "IP_PROXY:ANONYMOUS",
+          "attestations": [
+            "HHF-001-A001",
+            "HHF-001-A008",
+            "HHF-001-A012"
+          ]
+        },
+        {
+          "txn_id": "3660108",
+          "ts": "2017-01-14 20:25:19",
+          "amount_usd": 447.95,
+          "channel": "online",
+          "card_id": "C05061-K1",
+          "region": "492.0",
+          "device_profile": "RCT6303W87M7 Build/MRA58K | Windows 7 | ie 11.0 for desktop",
+          "proxy": "IP_PROXY:ANONYMOUS",
+          "attestations": [
+            "HHF-001-A001",
+            "HHF-001-A002",
+            "HHF-001-A004",
+            "HHF-001-A008",
+            "HHF-001-A009",
+            "HHF-001-A012"
+          ]
+        }
+      ],
+      "evidence_graph": {
+        "nodes": [
+          {
+            "id": "C05061",
+            "type": "Customer"
+          },
+          {
+            "id": "C05061-K1",
+            "type": "Card"
+          },
+          {
+            "id": "3660107",
+            "type": "Transaction",
+            "amount_usd": 890.79,
+            "ts": "2017-01-13 22:09:55"
+          },
+          {
+            "id": "3660108",
+            "type": "Transaction",
+            "amount_usd": 447.95,
+            "ts": "2017-01-14 20:25:19"
+          },
+          {
+            "id": "RCT6303W87M7 Build/MRA58K | Windows 10 | ie 11.0 for tablet | 1920x1080",
+            "type": "DeviceProfile"
+          },
+          {
+            "id": "RCT6303W87M7 Build/MRA58K | Windows 7 | ie 11.0 for desktop",
+            "type": "DeviceProfile"
+          },
+          {
+            "id": "CC-2420",
+            "type": "ClosedCase",
+            "outcome": "confirmed_fraud"
+          },
+          {
+            "id": "CC-2674",
+            "type": "ClosedCase",
+            "outcome": "confirmed_fraud"
+          },
+          {
+            "id": "CC-0889",
+            "type": "ClosedCase",
+            "outcome": "cleared"
+          },
+          {
+            "id": "CC-4210",
+            "type": "ClosedCase",
+            "outcome": "confirmed_fraud"
+          },
+          {
+            "id": "CC-3123",
+            "type": "ClosedCase",
+            "outcome": "confirmed_fraud"
+          }
+        ],
+        "edges": [
+          {
+            "from": "3660107",
+            "to": "C05061-K1",
+            "type": "MADE_WITH"
+          },
+          {
+            "from": "3660107",
+            "to": "RCT6303W87M7 Build/MRA58K | Windows 10 | ie 11.0 for tablet | 1920x1080",
+            "type": "FROM_DEVICE"
+          },
+          {
+            "from": "3660108",
+            "to": "C05061-K1",
+            "type": "MADE_WITH"
+          },
+          {
+            "from": "3660108",
+            "to": "RCT6303W87M7 Build/MRA58K | Windows 7 | ie 11.0 for desktop",
+            "type": "FROM_DEVICE"
+          },
+          {
+            "from": "CC-2420",
+            "to": "C05061",
+            "type": "PRECEDENT_SHARES"
+          },
+          {
+            "from": "CC-2420",
+            "to": "C05061-K1",
+            "type": "PRECEDENT_SHARES"
+          },
+          {
+            "from": "CC-2674",
+            "to": "C05061",
+            "type": "PRECEDENT_SHARES"
+          },
+          {
+            "from": "CC-2674",
+            "to": "C05061-K1",
+            "type": "PRECEDENT_SHARES"
+          },
+          {
+            "from": "CC-0889",
+            "to": "C05061",
+            "type": "PRECEDENT_SHARES"
+          },
+          {
+            "from": "CC-0889",
+            "to": "C05061-K1",
+            "type": "PRECEDENT_SHARES"
+          },
+          {
+            "from": "CC-4210",
+            "to": "C05061",
+            "type": "PRECEDENT_SHARES"
+          },
+          {
+            "from": "CC-4210",
+            "to": "C05061-K1",
+            "type": "PRECEDENT_SHARES"
+          }
+        ]
+      },
+      "review_checklist": {
+        "every_sentence_cited": true,
+        "total_equals_attested_exposure": true,
+        "first_txn_is_earliest": true,
+        "no_tip_off_in_customer_text": true,
+        "unattested_claims": 0
+      },
+      "ready_to_send": true
+    },
     "handover": {
       "state": "closed_fraud",
       "waiting_on": [
@@ -1823,8 +2080,8 @@
     },
     "framework": "langgraph",
     "telemetry": {
-      "wall_s": 16.49,
-      "graph_calls": 27,
+      "wall_s": 7.24,
+      "graph_calls": 29,
       "graph_errors": 0,
       "llm_calls": 3,
       "tokens": 6067,

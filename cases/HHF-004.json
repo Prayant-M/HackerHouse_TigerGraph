@@ -9,7 +9,7 @@
       "executed": true,
       "simulated": true,
       "reference": "SIM-9AFA16D45C",
-      "executed_at": "2026-10-29T20:34:05Z",
+      "executed_at": "2026-10-30T14:04:46Z",
       "effect": "Fraud case opened and written to the graph.",
       "customer_impact": "none"
     }
@@ -128,7 +128,7 @@
   "stop_reason": "Fraud probability 0.89 is at or above the 0.85 ceiling in policy §6, supported by 4 independent pieces of evidence, with account_takeover leading out_of_region_use by 0.17.",
   "tool_calls": 36,
   "tokens": 0,
-  "latency_s": 256.52,
+  "latency_s": 17.6,
   "agent_record": {
     "trigger": {
       "type": "customer_report",
@@ -479,7 +479,7 @@
         "executed": true,
         "simulated": true,
         "reference": "SIM-9AFA16D45C",
-        "executed_at": "2026-10-29T20:34:05Z",
+        "executed_at": "2026-10-30T14:04:46Z",
         "effect": "Fraud case opened and written to the graph.",
         "customer_impact": "none"
       }
@@ -496,7 +496,7 @@
       "No identity record for the flagged transaction, so device and proxy evidence is unavailable rather than clean.",
       "The dataset has no merchant field, so the R7 recurring-charge check uses amount, product code and cadence only."
     ],
-    "graph_transport": "mcp",
+    "graph_transport": "mcp+direct(degraded)",
     "backend": "tigergraph",
     "llm": {
       "available": true,
@@ -507,14 +507,13 @@
       "output_tokens": 0,
       "tokens": 0,
       "cached": 0,
-      "errors": [
-        "google: 429 You exceeded your current quota, please check your plan and billing details. For more information on this error, head to: https://ai.google.dev/gemini-api/docs/rate-limits. To monitor your current usage, head to: https://ai.dev/rate-limit. \n* Quota exceeded for metric: generativelanguage.googleapis.com/generate_content_free_tier_requests, limit: 20, model: gemini-3.6-flash, description: Generate content requests per day limit exceeded on Free Tier. See https://ai.google.dev/gemini-api/docs/rate-limits.\nPlease retry in 10h26m25.570807596s. [links {\n  description: \"Learn more about Gemini API quotas\"\n  url: \"https://ai.google.dev/gemini-api/docs/rate-limits\"\n}\n, violations {\n  description: \"Generate content requests per day limit exceeded on Free Tier. See https://ai.google.dev/gemini-api/docs/rate-limits.\"\n  quota_metric: \"generativelanguage.googleapis.com/generate_content_free_tier_requests\"\n  quota_id: \"GenerateRequestsPerDayPerProjectPerModel-FreeTier\"\n  quota_dimensions {\n    key: \"model\"\n    value: \"gemini-3.6-flash\"\n  }\n  quota_dimensions {\n    key: \"location\"\n    value: \"global\"\n  }\n  quota_value: 20\n}\n, retry_delay {\n  seconds: 37585\n}\n]",
-        "google: 429 You exceeded your current quota, please check your plan and billing details. For more information on this error, head to: https://ai.google.dev/gemini-api/docs/rate-limits. To monitor your current usage, head to: https://ai.dev/rate-limit. \n* Quota exceeded for metric: generativelanguage.googleapis.com/generate_content_free_tier_requests, limit: 20, model: gemini-3.6-flash, description: Generate content requests per day limit exceeded on Free Tier. See https://ai.google.dev/gemini-api/docs/rate-limits.\nPlease retry in 10h24m3.172496858s. [links {\n  description: \"Learn more about Gemini API quotas\"\n  url: \"https://ai.google.dev/gemini-api/docs/rate-limits\"\n}\n, violations {\n  description: \"Generate content requests per day limit exceeded on Free Tier. See https://ai.google.dev/gemini-api/docs/rate-limits.\"\n  quota_metric: \"generativelanguage.googleapis.com/generate_content_free_tier_requests\"\n  quota_id: \"GenerateRequestsPerDayPerProjectPerModel-FreeTier\"\n  quota_dimensions {\n    key: \"model\"\n    value: \"gemini-3.6-flash\"\n  }\n  quota_dimensions {\n    key: \"location\"\n    value: \"global\"\n  }\n  quota_value: 20\n}\n, retry_delay {\n  seconds: 37443\n}\n]"
-      ],
-      "template_fallbacks": 2
+      "errors": [],
+      "template_fallbacks": 2,
+      "breaker_skips": 2,
+      "backoff_s": 0.0
     },
     "prose_source": "template",
-    "transport_degraded": false,
+    "transport_degraded": true,
     "january_regime": true,
     "text_facts": {
       "facts": {
@@ -572,19 +571,19 @@
       "alpha": 0.1,
       "p_fraud_graph_only": 0.8903,
       "quantiles": {
-        "fraud": 0.91292,
-        "legit": 0.742317
+        "fraud": 0.943713,
+        "legit": 0.690813
       },
       "base_set": [
         "fraud"
       ],
-      "calibrated_on": "2016-08-01..2016-09-30",
+      "calibrated_on": "2016-08-01..2016-10-31",
       "widened_by": [
         "outside_support",
         "data_quality_taint"
       ],
-      "support_distance": 0.8203,
-      "support_threshold": 0.8105,
+      "support_distance": 0.8174,
+      "support_threshold": 0.7993,
       "outside_support": true,
       "set": [
         "fraud",
@@ -687,7 +686,7 @@
     "trace": [
       {
         "node": "trigger_intake",
-        "at": 0.013,
+        "at": 0.035,
         "trigger_type": "customer_report",
         "flagged_txn_id": "3660260",
         "as_of": "2017-01-26 21:09:37",
@@ -700,13 +699,13 @@
       },
       {
         "node": "case_opener",
-        "at": 0.015,
+        "at": 0.039,
         "graph_case_id": "CASE-HHF-004",
         "prior_fraud": 0.8
       },
       {
         "node": "evidence_planner",
-        "at": 114.181,
+        "at": 0.046,
         "planned_tools": [
           "card_baseline",
           "episode_window",
@@ -731,7 +730,7 @@
       },
       {
         "node": "graph_retrieval",
-        "at": 119.293,
+        "at": 11.751,
         "signals_fired": [
           "known_device_and_region",
           "fraud_proximity",
@@ -742,7 +741,7 @@
       },
       {
         "node": "memory_recall",
-        "at": 140.34,
+        "at": 12.443,
         "recalled": [
           "CC-4890",
           "CC-2623",
@@ -756,7 +755,7 @@
       },
       {
         "node": "policy_grounding",
-        "at": 140.568,
+        "at": 12.909,
         "retrieved": [
           "PATTERN-out_of_region_use",
           "PATTERN-card_not_present_fraud",
@@ -768,7 +767,7 @@
       },
       {
         "node": "ledger_update",
-        "at": 140.573,
+        "at": 12.924,
         "folded": 24,
         "p_fraud": 0.8903,
         "posterior": {
@@ -806,7 +805,7 @@
       },
       {
         "node": "uncertainty_assessor",
-        "at": 140.576,
+        "at": 12.947,
         "p_fraud": 0.8903,
         "margin": 0.166,
         "entropy": 1.2349,
@@ -866,7 +865,7 @@
       },
       {
         "node": "action_recommender",
-        "at": 144.138,
+        "at": 17.583,
         "verdict": "fraud",
         "pattern": "account_takeover",
         "exposure": 2.9,
@@ -901,7 +900,7 @@
       },
       {
         "node": "permission_gate",
-        "at": 144.142,
+        "at": 17.588,
         "executed": [
           "CREATE_CASE"
         ],
@@ -915,20 +914,20 @@
       },
       {
         "node": "explainer",
-        "at": 256.522,
+        "at": 17.592,
         "summary_chars": 708,
         "llm_used": true
       },
       {
         "node": "case_writer",
-        "at": 257.612,
+        "at": 18.084,
         "graph_case_id": "CASE-HHF-004",
         "affected_txns": 1,
         "sar_filed": false
       },
       {
         "node": "memory_consolidator",
-        "at": 257.614,
+        "at": 18.095,
         "audit_chain_intact": true,
         "decisions": 3
       }
@@ -976,7 +975,7 @@
           "as_of": "2017-01-26 21:09:37"
         },
         "tool_calls": [],
-        "ran_at": "2026-10-29T20:35:57Z",
+        "ran_at": "2026-10-30T14:04:46Z",
         "data_snapshot": "bc3011b15aff8ad88490fd4e127bf3de",
         "kind": "observed_fact"
       },
@@ -1000,13 +999,13 @@
             "seq": 2,
             "method": "episode_window",
             "key": "7c07dc1e422890cb2f1ab4e0",
-            "digest": "a8183548ded47dc608eeea2fa43559820c0c7beb2e6623fbd3d15981656f1463"
+            "digest": "cf9f0e0e1d377221f0ad263d0b0d780e88469dc83a38bf3be7c930075f4c06d3"
           },
           {
             "seq": 3,
             "method": "card_baseline",
             "key": "378daa738a8267a321180b2f",
-            "digest": "bcea7d00191a9c2245765fe10cdad0705238160bcf13f2cc35c67d6b611e87f8"
+            "digest": "a604a78794841d38ca3acd2a13980dfc5a1037f6b2f7d244e7d130e49462bff5"
           },
           {
             "seq": 4,
@@ -1027,7 +1026,7 @@
             "digest": "47a561dbaa1114b8004fc7bf4b2fd5706d8e8afc7740398ac3976f5793eec0a0"
           }
         ],
-        "ran_at": "2026-10-29T20:35:57Z",
+        "ran_at": "2026-10-30T14:04:46Z",
         "data_snapshot": "bc3011b15aff8ad88490fd4e127bf3de",
         "kind": "derived_inference"
       },
@@ -1043,7 +1042,7 @@
           "max_hops": "2"
         },
         "tool_calls": [],
-        "ran_at": "2026-10-29T20:35:57Z",
+        "ran_at": "2026-10-30T14:04:46Z",
         "data_snapshot": "bc3011b15aff8ad88490fd4e127bf3de",
         "kind": "derived_inference"
       },
@@ -1054,7 +1053,7 @@
         "query": "policy:PATTERN-out_of_region_use",
         "params": {},
         "tool_calls": [],
-        "ran_at": "2026-10-29T20:35:57Z",
+        "ran_at": "2026-10-30T14:04:46Z",
         "data_snapshot": "bc3011b15aff8ad88490fd4e127bf3de",
         "kind": "policy_text"
       },
@@ -1065,7 +1064,7 @@
         "query": "policy:PATTERN-card_not_present_fraud",
         "params": {},
         "tool_calls": [],
-        "ran_at": "2026-10-29T20:35:57Z",
+        "ran_at": "2026-10-30T14:04:46Z",
         "data_snapshot": "bc3011b15aff8ad88490fd4e127bf3de",
         "kind": "policy_text"
       },
@@ -1121,10 +1120,10 @@
             "seq": 2,
             "method": "episode_window",
             "key": "7c07dc1e422890cb2f1ab4e0",
-            "digest": "a8183548ded47dc608eeea2fa43559820c0c7beb2e6623fbd3d15981656f1463"
+            "digest": "cf9f0e0e1d377221f0ad263d0b0d780e88469dc83a38bf3be7c930075f4c06d3"
           }
         ],
-        "ran_at": "2026-10-29T20:35:57Z",
+        "ran_at": "2026-10-30T14:04:46Z",
         "data_snapshot": "bc3011b15aff8ad88490fd4e127bf3de",
         "kind": "exposure"
       },
@@ -1180,7 +1179,7 @@
             "digest": "654e07e9e1895d967234f9e33401ac3d407a855a54db73ba553fb52715845e0c"
           }
         ],
-        "ran_at": "2026-10-29T20:35:57Z",
+        "ran_at": "2026-10-30T14:04:46Z",
         "data_snapshot": "bc3011b15aff8ad88490fd4e127bf3de",
         "kind": "proof"
       },
@@ -1230,7 +1229,7 @@
             "digest": "654e07e9e1895d967234f9e33401ac3d407a855a54db73ba553fb52715845e0c"
           }
         ],
-        "ran_at": "2026-10-29T20:35:57Z",
+        "ran_at": "2026-10-30T14:04:46Z",
         "data_snapshot": "bc3011b15aff8ad88490fd4e127bf3de",
         "kind": "data_quality"
       }
@@ -1239,6 +1238,7 @@
     "unattested": [],
     "data_snapshot": "bc3011b15aff8ad88490fd4e127bf3de",
     "n_attestations": 8,
+    "sar_package": null,
     "handover": {
       "state": "closed_fraud",
       "waiting_on": [
@@ -1279,7 +1279,7 @@
     },
     "framework": "langgraph",
     "telemetry": {
-      "wall_s": 257.61,
+      "wall_s": 18.1,
       "graph_calls": 26,
       "graph_errors": 0,
       "llm_calls": 0,

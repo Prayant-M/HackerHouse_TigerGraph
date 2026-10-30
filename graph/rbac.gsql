@@ -23,7 +23,8 @@ GRANT EXECUTE ON QUERY card_baseline, card_window, episode_window, card_testing_
       recurring_charge_probe, device_fanout, peer_purchases, shared_entity_ring,
       fraud_proximity, hybrid_case_recall, behavioural_neighbours, policy_retrieve,
       card_community, case_chain, ring_at_asof, origin_counts, origin_touchers,
-      ring_exposure, precedent_by_facts, compromise_watch, data_gaps, case_write
+      ring_exposure, precedent_by_facts, compromise_watch, data_gaps, recipient_window,
+      case_write
       IN GRAPH FraudGraph TO agent_role
 
 CREATE ROLE console_role

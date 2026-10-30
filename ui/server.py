@@ -618,16 +618,37 @@ def ring_replay(case_id: str) -> dict[str, Any]:
                              "amount": t.amount, "device": t.device_profile,
                              "proxy": t.proxy})
     rows.sort(key=lambda r: r["ts"])
+    # Loss counts only transactions the investigation attested as suspect (the
+    # case's affected transactions and ring_exposure's per-card suspect txns);
+    # every other shared-device transaction is activity, shown but not summed
+    # into the loss.
+    suspect = set(map(str, d["case"].get("affected_txn_ids") or []))
+    for p in (plan.get("blocks") or {}).get("plan", []):
+        suspect |= set(map(str, p.get("txn_ids") or []))
     joined: dict[str, str] = {}
-    frames, loss = [], 0.0
+    frames, loss, activity = [], 0.0, 0.0
     for r in rows:
         if r["card_id"] not in joined:
             joined[r["card_id"]] = r["ts"]
-        loss += r["amount"]
-        frames.append({**r, "cards_in_ring": len(joined), "cumulative_usd": round(loss, 2),
-                       "new_card": joined[r["card_id"]] == r["ts"]})
+        is_suspect = str(r["txn_id"]) in suspect
+        activity += r["amount"]
+        loss += r["amount"] if is_suspect else 0.0
+        new = joined[r["card_id"]] == r["ts"]
+        via = "the compromise origin" if r["device"] == origin else "a shared rare device"
+        story = (f"Card {r['card_id']} {'joins the ring' if new else 'transacts again'} through "
+                 f"{via}{' behind an anonymising proxy' if 'ANONYMOUS' in str(r['proxy']) else ''}"
+                 f"; ${r['amount']:,.2f}{' (attested suspect)' if is_suspect else ''}.")
+        frames.append({**r, "cards_in_ring": len(joined), "suspect": is_suspect,
+                       "cumulative_suspect_usd": round(loss, 2),
+                       "cumulative_activity_usd": round(activity, 2),
+                       "new_card": new, "story": story})
     return {"case_id": case_id, "origin": origin, "cards": cards, "joined_at": joined,
-            "frames": frames, "attested_txn_ids": [r["txn_id"] for r in rows]}
+            "frames": frames, "attested_txn_ids": [r["txn_id"] for r in rows],
+            "suspect_txn_ids": sorted(suspect & {str(r["txn_id"]) for r in rows}),
+            "summary": (f"{len(joined)} cards joined over {len(frames)} shared-device "
+                        f"transactions; ${loss:,.2f} of it attested suspect, "
+                        f"${activity:,.2f} total activity")
+            if frames else ""}
 
 
 @app.get("/api/lifecycle/{case_id}")
@@ -639,7 +660,50 @@ def lifecycle_view(case_id: str) -> dict[str, Any]:
     rec = d.get("agent_record", {})
     return {"case_id": case_id, "state_changes": rec.get("lifecycle", []),
             "history": lc.history(case_id), "approvals": decisions_for(case_id),
-            "handover": rec.get("handover", {}), "watch_children": rec.get("watch_children", [])}
+            "handover": rec.get("handover", {}), "watch_children": rec.get("watch_children", []),
+            "status": lc.status(case_id, d)}
+
+
+@app.post("/api/cases/{case_id}/assign")
+def assign_case(case_id: str, payload: dict[str, Any],
+                authorization: str | None = Header(default=None)) -> JSONResponse:
+    """C14: take a case, or hand it over. The role comes from the token; a
+    team lead or fraud manager may assign to someone else."""
+    from fraudagent.governance import approvals as gov
+    from fraudagent.governance import lifecycle as lc
+
+    if READONLY:
+        return JSONResponse({"error": "read-only console"}, status_code=403)
+    try:
+        principal = gov.authenticate(authorization)
+    except gov.AuthError as exc:
+        return JSONResponse({"error": exc.message}, status_code=exc.status)
+    d = _load(case_id)
+    try:
+        rec = lc.assign(case_id, principal, str(payload.get("to") or ""),
+                        str(payload.get("note") or ""))
+    except PermissionError as exc:
+        return JSONResponse({"error": str(exc)}, status_code=403)
+    return JSONResponse({"assignment": rec, "status": lc.status(case_id, d)})
+
+
+@app.get("/api/queue")
+def work_queue() -> list[dict[str, Any]]:
+    """C14: every open case with its owner and SLA, overdue first."""
+    from fraudagent.governance import lifecycle as lc
+
+    rows = []
+    for p in sorted(PATHS.cases_out.glob("HH*-*.json")):
+        d = json.loads(p.read_text(encoding="utf-8"))
+        if "case" not in d:
+            continue
+        st = lc.status(d["case_id"], d)
+        if st["sla_hours"] is None:
+            continue
+        rows.append({**st, "verdict": d["case"]["verdict"],
+                     "waiting_on": d.get("agent_record", {}).get("handover", {}).get("waiting_on", [])})
+    rows.sort(key=lambda r: (not r["overdue"], r["due_at"] or "9999"))
+    return rows
 
 
 def _pack() -> pd.DataFrame:

@@ -849,6 +849,25 @@ class LocalGraphStore(GraphStore):
                 "placeholder_email": df.loc[df["email_p"].astype(str).isin(
                     ["", "anonymous.com"]), "txn_id"].tolist()}
 
+    def recipient_window(self, txn_id: str, as_of: datetime,
+                         window_hours: int = 24) -> dict[str, Any]:
+        """C1: who else paid the flagged transaction's recipient domain."""
+        self._count()
+        i = self.ds.by_txn.get(str(txn_id))
+        if i is None:
+            return {"domain": "", "rows": []}
+        dom = str(self.ds.tx.iloc[i]["email_r"])
+        if dom in ("", "nan"):
+            return {"domain": "", "rows": []}
+        if not hasattr(self, "_recipient_idx"):
+            tx = self.ds.tx
+            self._recipient_idx = {k: v for k, v in tx.groupby("email_r").indices.items()}
+        df = self.ds.tx.iloc[self._recipient_idx.get(dom, [])]
+        w = df[(df["ts"] >= as_of - timedelta(hours=window_hours)) & (df["ts"] <= as_of)]
+        return {"domain": dom,
+                "rows": [{"txn_id": str(r.txn_id), "card_id": str(r.card_id), "email_r": dom}
+                         for r in w.itertuples()]}
+
     def fraud_proximity(self, entity_ids: Sequence[str], as_of: datetime,
                         max_hops: int = 2) -> dict[str, Any]:
         """Distance-decayed count of confirmed-fraud closed cases around the

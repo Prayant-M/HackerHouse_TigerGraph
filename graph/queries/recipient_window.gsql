@@ -1,0 +1,25 @@
+/* recipient_window — C1 recipient fan-in, per case.
+
+   The recipient email domain of the flagged transaction, and every
+   transaction that paid the same domain in [as_of - window_hours, as_of],
+   with its card. core: detectors/typologies.recipient_fanin decides whether
+   enough distinct cards paid one uncommon recipient. Evidence only.           */
+
+USE GRAPH FraudGraph
+
+CREATE OR REPLACE QUERY recipient_window(STRING txn_id, DATETIME as_of,
+                                         INT window_hours = 24)
+FOR GRAPH FraudGraph SYNTAX v2 {
+  DATETIME since = epoch_to_datetime(datetime_to_epoch(as_of) - window_hours * 3600);
+  SetAccum<STRING> @@domain;
+  ListAccum<STRING> @@rows;
+
+  s = {Transaction.*};
+  s = SELECT t FROM s:t WHERE t.txn_id == txn_id;
+  d = SELECT m FROM s:t -(RECIPIENT_EMAIL>:e)- EmailDomain:m
+      POST-ACCUM @@domain += m.domain;
+  w = SELECT t FROM d:m -(EMAIL_RECEIVED_BY>:e)- Transaction:t
+      WHERE t.ts >= since AND t.ts <= as_of
+      ACCUM @@rows += (t.txn_id + "\t" + t.card_id);
+  PRINT @@domain AS domain, @@rows AS rows;
+}

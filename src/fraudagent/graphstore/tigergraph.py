@@ -740,6 +740,19 @@ class TigerGraphStore(GraphStore):
                 "empty_region": sorted(self._first(res, "empty_region", []) or []),
                 "placeholder_email": sorted(self._first(res, "placeholder_email", []) or [])}
 
+    def recipient_window(self, txn_id: str, as_of: datetime,
+                         window_hours: int = 24) -> dict[str, Any]:
+        res = self._run("recipient_window", {"txn_id": str(txn_id), "as_of": _fmt(as_of),
+                                             "window_hours": window_hours})
+        dom = sorted(self._first(res, "domain", []) or [])
+        dom = dom[0] if dom else ""
+        rows = []
+        for r in self._first(res, "rows", []) or []:
+            t, _, c = str(r).partition("	")
+            rows.append({"txn_id": t, "card_id": c, "email_r": dom})
+        rows.sort(key=lambda r: r["txn_id"])
+        return {"domain": dom, "rows": rows}
+
     def case_chain(self, graph_case_id: str) -> dict[str, Any]:
         res = self._run("case_chain", {"graph_case_id": graph_case_id})
         return {k: v for block in res for k, v in block.items()}

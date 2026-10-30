@@ -393,6 +393,62 @@ paths:
             application/json:
               schema: { $ref: '#/components/schemas/Lifecycle' }
         '404': { $ref: '#/components/responses/NotFound' }
+  /api/cases/{case_id}/assign:
+    post:
+      tags: [Case history]
+      operationId: assignCase
+      summary: Take a case, or hand it over
+      description: |
+        The role comes from the bearer token. Any role may take an unowned case (or
+        one it already owns) for itself; only a team lead or fraud manager may assign
+        it to someone else or take it from its owner. Every assignment is appended to
+        the case's history with who did it.
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/CaseId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                to: { type: string, description: Actor id; empty means the caller. }
+                note: { type: string }
+            example: { to: analyst-02, note: Shift handover. }
+      responses:
+        '200':
+          description: The assignment and the case's new status.
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [assignment, status]
+                properties:
+                  assignment: { type: object, additionalProperties: true }
+                  status: { $ref: '#/components/schemas/CaseWorkStatus' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403':
+          description: The role may not make this assignment, or the console is read-only.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ApiError' }
+        '404': { $ref: '#/components/responses/NotFound' }
+        '422': { $ref: '#/components/responses/ValidationFailed' }
+  /api/queue:
+    get:
+      tags: [Case history]
+      operationId: workQueue
+      summary: Open cases with owner and SLA, overdue first
+      responses:
+        '200':
+          description: The work queue.
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: '#/components/schemas/CaseWorkStatus' }
   /api/feedback:
     get:
       tags: [Feedback]
@@ -1188,6 +1244,23 @@ components:
         watch_children:
           type: array
           items: { type: object, additionalProperties: true }
+        status: { $ref: '#/components/schemas/CaseWorkStatus' }
+    CaseWorkStatus:
+      type: object
+      description: Where a case stands for whoever picks it up (C14).
+      required: [case_id, state, owner, sla_hours, due_at, overdue]
+      properties:
+        case_id: { type: string }
+        state: { type: string }
+        owner: { type: [string, 'null'] }
+        entered_state_at: { type: [string, 'null'] }
+        hours_in_state: { type: [number, 'null'] }
+        sla_hours: { type: [number, 'null'], description: null when the case is closed }
+        sla_source: { type: string, description: 'policy R4 for a customer reply; otherwise the bank default' }
+        due_at: { type: [string, 'null'] }
+        overdue: { type: boolean }
+        verdict: { type: string }
+        waiting_on: { type: array, items: { type: string } }
     FeedbackRequest:
       type: object
       properties:

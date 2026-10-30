@@ -1,0 +1,27 @@
+{
+ "approved_by": "operator flag --accept-mapping (no token)",
+ "backend": "local",
+ "run_exit": 0,
+ "filled_columns": [],
+ "answers": [
+  "HHF-001.json",
+  "HHF-002.json",
+  "HHF-003.json",
+  "HHF-004.json",
+  "HHF-005.json",
+  "HHF-006.json",
+  "HHF-007.json",
+  "HHF-008.json",
+  "HHF-009.json",
+  "HHF-010.json",
+  "HHF-011.json",
+  "HHF-012.json",
+  "HHF-013.json",
+  "HHF-014.json",
+  "HHF-015.json",
+  "HHF-016.json",
+  "HHF-017.json",
+  "HHF-018.json"
+ ],
+ "seconds": 1343.9
+}

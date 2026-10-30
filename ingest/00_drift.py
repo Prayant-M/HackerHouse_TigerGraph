@@ -180,9 +180,11 @@ def approve(pid: str, token: str) -> dict:
 
 
 def gate_open() -> bool:
-    """Loaders call this: True when no proposal is pending approval."""
-    pending = [p for p in OUT.glob("DRIFT-*.json") if not p.with_suffix(".approved").exists()]
-    return not pending
+    """True when no proposal is pending approval (loaders call
+    fraudagent.governance.drift_gate.require_open, which reads the same files)."""
+    from fraudagent.governance.drift_gate import pending
+
+    return not pending()
 
 
 def main() -> int:

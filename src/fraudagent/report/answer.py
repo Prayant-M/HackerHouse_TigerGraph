@@ -199,6 +199,9 @@ def build_answer(state, store: GraphStore) -> tuple[dict[str, Any], dict[str, An
     rec = answer["agent_record"]
     rec["lifecycle"] = FR.lifecycle(state, answer)
     rec.update(attest_answer(state, answer))
+    from .sar_package import build as sar_package
+
+    rec["sar_package"] = sar_package(store, state["ctx"], answer, state)
     rec["handover"] = FR.handover(state, answer)
     rec["answer_hash"] = answer_hash(answer)
     plan = state.get("containment") or {}

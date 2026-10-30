@@ -1,15 +1,15 @@
 # Attestation re-run
 
-`eval/attest_verify.py` against backend `tigergraph` at 2026-10-30 07:49:52Z (283 s). Current data snapshot `bc3011b15aff8ad88490fd4e127bf3de`.
+`eval/attest_verify.py` against backend `tigergraph` at 2026-10-30 14:32:10Z (597 s). Current data snapshot `bc3011b15aff8ad88490fd4e127bf3de`.
 
 | case | attestations | calls re-run | memory growth | snapshot | result |
 |---|--:|--:|--:|---|---|
-| HHF-001 | 16 | 26 | 1 | same | PASS |
-| HHF-002 | 14 | 26 | 1 | same | PASS |
-| HHF-003 | 13 | 26 | 1 | same | PASS |
+| HHF-001 | 16 | 28 | 1 | same | PASS |
+| HHF-002 | 14 | 29 | 1 | same | PASS |
+| HHF-003 | 13 | 27 | 1 | same | PASS |
 | HHF-004 | 8 | 25 | 0 | same | PASS |
 | HHF-005 | 9 | 25 | 0 | same | PASS |
-| HHF-006 | 10 | 24 | 0 | same | PASS |
+| HHF-006 | 10 | 25 | 0 | same | PASS |
 | HHF-007 | 12 | 25 | 0 | same | PASS |
 | HHF-008 | 11 | 25 | 0 | same | PASS |
 | HHF-009 | 10 | 24 | 0 | same | PASS |

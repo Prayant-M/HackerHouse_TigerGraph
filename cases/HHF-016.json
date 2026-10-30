@@ -9,7 +9,7 @@
       "executed": true,
       "simulated": true,
       "reference": "SIM-03DAEE8C99",
-      "executed_at": "2026-10-30T04:53:52Z",
+      "executed_at": "2026-10-30T13:55:47Z",
       "effect": "Validation request dispatched to customer C02502; card remains active pending reply.",
       "customer_impact": "low"
     },
@@ -22,7 +22,7 @@
       "executed": true,
       "simulated": true,
       "reference": "SIM-31985FCA65",
-      "executed_at": "2026-10-30T04:53:52Z",
+      "executed_at": "2026-10-30T13:55:47Z",
       "effect": "Fraud case opened and written to the graph.",
       "customer_impact": "none"
     },
@@ -35,7 +35,7 @@
       "executed": true,
       "simulated": true,
       "reference": "SIM-CCA6D3FFD7",
-      "executed_at": "2026-10-30T04:53:52Z",
+      "executed_at": "2026-10-30T13:55:47Z",
       "effect": "Case handed to the analyst queue with the full evidence chain.",
       "customer_impact": "none"
     }
@@ -139,7 +139,7 @@
       "CC-2754",
       "CC-4097"
     ],
-    "summary": "The bank's model scored transaction 3611043 at 0.13 ($3,008.76, in person, billing region 123.0). The investigation found: 2 of the issuer's name/address match flags failed on the flagged transaction; flagged transaction used a device profile and billing region already established on this card; flagged amount $3,008.76 is an extreme outlier for this card (z=15.8, 51.0x median). The evidence is genuinely ambiguous — fraud probability 0.75 — and neither clearing nor blocking is defensible on what is known. Closed case CC-1878 (cleared, none) is the closest prior investigation.",
+    "summary": "On 2017-01-01, an in-person transaction (txn_id 3611043) for $3,008.76 on card C02502-K2 was flagged as an extreme amount outlier standing 15.8 standard deviations above the running mean and 51.0x the median spend of $59.03. The primary risk indicators include two failed name/address match flags, 16 confirmed-fraud cases within two hops of the entity, and four similar historical fraud cases tied to out_of_region_use. The overall assessment indicates a fraud probability of 0.75 under the out_of_region_use pattern, yielding an official verdict of uncertain. It remains uncertain whether the charge is fraudulent because the transaction occurred in billing region 123.0 using a device profile already established on card C02502-K2.",
     "written_to_graph": true,
     "graph_case_id": "CASE-HHF-016"
   },
@@ -191,8 +191,8 @@
   },
   "stop_reason": "Fraud probability 0.75 clears the 0.70 threshold for the actions this case requires, and out_of_region_use is separated from none by 0.29, above the 0.15 floor. The actions policy requires at this probability are already fixed, so further steps are unlikely to change the decision (policy §6).",
   "tool_calls": 47,
-  "tokens": 0,
-  "latency_s": 283.64,
+  "tokens": 3401,
+  "latency_s": 61.74,
   "agent_record": {
     "trigger": {
       "type": "risk_score",
@@ -613,7 +613,7 @@
         "executed": true,
         "simulated": true,
         "reference": "SIM-03DAEE8C99",
-        "executed_at": "2026-10-30T04:53:52Z",
+        "executed_at": "2026-10-30T13:55:47Z",
         "effect": "Validation request dispatched to customer C02502; card remains active pending reply.",
         "customer_impact": "low"
       },
@@ -626,7 +626,7 @@
         "executed": true,
         "simulated": true,
         "reference": "SIM-31985FCA65",
-        "executed_at": "2026-10-30T04:53:52Z",
+        "executed_at": "2026-10-30T13:55:47Z",
         "effect": "Fraud case opened and written to the graph.",
         "customer_impact": "none"
       },
@@ -639,7 +639,7 @@
         "executed": true,
         "simulated": true,
         "reference": "SIM-CCA6D3FFD7",
-        "executed_at": "2026-10-30T04:53:52Z",
+        "executed_at": "2026-10-30T13:55:47Z",
         "effect": "Case handed to the analyst queue with the full evidence chain.",
         "customer_impact": "none"
       }
@@ -657,18 +657,17 @@
       "available": true,
       "provider": "google",
       "model": "gemini-3.6-flash",
-      "calls": 0,
-      "input_tokens": 0,
-      "output_tokens": 0,
-      "tokens": 0,
-      "cached": 0,
-      "errors": [
-        "google: 429 You exceeded your current quota, please check your plan and billing details. For more information on this error, head to: https://ai.google.dev/gemini-api/docs/rate-limits. To monitor your current usage, head to: https://ai.dev/rate-limit. \n* Quota exceeded for metric: generativelanguage.googleapis.com/generate_content_free_tier_requests, limit: 20, model: gemini-3.6-flash, description: Generate content requests per day limit exceeded on Free Tier. See https://ai.google.dev/gemini-api/docs/rate-limits.\nPlease retry in 2h7m2.175690387s. [links {\n  description: \"Learn more about Gemini API quotas\"\n  url: \"https://ai.google.dev/gemini-api/docs/rate-limits\"\n}\n, violations {\n  description: \"Generate content requests per day limit exceeded on Free Tier. See https://ai.google.dev/gemini-api/docs/rate-limits.\"\n  quota_metric: \"generativelanguage.googleapis.com/generate_content_free_tier_requests\"\n  quota_id: \"GenerateRequestsPerDayPerProjectPerModel-FreeTier\"\n  quota_dimensions {\n    key: \"model\"\n    value: \"gemini-3.6-flash\"\n  }\n  quota_dimensions {\n    key: \"location\"\n    value: \"global\"\n  }\n  quota_value: 20\n}\n, retry_delay {\n  seconds: 7622\n}\n]",
-        "google: 429 You exceeded your current quota, please check your plan and billing details. For more information on this error, head to: https://ai.google.dev/gemini-api/docs/rate-limits. To monitor your current usage, head to: https://ai.dev/rate-limit. \n* Quota exceeded for metric: generativelanguage.googleapis.com/generate_content_free_tier_requests, limit: 20, model: gemini-3.6-flash, description: Generate content requests per day limit exceeded on Free Tier. See https://ai.google.dev/gemini-api/docs/rate-limits.\nPlease retry in 2h4m14.198170633s. [links {\n  description: \"Learn more about Gemini API quotas\"\n  url: \"https://ai.google.dev/gemini-api/docs/rate-limits\"\n}\n, violations {\n  description: \"Generate content requests per day limit exceeded on Free Tier. See https://ai.google.dev/gemini-api/docs/rate-limits.\"\n  quota_metric: \"generativelanguage.googleapis.com/generate_content_free_tier_requests\"\n  quota_id: \"GenerateRequestsPerDayPerProjectPerModel-FreeTier\"\n  quota_dimensions {\n    key: \"model\"\n    value: \"gemini-3.6-flash\"\n  }\n  quota_dimensions {\n    key: \"location\"\n    value: \"global\"\n  }\n  quota_value: 20\n}\n, retry_delay {\n  seconds: 7454\n}\n]"
-      ],
-      "template_fallbacks": 2
+      "calls": 2,
+      "input_tokens": 3106,
+      "output_tokens": 295,
+      "tokens": 3401,
+      "cached": 2,
+      "errors": [],
+      "template_fallbacks": 0,
+      "breaker_skips": 0,
+      "backoff_s": 0.0
     },
-    "prose_source": "template",
+    "prose_source": "llm",
     "transport_degraded": false,
     "january_regime": true,
     "text_facts": {
@@ -733,16 +732,16 @@
       "alpha": 0.1,
       "p_fraud_graph_only": 0.7543,
       "quantiles": {
-        "fraud": 0.91292,
-        "legit": 0.742317
+        "fraud": 0.943713,
+        "legit": 0.690813
       },
       "base_set": [
         "fraud"
       ],
-      "calibrated_on": "2016-08-01..2016-09-30",
+      "calibrated_on": "2016-08-01..2016-10-31",
       "widened_by": [],
       "support_distance": 0.4673,
-      "support_threshold": 0.8105,
+      "support_threshold": 0.7993,
       "outside_support": false,
       "set": [
         "fraud"
@@ -774,8 +773,7 @@
       "reproduces_live": true,
       "minimal_sufficient_facts": [
         "match_flag_anomaly",
-        "known_device_and_region",
-        "fraud_proximity"
+        "known_device_and_region"
       ],
       "flip_set": [
         "match_flag_anomaly"
@@ -834,12 +832,13 @@
         },
         {
           "fact": "fraud_proximity",
-          "flips": true,
+          "flips": false,
           "action_class": [
-            "ESCALATE_TO_ANALYST"
+            "BLOCK_CARD",
+            "FILE_REPORT"
           ],
           "p_fraud": 0.7274,
-          "verdict": "uncertain"
+          "verdict": "fraud"
         },
         {
           "fact": "memory_recall",
@@ -854,24 +853,23 @@
       ],
       "precedent": {
         "available": true,
-        "n": 736,
-        "confirmed": 703,
-        "cleared": 33,
-        "cleared_share": 0.045,
+        "n": 853,
+        "confirmed": 801,
+        "cleared": 52,
+        "cleared_share": 0.061,
         "matched_facts": [
           "match_flag_anomaly",
-          "known_device_and_region",
-          "fraud_proximity"
+          "known_device_and_region"
         ],
         "unmatched_facts": [],
         "case_ids": [
-          "CC-5523",
           "CC-5532",
           "CC-5543",
           "CC-5544",
           "CC-5554",
           "CC-5555",
           "CC-5559",
+          "CC-5561",
           "CC-5563",
           "CC-5565",
           "CC-5568",
@@ -880,7 +878,7 @@
         ],
         "query": "precedent_by_facts",
         "params": {
-          "fact_mask": 5308416,
+          "fact_mask": 1114112,
           "as_of": "2017-01-01 03:07:47"
         },
         "source": "tigergraph:precedent_by_facts"
@@ -920,7 +918,7 @@
     "trace": [
       {
         "node": "trigger_intake",
-        "at": 0.015,
+        "at": 0.017,
         "trigger_type": "risk_score",
         "flagged_txn_id": "3611043",
         "as_of": "2017-01-01 03:07:47",
@@ -934,38 +932,26 @@
       },
       {
         "node": "case_opener",
-        "at": 0.018,
+        "at": 0.019,
         "graph_case_id": "CASE-HHF-016",
         "prior_fraud": 0.5
       },
       {
         "node": "evidence_planner",
-        "at": 115.484,
+        "at": 0.022,
         "planned_tools": [
           "card_baseline",
           "episode_window",
           "velocity_burst",
-          "device_first_use",
-          "device_fanout",
-          "region_profile",
-          "out_of_region_probe",
-          "card_testing_probe",
-          "threshold_structuring_probe",
-          "mixed_channel_probe",
-          "recurring_charge_probe",
-          "email_mismatch_profile",
           "shared_entity_ring",
-          "fraud_proximity",
-          "behavioural_neighbours",
-          "hybrid_case_recall",
-          "policy_retrieve"
+          "fraud_proximity"
         ],
-        "rationale": "",
-        "llm_used": false
+        "rationale": "These primitives establish the card's baseline activity, inspect recent transaction patterns around the flagged event, and check for shared network identifiers or proximity to known fraudulent entities.",
+        "llm_used": true
       },
       {
         "node": "graph_retrieval",
-        "at": 129.164,
+        "at": 42.738,
         "signals_fired": [
           "amount_anomalous",
           "amount_extreme",
@@ -978,7 +964,7 @@
       },
       {
         "node": "memory_recall",
-        "at": 160.892,
+        "at": 43.455,
         "recalled": [
           "CC-1878",
           "CC-2869",
@@ -992,7 +978,7 @@
       },
       {
         "node": "policy_grounding",
-        "at": 161.113,
+        "at": 43.794,
         "retrieved": [
           "PATTERN-out_of_region_use",
           "PATTERN-card_testing",
@@ -1004,7 +990,7 @@
       },
       {
         "node": "ledger_update",
-        "at": 161.117,
+        "at": 43.798,
         "folded": 24,
         "p_fraud": 0.7543,
         "posterior": {
@@ -1042,7 +1028,7 @@
       },
       {
         "node": "uncertainty_assessor",
-        "at": 161.119,
+        "at": 43.8,
         "p_fraud": 0.7543,
         "margin": 0.2938,
         "entropy": 1.0092,
@@ -1102,7 +1088,7 @@
       },
       {
         "node": "action_recommender",
-        "at": 169.923,
+        "at": 61.705,
         "verdict": "uncertain",
         "pattern": "out_of_region_use",
         "exposure": 3008.76,
@@ -1135,15 +1121,14 @@
         "proof_margin": 1,
         "minimal_facts": [
           "match_flag_anomaly",
-          "known_device_and_region",
-          "fraud_proximity"
+          "known_device_and_region"
         ],
         "gate": "proof gate: the action rests on a margin of 1 fact (match_flag_anomaly); a harmful action needs a sturdier proof",
         "containment_origin": null
       },
       {
         "node": "permission_gate",
-        "at": 169.931,
+        "at": 61.711,
         "executed": [
           "VERIFY_WITH_CUSTOMER",
           "CREATE_CASE",
@@ -1153,20 +1138,20 @@
       },
       {
         "node": "explainer",
-        "at": 283.637,
-        "summary_chars": 581,
+        "at": 61.738,
+        "summary_chars": 734,
         "llm_used": true
       },
       {
         "node": "case_writer",
-        "at": 285.201,
+        "at": 62.129,
         "graph_case_id": "CASE-HHF-016",
         "affected_txns": 1,
         "sar_filed": false
       },
       {
         "node": "memory_consolidator",
-        "at": 285.204,
+        "at": 62.131,
         "audit_chain_intact": true,
         "decisions": 3
       }
@@ -1249,7 +1234,7 @@
             "digest": "c3db2fb4a629a3555a8c52e2d042ce1cd735b7e6b9fd14282d4d362f97e19f46"
           }
         ],
-        "ran_at": "2026-10-30T04:55:46Z",
+        "ran_at": "2026-10-30T13:55:47Z",
         "data_snapshot": "bc3011b15aff8ad88490fd4e127bf3de",
         "kind": "derived_inference"
       },
@@ -1300,7 +1285,7 @@
             "digest": "aec3622e6dd1210321016c837f0acf8b81bc46b449b7a84442c0f048d9d06654"
           }
         ],
-        "ran_at": "2026-10-30T04:55:46Z",
+        "ran_at": "2026-10-30T13:55:47Z",
         "data_snapshot": "bc3011b15aff8ad88490fd4e127bf3de",
         "kind": "derived_inference"
       },
@@ -1352,7 +1337,7 @@
             "digest": "c3db2fb4a629a3555a8c52e2d042ce1cd735b7e6b9fd14282d4d362f97e19f46"
           }
         ],
-        "ran_at": "2026-10-30T04:55:46Z",
+        "ran_at": "2026-10-30T13:55:47Z",
         "data_snapshot": "bc3011b15aff8ad88490fd4e127bf3de",
         "kind": "derived_inference"
       },
@@ -1406,7 +1391,7 @@
             "digest": "aec3622e6dd1210321016c837f0acf8b81bc46b449b7a84442c0f048d9d06654"
           }
         ],
-        "ran_at": "2026-10-30T04:55:46Z",
+        "ran_at": "2026-10-30T13:55:47Z",
         "data_snapshot": "bc3011b15aff8ad88490fd4e127bf3de",
         "kind": "derived_inference"
       },
@@ -1431,7 +1416,7 @@
           "max_hops": "2"
         },
         "tool_calls": [],
-        "ran_at": "2026-10-30T04:55:46Z",
+        "ran_at": "2026-10-30T13:55:47Z",
         "data_snapshot": "bc3011b15aff8ad88490fd4e127bf3de",
         "kind": "derived_inference"
       },
@@ -1451,7 +1436,7 @@
           "as_of": "2017-01-01 03:07:47"
         },
         "tool_calls": [],
-        "ran_at": "2026-10-30T04:55:46Z",
+        "ran_at": "2026-10-30T13:55:47Z",
         "data_snapshot": "bc3011b15aff8ad88490fd4e127bf3de",
         "kind": "observed_fact"
       },
@@ -1462,7 +1447,7 @@
         "query": "policy:PATTERN-out_of_region_use",
         "params": {},
         "tool_calls": [],
-        "ran_at": "2026-10-30T04:55:46Z",
+        "ran_at": "2026-10-30T13:55:47Z",
         "data_snapshot": "bc3011b15aff8ad88490fd4e127bf3de",
         "kind": "policy_text"
       },
@@ -1473,7 +1458,7 @@
         "query": "policy:PATTERN-card_testing",
         "params": {},
         "tool_calls": [],
-        "ran_at": "2026-10-30T04:55:46Z",
+        "ran_at": "2026-10-30T13:55:47Z",
         "data_snapshot": "bc3011b15aff8ad88490fd4e127bf3de",
         "kind": "policy_text"
       },
@@ -1532,13 +1517,13 @@
             "digest": "d6cf470150a60a45ccfd33102b657e1b2e2e0f462453c3246550980873c740ee"
           }
         ],
-        "ran_at": "2026-10-30T04:55:46Z",
+        "ran_at": "2026-10-30T13:55:47Z",
         "data_snapshot": "bc3011b15aff8ad88490fd4e127bf3de",
         "kind": "exposure"
       },
       {
         "id": "HHF-016-A010",
-        "what": "Minimal sufficient facts ['match_flag_anomaly', 'known_device_and_region', 'fraud_proximity'] force action class ['BLOCK_CARD', 'FILE_REPORT']; margin k=1",
+        "what": "Minimal sufficient facts ['match_flag_anomaly', 'known_device_and_region'] force action class ['BLOCK_CARD', 'FILE_REPORT']; margin k=1",
         "evidence_ids": [
           "3611043"
         ],
@@ -1591,21 +1576,21 @@
             "digest": "c3db2fb4a629a3555a8c52e2d042ce1cd735b7e6b9fd14282d4d362f97e19f46"
           }
         ],
-        "ran_at": "2026-10-30T04:55:46Z",
+        "ran_at": "2026-10-30T13:55:47Z",
         "data_snapshot": "bc3011b15aff8ad88490fd4e127bf3de",
         "kind": "proof"
       },
       {
         "id": "HHF-016-A011",
-        "what": "736 closed cases share these facts: 703 confirmed, 33 cleared",
+        "what": "853 closed cases share these facts: 801 confirmed, 52 cleared",
         "evidence_ids": [
-          "CC-5523",
           "CC-5532",
           "CC-5543",
           "CC-5544",
           "CC-5554",
           "CC-5555",
           "CC-5559",
+          "CC-5561",
           "CC-5563",
           "CC-5565",
           "CC-5568",
@@ -1614,18 +1599,18 @@
         ],
         "query": "precedent_by_facts",
         "params": {
-          "fact_mask": "5308416",
+          "fact_mask": "1114112",
           "as_of": "2017-01-01 03:07:47"
         },
         "tool_calls": [
           {
             "seq": 24,
             "method": "precedent_by_facts",
-            "key": "4a9b95f55e0c11a083cee72a",
-            "digest": "8c7d73c92d3e4ab57a44d9d04803393d15a610ebce6d71c5b0256c384178a8d5"
+            "key": "9e042d00a01557a3572e003d",
+            "digest": "7344641b05d6512e24a3de14bde959ea2e688eaed5154845369b4da72eeeb554"
           }
         ],
-        "ran_at": "2026-10-30T04:55:46Z",
+        "ran_at": "2026-10-30T13:55:47Z",
         "data_snapshot": "bc3011b15aff8ad88490fd4e127bf3de",
         "kind": "precedent"
       },
@@ -1675,7 +1660,7 @@
             "digest": "c3db2fb4a629a3555a8c52e2d042ce1cd735b7e6b9fd14282d4d362f97e19f46"
           }
         ],
-        "ran_at": "2026-10-30T04:55:46Z",
+        "ran_at": "2026-10-30T13:55:47Z",
         "data_snapshot": "bc3011b15aff8ad88490fd4e127bf3de",
         "kind": "data_quality"
       }
@@ -1684,6 +1669,7 @@
     "unattested": [],
     "data_snapshot": "bc3011b15aff8ad88490fd4e127bf3de",
     "n_attestations": 12,
+    "sar_package": null,
     "handover": {
       "state": "escalated",
       "waiting_on": [],
@@ -1725,13 +1711,13 @@
     },
     "framework": "langgraph",
     "telemetry": {
-      "wall_s": 285.2,
+      "wall_s": 62.13,
       "graph_calls": 27,
       "graph_errors": 0,
-      "llm_calls": 0,
-      "tokens": 0,
-      "llm_cost_usd": 0.0,
-      "template_fallbacks": 2,
+      "llm_calls": 2,
+      "tokens": 3401,
+      "llm_cost_usd": 0.01374,
+      "template_fallbacks": 0,
       "backend": "tigergraph",
       "unattested_claims": 0
     }

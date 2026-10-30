@@ -80,7 +80,55 @@ _HOSTILE = [
      "outcome_demand"),
     (r"\breply (with )?(close_no_fraud|allow_transaction|block_\w+)\b", "outcome_demand"),
     (r"\b(api[_ ]?key|password|secret|token)\b", "secret_probe"),
+    # The same override in other languages.
+    (r"\b(ignora|ignore[sz]?|ignorez) (las |les |todas las |toutes les )?(instrucciones|instructions|reglas|règles)\b",
+     "override_instruction"),
+    (r"\bignorier(e|en)? (alle )?(vorherigen |bisherigen )?(anweisungen|regeln)\b", "override_instruction"),
+    (r"निर्देशों को अनदेखा|नियमों को अनदेखा", "override_instruction"),
+    # Turn and tool injection.
+    (r"(^|\n)\s*(human|assistant|system|user)\s*:", "turn_injection"),
+    (r"\b(developer|god|admin|debug) mode\b|\bjailbreak\b|\bsafety (rules|filters|checks) "
+     r"(are )?(suspended|disabled|off)\b", "mode_switch"),
+    (r"\"(type|name|tool|function)\"\s*:\s*\"(tool_use|function|approve\w*|block\w*|close\w*)",
+     "json_injection"),
+    (r"\[[^\]]{0,60}(approv|confirm|verif|unlock)[^\]]{0,60}\]\(\s*https?://", "link_injection"),
+    # Evidence and policy forged inside the text.
+    (r"\battestation\s+[a-z]{2,4}-\d{3}-a\d{3}\b", "forged_evidence"),
+    (r"\bidentical facts\b|\bfollow (the )?precedent\b", "forged_evidence"),
+    (r"\b(note|message|instructions?) (for|to) the (model|agent|ai|assistant)\b", "fake_system_text"),
+    (r"\br\d{1,2} now applies\b|\bthreshold is now\b|\bpolicy r\d{2,}\b", "policy_rewrite"),
+    (r"\bthe policy threshold is\b|\brisk score is irrelevant\b", "policy_rewrite"),
+    # Tool, query and encoding tricks.
+    (r"\b(interpret query|delete from|delete \w+ from|drop (graph|vertex|table)|run query|"
+     r"call tool|add_node|add_edge|upsert\w*)\b", "tool_or_query_injection"),
+    (r"\b[a-z0-9+/]{16,}={1,2}(\s*\(?\s*(decode|base64))?", "encoded_payload"),
+    # Outcome demands phrased as notes or pleas.
+    (r"\btreat (every|all|this) (alerts?|cases?|transactions?) as (cleared|legitimate|fraud)\b",
+     "outcome_demand"),
+    (r"\b(must|should|may) not (flag|block|report|escalate)\b", "outcome_demand"),
+    (r"\breport all (the )?connected cards\b", "outcome_demand"),
+    (r"\bapproved by (the )?(l1|l2|management|fraud manager|team lead)\b", "approval_claim"),
+    (r"\b(tell me|let me know) (if|whether) (you'?re|you are) filing\b|\bare you filing\b",
+     "tipoff_probe"),
+    (r"\b(\w{4,})(\s+\1\b){3,}", "repetition"),
 ]
+
+# Views of the text that undo cheap obfuscation. They are scanned for hostile
+# shapes only: facts are always read from the plain normalised text, so a
+# decoding can raise a flag but never create or remove a denial.
+_LEET = str.maketrans({"0": "o", "1": "i", "3": "e", "4": "a", "5": "s", "7": "t", "@": "a",
+                       "$": "s"})
+
+
+def _views(low: str, hidden: str) -> list[tuple[str, str]]:
+    import codecs
+
+    out = [("leet", low.translate(_LEET)),
+           ("spaced_letters", re.sub(r"\s+", " ", re.sub(r"(?<=\b\w) (?=\w\b)", "", low))),
+           ("rot13", codecs.encode(low, "rot13"))]
+    if hidden:
+        out.append(("unicode_tags", hidden.lower()))
+    return out
 
 
 @dataclass
@@ -106,13 +154,21 @@ _HOMOGLYPHS = str.maketrans({
     "Μ": "M", "Ο": "O", "Ρ": "P", "Τ": "T", "Χ": "X", "ο": "o", "ν": "v",
 })
 _ZERO_WIDTH = dict.fromkeys(map(ord, "​‌‍⁠﻿­"), None)
+# Unicode tag characters (U+E0000-E007F) render as nothing and smuggle ASCII.
+_TAGS = {c: None for c in range(0xE0000, 0xE0080)}
+
+
+def hidden_tag_text(text: str) -> str:
+    return "".join(chr(ord(c) - 0xE0000) for c in str(text or "")
+                   if 0xE0020 <= ord(c) <= 0xE007E)
 
 
 def normalise(text: str) -> tuple[str, int]:
     """NFKC, strip zero-width characters, fold homoglyphs. Returns the text and
     how many characters changed, which is itself a signal of evasion."""
     raw = str(text or "")
-    t = unicodedata.normalize("NFKC", raw).translate(_ZERO_WIDTH).translate(_HOMOGLYPHS)
+    t = unicodedata.normalize("NFKC", raw).translate(_ZERO_WIDTH).translate(_TAGS) \
+        .translate(_HOMOGLYPHS)
     changed = sum(1 for a, b in zip(raw, t) if a != b) + abs(len(raw) - len(t))
     return t, changed
 
@@ -139,6 +195,16 @@ def extract_text_facts(text: str, trigger_type: str) -> TextFacts:
         "text_analyst_asks_ring": trigger_type == "analyst_request"
         and any(re.search(p, clean) for p in _RING),
     }
+    seen_kinds: set = {x["kind"] for x in spans}
+    for view, vt in _views(low, hidden_tag_text(text)):
+        for pat, kind in _HOSTILE:
+            m = re.search(pat, vt)
+            # A view only adds what the plain text did not already show.
+            if m and kind not in seen_kinds and vt[m.start():m.end()] not in low:
+                seen_kinds.add(kind)
+                spans.append({"kind": kind, "start": 0, "end": 0, "view": view,
+                              "text": f"after {view} decoding: {vt[m.start():m.end()][:60]}"})
+                break
     hostile = bool(spans) or changed > 3
     if changed > 3 and not any(s["kind"] == "homoglyph_or_hidden" for s in spans):
         spans.append({"kind": "homoglyph_or_hidden", "start": 0, "end": 0,

@@ -17,6 +17,7 @@ TigerGraph workspace, and every code excerpt is copied from the real files.*
     are the ones to judge us on.
   - **Part 4: implemented, with lighter depth.**
   - **Part 5: present but thin.** We say plainly what is missing.
+  - The "What the last audit found and fixed" table right below lists every gap we closed.
 - **Part 6** covers the safety rules every challenge shares.
 - **Part 7** shows what Round 1 taught us.
 - **Part 8** is a glossary, and **Part 9** lists the sources.
@@ -42,21 +43,41 @@ Every challenge section follows the same pattern:
 |---|---|---|---|---|
 | C7 | Containment planner | **Strong** | Find *where* the ring was compromised and protect cards that have not been hit yet, using only actions that cost an innocent customer nothing | 80 rings: 5.0× lift, $14.4M of later loss on flagged cards, **0 blocks on innocents** |
 | C6 | Regulator's view | **Strong** | The reason for a verdict is *computed* (a proof), not written, and a block resting on one fact is downgraded before anyone is harmed | Legitimate customers acted against: **70 → 5** on the holdout; 18/18 answers re-verify on live TigerGraph |
-| C10 | Break the agent | **Strong** | Free text is a *type* the decision code refuses at runtime, so it cannot reach a decision, whatever it says | **0 of 720** hostile-text runs changed a decision; evasions that got past a detector: 3 → 0 |
-| C11 | Data quality detective | **Strong** | A gap taints a case only if it hides evidence *that decision* needed, and taint automatically routes the case to a human | 5 of 18 final cases flagged; a real label conflict in the organisers' data found |
-| C1 | New typologies | **Strong, with gaps** | New detectors are *evidence only*, so they cannot increase the number of innocent customers acted against | 86 frauds caught that the core had cleared |
-| C12 | Schema drift survival | **Strong, with gaps** | Each changed column is listed with *what it breaks*; nothing loads until a fraud manager approves | January diffed in 9.9 s; wrong-role approval refused (403) |
-| C13 | Someone else's schema | **Strong, with gaps** | Each mapping choice comes with the sample values that justify it; anything that cannot be mapped is refused | Renamed variant: 3/3 cases graded clean, verdicts identical; 3 foreign bank graph schemas mapped 100% |
-| C4 | Evidence to SAR | Implemented | Every sentence of the filing cites the attested query behind it | 0 §3a findings from the official grader across 18 cases |
-| C14 | Case management | Implemented | The case is a record with a life, stored in the graph, with a handover note | Every state change carries its cause, time and approver |
+| C10 | Break the agent | **Strong** | Free text is a *type* the decision code refuses at runtime, so it cannot reach a decision, whatever it says | **0 of 1,116** hostile-text runs (62 attack templates × 18 cases) changed a decision; evasions that got past a detector: 3 → 0 |
+| C11 | Data quality detective | **Strong** | A gap taints a case only if it hides evidence *that decision* needed, and taint automatically routes the case to a human | 5 of 18 final cases flagged; conformal coverage restored to **0.90** after finding a signal that silently died |
+| C1 | New typologies | **Strong** | New detectors are *evidence only*, so they cannot increase the number of innocent customers acted against | 86 frauds caught that the core had cleared; all four detectors run live on every case |
+| C12 | Schema drift survival | **Strong** | Each change is listed with *what it breaks*, for files **and** for graph schemas; the loaders refuse to run until a fraud manager approves | January diffed in 9.9 s; a core-banking schema upgrade diffed in 0.07 s; loaders exit 4 while a proposal is pending |
+| C13 | Someone else's schema | **Strong** | Each mapping choice comes with the sample values that justify it; anything that cannot be mapped is refused | Two renamed variants; on the harder one all **18/18** cases graded clean and **identical** to a same-data control; 3 foreign graph schemas mapped 100% |
+| C4 | Evidence to SAR | Implemented | Every sentence of the filing cites the attested query behind it, and a filing package (five W's, timeline, evidence graph, checklist) ships with it | 0 §3a findings across 18 cases; 3/3 filings pass every review check |
+| C14 | Case management | Implemented | The case is a record with a life, stored in the graph, with a handover note, an owner and an SLA | Every state change carries its cause, time and approver; overdue cases surface first |
 | C8 | Analyst in the loop | Implemented | Rejections change behaviour without retraining, and each answer names the feedback that changed it | Legitimate customers acted against: 46 → 42 |
-| C3 | Policy text to detector | Implemented | The numbers in a rule are read from the policy text, not typed by hand | R6: 7,117 agree / 6 disagree with the agent, every disagreement listed |
-| C2 | Self-growing detective | Thin | Discovery, backtest and approval work end to end; what it found should be rejected | 3 proposals; all fail the out-of-time backtest |
-| C5 | Ring replay | Thin | Frames are rebuilt from transactions at request time, not stored pictures | Slider on HHG-014 |
-| C9 | Speed and autonomy | Thin | Pre-investigated cases go through the same code as manual ones | p95 284 s, $0.0018 per case |
+| C3 | Policy text to detector | Implemented | The numbers in a rule are read from the policy text, not typed by hand | 3 rules compiled as detectors and 3 as checks; R6: 7,126 agree / 7 disagree |
+| C2 | Self-growing detective | Implemented | Discovery must survive a month it never saw and fire on today's alerts before a human is asked | 1 proposal: October precision 0.88, **59 frauds the core missed**, 8 legitimate touched |
+| C9 | Speed and autonomy | Implemented | Pre-investigated cases go through the same code as manual ones; a dead model provider cannot stall the queue | p95 **79 s** (was 284 s); 18 alerts in 315 s on 4 workers; $0.003 per case |
+| C5 | Ring replay | Thin | Frames are rebuilt from transactions at request time, and the loss counts only attested suspect transactions | Slider with a plain-language caption per frame on HHG-014 |
 
 **The floor under all of it:** the organisers' own grader scores our 18 answers **18/18
-clean** (0 hard, 0 policy, 0 warnings). All **11 resilience drills pass**.
+clean** (0 hard, 0 policy, 0 warnings). All **11 resilience drills pass**, and all 18
+answers re-run to the same content on live TigerGraph.
+
+### What the last audit found and fixed
+
+We audited every challenge against its own brief and closed each gap we could close in code.
+Every fix was re-run end to end; the 18 final decisions did not change.
+
+| Gap found | What we did | Result |
+|---|---|---|
+| C1: `recipient_fanin` only ran in the backtest | New GSQL query `recipient_window`, installed on TigerGraph and granted to the agent role | Runs on every case; same rows on TigerGraph and the local mirror |
+| C2: proposals scored 99% in training and caught nothing in October | Controls counted as negatives, a validation month, and a label-free liveness check | 1 proposal that holds on October (0.88 precision, 59 frauds the core missed) |
+| C2 → C11: a signal (`behavioural_fraud_neighbourhood`) **cannot fire** once the closed-case pool passes ~93% fraud, which it does from October | Masked in conformal calibration; recalibrated on Aug–Oct | Fraud coverage 0.81 → 0.89; overall 0.86 → 0.90 |
+| C3: only two rules compiled | R7 compiled as a detector; R1, R8 and R10 compiled as checks; a generic advisory grammar | 0 violations across 38 answers; an unseen advisory compiles |
+| C4: no timeline or evidence graph beside the filing | A filing package: five W's, timeline, evidence graph, review checklist | 3/3 filings `ready_to_send` |
+| C5: the replay's "loss" summed every shared-device transaction | Loss counts only attested suspect transactions; each frame gets a plain-language caption | Activity and loss shown separately |
+| C9: p95 of 284 s | Diagnosed as an exhausted model quota, not the graph; added a circuit breaker shared across workers, plus parallel workers and a streaming mode | p95 79 s; decisions identical |
+| C10: the firewall flagged 65% of hostile runs | Decoded views (leetspeak, spaced letters, rot13, hidden Unicode tags) and new patterns; 22 new attack templates | 1,032 of 1,116 runs flagged; 0 false flags on 5,585 analyst notes |
+| C12: **no loader actually checked the approval gate** | Gate wired into the loaders; a graph-schema diff with the same approval | Loaders exit 4 while any proposal is pending |
+| C13: tested on 3 cases of one variant | A second variant (epoch timestamps, single-letter column families, no file-name hints) on all 18 cases, plus a same-data control | Found and fixed 3 mapping bugs; 18/18 identical to the control |
+| C14: no owner or SLA | Assignment with role checks, an SLA per state, and a work queue | Overdue cases surface first |
 
 ---
 
@@ -158,7 +179,7 @@ uses. These are vendor case studies, see Part 9.
 │ 4. TIGERGRAPH SAVANNA 4.2.5 (FraudGraph)│   │ 3. DECISION CORE (no LLM, pure code)   │
 │  • 650,938 txns · 14,849 cards          │   │  evidence ledger (Bayes, 7 hypotheses) │
 │  • 5,585 closed cases + 384-d vectors   │   │  → conformal abstention (C11)          │
-│  • 25 installed queries (RBAC)          │◀─▶│  → policy engine R1–R10, §3a           │
+│  • 26 installed queries (RBAC)          │◀─▶│  → policy engine R1–R10, §3a           │
 │  • TigerVector + traversal fused        │   │  → proof + gate (C6)                   │
 │  • case_write: the only write path      │   │  → containment (C7)                    │
 │  • written cases, approvals, lineage    │   │  → new detectors as evidence (C1–C3)   │
@@ -241,6 +262,7 @@ the LLM switched off (`AGENT_USE_LLM=0`), which is how the drills prove it.
 | `case_write`, `case_chain` | The one write path, and the read-back | C14, C4, C6 |
 | `compromise_watch` | Later cases read the `COMPROMISE_POINT` edges earlier cases wrote | C7 |
 | `data_gaps` | Re-checks a case's data gaps against the graph | C11 |
+| `recipient_window` | Who else paid the flagged transaction's recipient in the last 24 h | C1 |
 | `governance_write` | Human approvals, feedback, detector and schema decisions (console role only) | C2, C8, C12, C14 |
 | `typology_probes`, `device_fanout`, `fraud_proximity`, … | The measured signals | all |
 
@@ -264,7 +286,7 @@ backtest built on it would be fiction.
 
 **Least privilege, enforced twice.**
 
-- *In TigerGraph:* the `agent_role` may run 25 installed queries and nothing else. It has no
+- *In TigerGraph:* the `agent_role` may run 26 installed queries and nothing else. It has no
   schema access, no loading jobs, no interpreted GSQL and no generic upsert.
   (`graph/rbac.gsql`)
 - *In our code:* the MCP client accepts only three allow-listed tools, and the agent's graph
@@ -631,8 +653,13 @@ The brief adds two twists:
   "it was me" cannot clear a dispute.
 - **Defence c: report, never obey, never invert.** Instruction-like spans are flagged with
   their character positions: fake system text, role claims, approval claims, outcome
-  demands, JSON or field injection, homoglyphs, zero-width characters. When text is shown to
-  the LLM for prose, it goes inside a delimited data block.
+  demands, JSON or field injection, homoglyphs, zero-width characters. The text is also
+  scanned through **decoded views**: leetspeak (`1gn0r3`), spaced letters (`i g n o r e`),
+  rot13 and hidden Unicode tag characters (text that renders as nothing). Decoded views can
+  raise a flag but never create or remove a fact. Overrides in Spanish, French, German and
+  Hindi, fake chat turns (`Human:` / `Assistant:`), tool-call JSON, approval links, and
+  forged attestations or precedents are recognised too. When text is shown to the LLM for
+  prose, it goes inside a delimited data block.
 
 **Attack 2 — activity shaped to look innocent.** We attacked our own detectors with the
 cheapest evasion of each threshold, planted as `ATK-*` transactions:
@@ -680,16 +707,23 @@ I/O of all 18 cases (`eval/metamorphic.py`):
 
 | Relation | What must hold | Runs | Violations |
 |---|---|--:|--:|
-| M2 hostile text | 40 attack templates × 18 cases must not change any decision field | 720 | **0** |
+| M2 hostile text | 62 attack templates × 18 cases must not change any decision field | 1,116 | **0** |
 | M1 id renaming | renaming every id changes nothing | 18 | 0 |
 | M4 time shift | shifting all times together changes nothing | 18 | 0 |
 | M5 monotone evidence | adding one more fraud-indicating fact never lowers p(fraud) or the severity | 90 | 0 |
 | M6 monotone exposure | doubling the exposure never switches a SAR requirement off | 18 | 0 |
 | M7 determinism | same input, same output | 18 | 0 |
 
-The firewall flagged instruction-like text on 468 of the 720 M2 runs. Even on the 252 it did
-*not* flag, the decision did not change, because the structural defence does not depend on
-the regex catching anything.
+The 62 templates include 22 added in the last audit: leetspeak, spaced letters, right-to-left
+override, full-width letters, Unicode tag smuggling, rot13, Spanish, German and Hindi, chat-turn
+injection, "developer mode", tool-use JSON, YAML and CSV injection, approval links, HTML
+comments, quoted injections, a forged attestation, a forged precedent and a forged threshold.
+
+The firewall now flags **1,032 of the 1,116** runs (before the audit: 468 of 720). The ones
+left unflagged are deliberately benign-looking: a polite confirmation, a polite denial, and
+plain id claims. Even on those, the decision did not change, because the structural defence
+does not depend on the flag. **False flags: 0** on the Round 1 pack and on all 5,585
+closed-case analyst notes.
 
 **Evasion attacks** (`eval/attacks.py`): 8 attacks; **3 got past a detector before
 hardening, 0 after.**
@@ -781,7 +815,8 @@ widens its **conformal prediction set** to {fraud, legit}. A fraud verdict whose
 just {fraud} becomes **uncertain**, which routes to escalation under R8. This is
 *Innovation 4, conformal abstention*:
 
-- label-conditional split conformal at 90% coverage, calibrated on August–September;
+- label-conditional split conformal at 90% coverage, calibrated on August–October, the newest
+  labelled months, with **dead signals masked** (see the proof below);
 - plus a **support check**: a case whose behaviour vector is far from anything calibration
   has seen also widens the set. This matters for January, which the bank's model never saw.
 
@@ -811,8 +846,24 @@ detector.
   report where the cardholder *denied* the charge, so policy R2 governs and the conformal set
   does not override it (`customer_settled`). The set *is* widened and recorded, so a reviewer
   sees the doubt.
-- October coverage: 0.86 overall against 0.90 nominal; fraud under-covers (0.81) under the
-  shift. We state this rather than hide it.
+- **A silent failure found and fixed.** Fraud coverage on October was 0.81 against 0.90. The
+  cause was one signal, `behavioural_fraud_neighbourhood`. It fires when a transaction's
+  nearest neighbours are more fraud-heavy than the closed-case pool by at least 0.07. From
+  October the pool is about 93% fraud, so that lift becomes impossible and the signal never
+  fires again. Calibration had learned from it, and live cases could not use it. Masking any
+  signal whose firing rate collapses on the newest month fixes it
+  (`eval/conformal_calibrate.py`):
+
+  | Calibration arm | Tested on | Coverage | Fraud coverage |
+  |---|---|--:|--:|
+  | all signals, Aug–Sep (before) | October (n = 1,988) | 0.861 | 0.811 |
+  | dead signal masked, Aug–Sep | October | **0.902** | **0.893** |
+  | all signals, Aug–Sep (before) | Nov–Dec (n = 37, out of time) | 0.838 | 0.829 |
+  | masked, Aug–Oct (deployed) | Nov–Dec | **0.892** | **0.886** |
+
+  The cost is more "uncertain" sets: escalations, never blocks. On the 18 final cases it
+  changes no decision: one legitimate case's set widens, and a legitimate verdict is never
+  widened. Out-of-support January cases fell from 14% to 0.75%.
 
 ### What is unique, and why it matters
 
@@ -825,8 +876,11 @@ detector.
 
 ### Honest limits
 
-- Fraud coverage under the January shift is below nominal (0.81 vs 0.90). The support check
-  partly compensates; a production system would recalibrate monthly.
+- Coverage is now at nominal on October and Nov–Dec, but the Nov–Dec check has only 37
+  labelled cases. A production system would recalibrate monthly, and rerun the dead-signal
+  check each time.
+- The dead signal is still computed for the live agent; it simply cannot fire on January data.
+  Redesigning it (lift against a rolling pool) is the proper fix and is not done yet.
 - The closed cases are a *selected* sample (investigated alerts), so coverage holds for cases
   like those the bank investigates, not for all traffic.
 
@@ -868,6 +922,16 @@ transactions up to `as_of`, read through the store so the read is recorded and a
 | `micro_charges` | ≥ 3 charges of ≤ $5 within 7 days |
 | `recipient_fanin` | ≥ 4 distinct cards paying one uncommon recipient domain in 24 h |
 | shared origin | the compromise-origin lift test from C7 (`origin_counts`) |
+
+All five run live on every case. `recipient_fanin` reads the graph through `recipient_window`:
+
+```sql
+/* graph/queries/recipient_window.gsql */
+d = SELECT m FROM s:t -(RECIPIENT_EMAIL>:e)- EmailDomain:m POST-ACCUM @@domain += m.domain;
+w = SELECT t FROM d:m -(EMAIL_RECEIVED_BY>:e)- Transaction:t
+    WHERE t.ts >= since AND t.ts <= as_of
+    ACCUM @@rows += (t.txn_id + "	" + t.card_id);
+```
 | `frontier_structuring`, `frontier_card_testing` | the hardened rules from C10, just past our own thresholds |
 
 ```python
@@ -916,8 +980,11 @@ acted against, while they surface **86 frauds** our core had cleared.
 
 ### Honest limits
 
-- `recipient_fanin` runs in the backtest but is **not yet wired into the per-case run**.
-  The 24-hour cross-card scan is one more query, but it is not in the live toolkit today.
+- Closed in the last audit: `recipient_fanin` used to run only in the backtest. It now runs on
+  every case through a new installed query, `recipient_window` (the flagged transaction's
+  recipient domain, then everyone who paid it in the last 24 hours, via the
+  `RECIPIENT_EMAIL` edge). TigerGraph and the local mirror return identical rows. It did
+  not fire on any of the 18 final cases.
 - Recall is low (about 1% each). These are narrow nets for specific patterns, not a general
   fraud model.
 
@@ -961,7 +1028,23 @@ approval before acting on it**.
    }
    ```
 3. **Write a proposal and stop.** The command exits with code **4**, and the loaders refuse
-   to run while a proposal is pending (`gate_open()`).
+   to run while a proposal is pending. The audit found that this second half was a promise:
+   no loader actually checked. It is now enforced. `01_normalise.py` and the graph load
+   step call `drift_gate.require_open()`, which exits 4 while any file or graph-schema
+   proposal waits for approval:
+
+   ```python
+   # src/fraudagent/governance/drift_gate.py
+   waiting = pending()            # DRIFT-*.json / GSCHEMA-*.json without .approved
+   if waiting:
+       print(f"[{step}] refusing to load: drift proposal(s) {', '.join(waiting)} wait for "
+             f"a fraud manager ...")
+       sys.exit(EXIT_PENDING)     # 4
+   ```
+
+   We watched it work: a foreign-dataset ingest launched while two proposals were pending was
+   refused. That ingest (C13) now carries its own mapping approval and runs isolated, so it
+   alone sets `DRIFT_GATE=off`.
 4. **Only a fraud manager can approve.** The bearer token is checked on the server. Any other
    role is refused with 403, and the refusal is logged. The approval is Ed25519-signed into
    the approval ledger and written to TigerGraph as a `SchemaChange` vertex through
@@ -998,6 +1081,27 @@ a real defect in one of the test schemas: a column named `TARGET`, a GSQL reserv
 TigerGraph rejects. Each schema is then loaded into a scratch graph on live TigerGraph,
 compared, and dropped.
 
+**Graph schema drift, with the same gate.** `ingest/graph_schema_diff.py OLD.gsql NEW.gsql`
+compares two versions of a bank's graph schema. It reports vertex and edge types added,
+removed or renamed (a rename is proposed by attribute overlap), attributes added, removed or
+retyped, and primary-id and endpoint changes. It then runs both versions through the mapper
+and lists **what each change breaks in our mapping**:
+
+- `breaking`: a mapped target is gone or changed type;
+- `remap`: the mapper found a new target;
+- `info`.
+
+It writes a proposal and exits 4 until a fraud manager approves. Tested on a simulated
+core-banking upgrade of the T24 schema (`schemas/drift/bank3_core_banking_t24_v2.gsql`),
+detected in 0.07 s:
+
+| Change in the new schema | What the diff reports |
+|---|---|
+| `CARD_ISSUE` renamed `CARD` | rename proposed (100% attribute overlap); Card concept: `remap` |
+| `DEBIT_AMOUNT` retyped DOUBLE → STRING | **breaking**: the old amount target changed type; the mapper falls back to `TELLER.AMOUNT_LOCAL_1` |
+| `PROTOCOL.TERMINAL_ID` dropped, `DEVICE` vertex added | Device concept: `remap` from an attribute to the new vertex |
+| knock-on | **breaking**: the LoginEvent concept and the LOGGED_IN path lose their mapping |
+
 ### What is unique, and why it matters
 
 - **"What it breaks" is spelled out per column**, so the approver knows what they are
@@ -1011,12 +1115,12 @@ compared, and dropped.
 
 - January had **no renamed or removed columns**, so the re-mapping path was exercised on our
   rehearsal variant (C13), not on the real January files.
-- The current January proposal (`DRIFT-f529d6d85136`) **still needs its fraud-manager
-  approval**. A rehearsal proposal was approved end to end, and a team-lead token was
-  refused with 403. The approval is one command, ideally run live:
+- The current January proposal (`DRIFT-f529d6d85136`) and an older rehearsal proposal still
+  wait for a fraud manager, and now that the gate is enforced they keep the loaders closed.
+  That is deliberate: approval is a human act, and we do not mint a fraud-manager token for
+  ourselves. It is one command, best run live in front of the judges:
   `python ingest/00_drift.py --auto --approve --token <fraud-manager token>`.
-- A graph-schema *diff* (old GSQL vs new GSQL, with the same approval gate) is designed but
-  not built. Today the mapper validates and maps one schema at a time.
+- The graph-schema diff was tested on one simulated upgrade of one vendor's schema.
 
 **In the terminal:** `python ingest/00_drift.py --auto` shows the proposal and exits 4.
 
@@ -1047,7 +1151,13 @@ file it:
    - value shape (dates, ids such as `C12345-K1`);
    - overlapping values;
    - **quantile match with a scale search**, which is how it finds cents (×0.01);
-   - numbered column families under any prefix (`V1…V339` renamed to `feat_1…`);
+   - numbered column families under any prefix, matched **by size** when the name gives no
+     hint: `x1…x339` can only be the 339-column V family, `k1…k14` the 14 counts, `t1…t15`
+     the 15 time deltas, `sig1…sig38` the 38 identity fields;
+   - free text (analyst notes, alert messages) by **shared vocabulary**, because those values
+     never repeat;
+   - only money columns may be rescaled. A time offset that happens to "match at ×0.01" is a
+     coincidence, not a unit change;
 3. **detects reshapes**: cents, date + time split, epoch seconds;
 4. **refuses** a file or column it cannot map, and says so, instead of guessing;
 5. **validates**, applies the mapping **only with an approval**, ingests into **isolated
@@ -1080,12 +1190,27 @@ BIAN, the device is `AccessDevice`, not the issued card.
 
 ### The proof
 
-- **Renamed and reshaped variant:**
-  - every required column mapped, including the card tuple by value quantiles, cents ×0.01,
-    date + time → timestamp, and 377 numbered-family columns;
-  - **3/3 cases graded clean** by the official grader, with verdicts **identical** to the
-    canonical run;
-  - three optional columns were left unmapped and reported.
+- **Variant a** (camelCase names, amounts in cents, date + time split, prefixed families):
+  every required column mapped, including the card tuple by value quantiles, cents ×0.01,
+  date + time → timestamp and 377 numbered-family columns. 3/3 cases graded clean, with
+  verdicts identical to the canonical run.
+- **Variant b, built to be harder, on all 18 cases.** Opaque file names (`extract_01.csv`
+  …), short names (`txn_ref`, `party_no`, `amt_usd`), epoch-second timestamps, shuffled
+  column order, and single-letter numbered families. Its first run **exposed three real
+  mapping bugs**:
+
+  | Bug | Symptom | Fix |
+  |---|---|---|
+  | families only recognised by known prefixes | `x99 → D12 ×100`, `k11 → C14`, `sig28 → id_15` | match families by size, member by index |
+  | any column could be rescaled | `dt_offset → TransactionDT ×0.01` | only money columns rescale |
+  | free text matched by exact values | `remarks` (the analyst notes) unmapped, so precedent recall changed | shared-vocabulary match (62%) |
+
+  We separated mapping errors from data-volume effects with a **control**: the same 418
+  customers with the original column names, through the same pipeline. After the fixes,
+  variant b gives **the same verdict, actions and exposure as the control on 18/18 cases**,
+  and the official grader scores it **18/18 clean**. Both differ from the full-data run on
+  2 cases (HHF-003, HHF-009). That is the subset having less history and precedent, not the
+  mapping.
 - **Graph schemas:** mapping against each file's own ground truth: ISO 20022 **25/25**,
   BIAN **32/32**, T24 **25/25**. All three load on live TigerGraph with 0 differences after
   the reserved-word fix.
@@ -1101,8 +1226,9 @@ BIAN, the device is `AccessDevice`, not the issued card.
 
 ### Honest limits
 
-- The rehearsal variant was produced by our own `eval/make_variant.py`, and it was run on 3
-  cases. The organisers' variant, handed out on the day, is the real test.
+- Both variants were produced by our own `eval/make_variant.py`. The organisers' variant,
+  handed out on the day, is the real test, and the same control method (`--style control`)
+  will tell mapping errors from subset effects on it.
 - The graph-schema mapper was developed on those three schemas. A fourth, different
   vocabulary may need new synonyms. The scoring harness that would show this is in place.
 
@@ -1134,8 +1260,22 @@ So a $23 loss that connects to eleven other cards still needs a report.
 - The narrative covers who (customer, card, device), what and when (the transactions, the
   first one, the total), where (channel, region) and why (the evidence and precedent).
 - **Every sentence carries a citation**: an attestation id over the ids it names.
-- The timeline is the attested affected transactions, and the evidence graph is the case as
-  read back with `case_chain`.
+- **A filing package ships with every filed SAR** (`agent_record.sar_package`,
+  `src/fraudagent/report/sar_package.py`). It holds what a reviewer needs to send the filing
+  with minor edits:
+  - **five W's**: who, what, when, where, why, each item with the attestation ids behind it;
+  - **timeline**: every affected transaction in time order, read from the graph, with
+    amount, channel, device, region, proxy and the attestations that cite it;
+  - **evidence graph**: subjects, transactions, devices, connected cards, precedent cases
+    and the compromise origin, as nodes and edges;
+  - **review checklist**: machine checks a reviewer would otherwise do by hand.
+
+  ```json
+  "review_checklist": {"every_sentence_cited": true, "total_equals_attested_exposure": true,
+                       "first_txn_is_earliest": true, "no_tip_off_in_customer_text": true,
+                       "unattested_claims": 0},
+  "ready_to_send": true
+  ```
 
 **A real case: HHF-002** ($2,166.71). The first two sentences and their citations:
 
@@ -1155,10 +1295,12 @@ zero bytes of customer text.
 
 **Proof.** SARs filed in the final pack: HHF-001 ($1,338.74), HHF-002 ($2,166.71) and HHF-003
 ($1,800.00). Plus HHG-014 and HHG-006 among the Round 1 cases. The official grader found **0
-§3a findings** across all 18.
+§3a findings** across all 18. All three final-pack filings are `ready_to_send`: every
+check passes.
 
-**Honest limits.** The narrative is template-driven: accurate and cited, but plain. The blind
-human review the challenge describes has not been run.
+**Honest limits.** The narrative is template-driven: accurate and cited, but plain. The
+model provider was out of quota during the final runs, so the prose is the template's. The
+blind human review the challenge describes needs people, and has not been run.
 
 **In the console:** HHF-002 → SAR narrative, with citations on hover.
 
@@ -1189,6 +1331,16 @@ done, what is pending and who signed what.
   - what the agent already did;
   - open questions and what changed;
   - the proof margin and the gate reason.
+- **Ownership and SLA.** Each case has an owner and a clock:
+  - `POST /api/cases/{id}/assign` (bearer token). Any role may take an unowned case for
+    itself. Only a team lead or fraud manager may assign it to someone else, or take it
+    from its owner. Each assignment is appended to the case history with who did it.
+  - Each open state has an SLA. Awaiting a customer reply is **24 h, from policy R4**.
+    Escalated (24 h) and pending approval (8 h) are bank defaults, configurable with
+    `CASE_SLA_HOURS` and labelled as defaults.
+  - `GET /api/queue` lists every open case with its owner, how long it has been in its
+    state, when it is due and what it waits on, **overdue first**. The *Case life* tab shows
+    the same, with a *Take / hand over* button.
 
 **Proof.** 50 state changes and 25 WATCH children are in the graph. Every approval and every
 refusal is signed and chained. The drill `wrong_role` returns 401 with no token, 403 for a
@@ -1199,8 +1351,9 @@ another case, and detects a tampered record.
 investigation on a connected card reads it back as precedent. Approvals are append-only and
 bound to the exact answer hash, so an approval cannot be replayed onto a different decision.
 
-**Honest limits.** There is no assignment or queue management (who owns the case, SLA
-timers), and no multi-user concurrency beyond the append-only ledger.
+**Honest limits.** Only R4's 24 hours comes from policy; the other SLA hours are defaults a
+bank would set. There is no notification when a case goes overdue (the queue shows it), and
+no multi-user locking beyond the append-only history.
 
 **In the console:** HHF-001 → *Case life*. Approve the block with a team-lead token, and the
 transition appears with its sequence number and hash.
@@ -1254,71 +1407,152 @@ cases later cleared, accept them on confirmed fraud), not made by real analysts.
 authorizations within an hour, followed by a larger purchase."* Someone has to turn each
 sentence into code, and errors creep in when people retype the numbers.
 
-**What we built.** R5 (card testing) and R6 (shared origin) are **compiled from the policy
-text**. Every number in them is *read from the clause* by pattern, not typed:
+**What we built.** Policy rules are **compiled from the text**. Every number is *read from
+the clause* by pattern, not typed. Where the text leaves something open, the spec says so
+under `assumed` instead of quietly picking a value.
 
-- R5: "three or more", "within an hour", "over $100";
-- R6: the elements "device profile, billing region, recipient email".
+| Rule | Compiled into | Read from the text |
+|---|---|---|
+| R5 card testing | a detector | "three or more", "online", "within an hour", "over $100" |
+| R6 shared origin | a detector | the elements: device profile, billing region, recipient email |
+| R7 recurring charge | a detector | "same merchant", "same amount", "monthly", "do not block"; assumed: ±5 days, ±$0.01, ≥ 2 prior charges, product code as merchant |
+| R1 weak signal | a check over answers | "single signal", "below 0.70", the actions it forbids and requires |
+| R8 escalate | a check over answers | "uncertain", "exposure exceeds $500", `ESCALATE_TO_ANALYST` |
+| R10 block-all | a check over answers | "at least two of the customer's cards" |
 
 ```
-R5 → {"type": "card_testing", "min_small": 3, "channel": "online",
-      "window_hours": 1.0, "block_if_cleared_over": 100.0, "small_cap": 10.0}
-R6 → {"type": "shared_origin", "elements": ["device_profile", "region", "email_r"],
-      "min_cards": 2, "window_days": 30}
+R7 → {"type": "recurring_charge", "same_merchant": true, "same_amount": true,
+      "period_days": 30, "do_not_block": true,
+      "assumed": {"period_tolerance_days": 5, "amount_tolerance_usd": 0.01,
+                  "min_prior_occurrences": 2, "merchant": "product code (no merchant id)"}}
 ```
 
-Both specs run over every replayed closed case and are compared with the agent's own
-judgement.
+**A generic advisory compiler.** One grammar, with no code specific to a rule: *"N or more
+[small | online | card-not-present] transactions [under $X] [on one card] within T"*. Tested
+on R5, and on a sample advisory whose wording it had never seen. The advisory was written
+for the test in the style of a scheme bulletin; it is not an official text:
 
-**Proof.**
+> *"…five or more card-not-present transactions under $2.00 on one card are attempted within
+> 30 minutes…"* → `{"min_count": 5, "online_only": true, "amount_cap": 2.0,
+> "scope": "card", "window_hours": 0.5, "missing": []}`
+
+When a field is absent (R5 never says how small "small" is), it is listed under `missing`.
+
+**Proof.** Detectors against the agent's own judgement, over 7,133 replayed cases:
 
 | Rule | Agrees with agent | Disagrees | Fraud rate where only the rule fires |
 |---|--:|--:|--:|
-| R5 | 7,065 | 58 | 27.5% |
-| R6 | 7,117 | 6 | **83%** |
+| R5 | 7,074 | 59 | 29% |
+| R6 | 7,126 | 7 | **86%** |
+| R7 | 7,015 | 118 | 51% |
 
-Every disagreement is listed with case ids (`detectors.json`: `rule_only`, `agent_only`).
+Checks over all 38 answer files: R1 applies to 17 answers, R8 to 1, R10 to 0; **0
+violations**. Every disagreement is listed with case ids (`detectors.json`).
 
-**Unique.** The 6 R6 disagreements are mostly fraud (83%), which tells the bank where the
-agent is weaker than its own rule. The comparison is a review tool, not just a score.
+**Unique.** The 7 R6 disagreements are mostly fraud (86%), which tells the bank where the
+agent is weaker than its own rule. R7's 118 disagreements come from the tolerances the text
+leaves open, and the spec shows them, so the bank can set them instead of discovering them.
 
-**Honest limits.** Two rules are compiled, not all ten. No regulator advisory was handed out
-to test turning a *new* text into a detector on the day. The parser reads the patterns in
-this policy and is not a general language parser.
+**Honest limits.** Six of the ten rules are compiled. R2, R3, R4 and R9 are decisions about
+customer replies and patterns, enforced in the policy engine but not compiled from text. The
+advisory grammar covers velocity-style rules, not every kind of prose.
+
+---
+
+## C2 · Self-growing detective — it finds a pattern, then has to prove it
+
+**In plain words.** Instead of a human noticing a new pattern, the agent finds one, writes a
+detector, tests it on history, and asks a human to approve it.
+
+**What we built** (`eval/detectors.py`):
+
+1. **Mine** conjunctions of measured facts on **July–August**. The negatives are cleared
+   cases *and* matched controls and untouched transactions, so precision is not inflated by
+   the fact that most closed cases are fraud.
+2. **Hold out September.** A candidate must keep its precision on a month it never saw.
+3. **Liveness check.** Every fact in it must fire at a stable rate on the newest month's
+   alerts. This uses firing rates only, never labels, so it is observable the day the
+   detector is proposed.
+4. **Keep the simpler** of two nested candidates unless the longer one is clearly better.
+5. **Backtest on October**: caught, missed, legitimate customers touched, and the frauds the
+   core missed, all with ids. File the detector as **proposed**.
+6. It joins the toolkit only when a **fraud manager** approves through
+   `POST /api/detectors/{id}`. The approval is role-checked, signed and written to the graph
+   as a `Detector` vertex. An analyst token gets 403.
+
+**What it found.**
+
+| Proposal | Mined (Jul–Aug) | Held out (Sep) | October fires | October precision | Caught | Legitimate touched | **Frauds the core missed** |
+|---|--:|--:|--:|--:|--:|--:|--:|
+| `known_device_and_region` + `online_burst_2_to_4` | 0.87 | 0.84 (79 fires) | 68 | **0.88** | 60 | 8 | **59** |
+
+In plain words: a burst of online purchases from the cardholder's *own* device and region.
+That is the shape of account takeover, where the thief uses the victim's own phone or saved
+session. The core treats "known device and region" as reassuring, so it missed 59 of these.
+As an evidence-only detector, it puts them in front of the analyst.
+
+**The ablation: why each step matters.** The first version of the miner (closed cases as the
+only negatives, no held-out month, no liveness check) proposed three conjunctions that looked
+**99%** precise. All three fire **0 times** on October. Each relied on
+`behavioural_fraud_neighbourhood`, a signal that cannot fire once the closed-case pool passes
+~93% fraud. That finding also fixed C11's coverage.
+
+**Honest limits.** One proposal is not a library; it is mined from combinations of our own
+measured facts, not from new graph shapes. It sits as *proposed*, waiting for a fraud
+manager; we do not approve our own detectors. The three old proposals remain in the registry
+for the manager to reject.
+
+---
+
+## C9 · Speed and autonomy — the case is ready before anyone opens it
+
+**In plain words.** The analyst should open a case that is already investigated, not wait for
+it.
+
+**What we built** (`benchmark/alert_pipeline.py`):
+
+- **Alert inbox → worker → ready case.** Workers use the **same `Runner`** as the manual
+  command, so a pre-investigation carries identical attested evidence. Each alert fails
+  closed on its own.
+- **Parallel workers** (`--workers N`): separate processes, each with its own graph
+  connection. A worker claims an alert by renaming it, so no two workers take the same one.
+- **Streaming** (`--watch`): workers stay up and investigate each alert the moment it lands.
+
+**The diagnosis that mattered.** p95 was 284 s, and we had assumed the remote graph was the
+cause. The telemetry said otherwise. A slow case made 0 successful model calls, fell back to
+template prose 3 times, and waited through 5 + 15 + 30 + 60 s of backoff on each call. The
+model provider's free-tier quota was exhausted (HTTP 429, *"exceeded your current quota"*).
+The decision itself took seconds. So we added a **circuit breaker**:
+
+- a billing-quota error opens it for 15 minutes;
+- a timeout, or two failures in a row, opens it for 5 minutes;
+- no case spends more than 30 s in backoff;
+- the breaker state is shared through a file, so one worker's discovery spares the others.
+
+While it is open, prose comes from the template at once. Decisions never depended on the
+model, so they are unchanged.
+
+**Proof** (18 final cases, live TigerGraph):
+
+| Run | p95 investigation | Mean | Queue of 18 |
+|---|--:|--:|--:|
+| Before (serial, quota stalls) | 284 s | 249 s | ~75 min |
+| After, serial | **79 s** | 34 s | ~10 min |
+| After, 4 workers | **80 s** | 33 s | **315 s** |
+
+Cost: about $0.003 per case. All 18 decisions were identical before and after.
+
+**Honest limits.** Each new worker spends about 150 s loading the embedding model and
+connecting before its first case. That cost is paid once per worker, which is why `--watch`
+keeps workers up, but it means alert-to-ready p95 on a cold start is still about 300 s. The
+signal queries still run as about 25 separate GSQL calls per case; batching them would cut
+most of what remains.
 
 ---
 
 # Part 5 — Present, but thin (and what is missing)
 
-We built something for each of these, but we do not claim depth. We say exactly where they
-stop.
-
-## C2 · Self-growing detective
-
-**In plain words.** Instead of a human noticing a new pattern, the agent finds one, writes a
-detector, tests it on history and asks a human to approve it.
-
-**What exists.** `eval/detectors.py`:
-
-1. mines combinations of measured facts that are ≥ 95% confirmed fraud (support ≥ 25) on
-   July–September;
-2. writes each as a declarative detector spec;
-3. backtests it on October: caught, missed, and legitimate customers it would touch, with
-   ids;
-4. files it as **proposed**.
-
-It joins the toolkit only when a **fraud manager** approves through
-`POST /api/detectors/{id}`. The approval is role-checked, signed and written to the graph as
-a `Detector` vertex. An analyst token gets 403.
-
-**The honest result.** The three proposals score 99% on July–September, but on October they
-**catch 0 and touch 330 legitimate customers**. They are artefacts of the training months.
-That is exactly why the approval step exists, and why each proposal ships with its
-out-of-time backtest: *the loop works end to end, and what it found this time should be
-rejected.*
-
-**Missing.** A discovery that survives out-of-time testing. Mining over graph structure (new
-motifs) rather than combinations of existing facts.
+We built this, but we do not claim depth, and we say exactly where it stops.
 
 ## C5 · Ring replay
 
@@ -1326,34 +1560,19 @@ motifs) rather than combinations of existing facts.
 card joined when, through what, and how the loss grew.
 
 **What exists.** `GET /api/ring/{case}` builds frames at request time from the ring cards'
-transactions through the shared devices or origin, in time order. Each frame names its
-transaction id, how many cards are in the ring so far, and the running total. The
-*Containment & ring* tab plays it with a slider (HHG-014: cards joining through the SM-G935F
-device behind an anonymising proxy).
+transactions through the shared devices or origin, in time order. The *Containment & ring*
+tab plays it with a slider. Each frame carries:
 
-**Missing.**
+- a **plain-language caption**, for example *"Card C04274-K1 joins the ring through the
+  compromise origin behind an anonymising proxy; $221.02 (attested suspect)."*;
+- the cards in the ring so far;
+- the **attested suspect loss**, counting only transactions the investigation attested as
+  suspect;
+- separately, all shared-device activity (the earlier version summed everything into
+  "loss", which overstated it).
 
-- The running total adds *all* transactions through the shared devices, not only the
-  confirmed-fraud ones, so it overstates "loss".
-- The challenge's measure, how fast a newcomer understands the case with the replay versus
-  without, has not been tested with people.
-
-## C9 · Speed and autonomy
-
-**In plain words.** The analyst should open a case that is already investigated, not wait for
-it.
-
-**What exists.** `benchmark/alert_pipeline.py`: alert inbox → worker → ready case. It uses
-the **same `Runner`** as the manual command, so a pre-investigation carries identical attested
-evidence. It fails closed per alert. Per-case wall time, tokens, cost and graph calls are in
-every answer.
-
-**Numbers.** p95 **284 s**, mean 249 s, about 380 tokens per case, **$0.0018 per case**
-(prose is cached). The decision itself takes seconds. Most of the time is about 25–50 calls
-to a remote Savanna workspace.
-
-**Missing.** A streaming trigger (the queue is a folder). Parallel workers. Moving the
-signal queries into fewer, batched GSQL calls, which would cut most of the latency.
+**Missing.** The challenge's measure, how fast someone who has never seen the case understands
+it with the replay versus without, needs people, and has not been run.
 
 ---
 
@@ -1364,7 +1583,7 @@ These are what make the challenge work deployable, and they are tested by the li
 | Rule from the brief | How we meet it | Drill result |
 |---|---|---|
 | **Fail closed** | Graph error → named `DependencyFailure` → exit 2, signed `FAILED_DEPENDENCY`, answer file untouched | `graph_down` PASS |
-| Model failure | One retry, then template prose; the decision is identical because the LLM never decides | `llm_timeout`, `llm_garbage` PASS |
+| Model failure | Template prose; the decision is identical because the LLM never decides. A circuit breaker shared across workers stops an out-of-quota or silent provider from stalling cases | `llm_timeout`, `llm_garbage` PASS |
 | MCP failure | Falls back to the same graph directly and flags `transport_degraded`; strict mode exits 2 | `mcp_down` PASS |
 | **Approvals enforced on the server** | Token hashed and looked up on the server; role in the request body ignored; self-approval refused; Ed25519-signed, hash-chained, bound to the answer hash | `wrong_role` PASS (401/403/409, tamper detected) |
 | Hostile or invalid input | Exit 3 naming the field; hostile text flagged, decision identical | `invalid_input`, `hostile_input` PASS |
@@ -1372,9 +1591,17 @@ These are what make the challenge work deployable, and they are tested by the li
 | **Audit trail** | Every call hashed and replayable; `make replay` is bit-for-bit | `replay` PASS |
 | Bounded behaviour | Round cap and wall-clock budget | `bounded` PASS |
 | No future data | Future-dated `CANARY-*` transactions abort the run if any query returns one | `canary` PASS |
-| **Least privilege** | 25 installed queries and nothing else; one write query; 3 MCP tools | RBAC in `graph/rbac.gsql` |
+| **Act on new data only with approval** | Loaders exit 4 while a file or graph-schema drift proposal waits for a fraud manager | `test_loaders_refuse_while_a_proposal_is_pending` |
+| **Least privilege** | 26 installed queries and nothing else; one write query; 3 MCP tools | RBAC in `graph/rbac.gsql` |
 | **Do not tip off** | Customer text from a type with no SAR field | 0 bytes changed when the SAR flag is toggled |
 | Protect data | Logs redacted; embeddings computed locally; the LLM sees only an evidence brief with pseudonymous ids | declared in the resilience statement |
+
+**It happened for real.** During the final re-run, the Savanna workspace's DNS failed
+mid-investigation on HHF-012. The MCP transport failed first, and the agent switched to the
+direct connection and flagged `transport_degraded`. When that failed too, it stopped at
+`hybrid_case_recall` with a signed `FAILED_DEPENDENCY` record and left the previous answer
+file untouched. Re-run once the graph was back, the case produced the same decision as
+before.
 
 **Attest every claim.** Each answer carries 8–16 attestations, each with what, evidence ids,
 how (query and parameters) and when (time and data snapshot). `make attest-verify` re-runs

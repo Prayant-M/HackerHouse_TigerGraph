@@ -64,6 +64,17 @@ class LLMClient:
         self._case_start = LLMUsage()
         self.template_fallbacks = 0
         self.timeout_s = float(os.environ.get("LLM_TIMEOUT_S", "45") or 45)
+        # Circuit breaker: a provider that is out of quota or failing does not
+        # get to hold every case hostage to its backoff schedule. Prose falls
+        # to the template immediately while the breaker is open; decisions
+        # never depended on the model.
+        self.breaker_quota_s = float(os.environ.get("LLM_BREAKER_QUOTA_S", "900") or 900)
+        self.breaker_fail_s = float(os.environ.get("LLM_BREAKER_FAIL_S", "300") or 300)
+        self.backoff_budget_s = float(os.environ.get("LLM_BACKOFF_BUDGET_S", "30") or 30)
+        self._open_until = 0.0
+        self._consecutive_failures = 0
+        self._case_backoff_s = 0.0
+        self.breaker_skips = 0
         self._client: Any = None
         self._provider = LLM.provider
         self.available = LLM.available and os.environ.get("AGENT_USE_LLM", "1") != "0"
@@ -106,6 +117,41 @@ class LLMClient:
                                     self.usage.output_tokens, self.usage.cached,
                                     list(self.usage.errors))
         self.template_fallbacks = 0
+        self._case_backoff_s = 0.0
+        self.breaker_skips = 0
+
+    # Shared across worker processes and runs: one worker finding the provider
+    # out of quota spares every other worker the same wait.
+    BREAKER_FILE = PATHS.cache / "llm_breaker.json"
+
+    def breaker_open(self) -> bool:
+        if time.time() < self._open_until:
+            return True
+        try:
+            blob = json.loads(self.BREAKER_FILE.read_text(encoding="utf-8"))
+            if blob.get("provider") == self._provider and time.time() < blob["open_until"]:
+                self._open_until = float(blob["open_until"])
+                return True
+        except Exception:
+            pass
+        return False
+
+    def _trip(self, exc: Exception) -> None:
+        msg = str(exc).lower()
+        self._consecutive_failures += 1
+        if "current quota" in msg or "billing" in msg or "insufficient_quota" in msg:
+            self._open_until = time.time() + self.breaker_quota_s
+        elif isinstance(exc, TimeoutError) or self._consecutive_failures >= 2:
+            # A provider silent past the timeout is down for now.
+            self._open_until = time.time() + self.breaker_fail_s
+        else:
+            return
+        try:
+            self.BREAKER_FILE.write_text(json.dumps(
+                {"provider": self._provider, "open_until": self._open_until,
+                 "reason": str(exc)[:200]}), encoding="utf-8")
+        except Exception:
+            pass
 
     def case_usage(self) -> dict[str, Any]:
         s = self._case_start
@@ -115,7 +161,9 @@ class LLMClient:
                 "tokens": (self.usage.total_tokens - s.total_tokens),
                 "cached": self.usage.cached - s.cached,
                 "errors": self.usage.errors[len(s.errors):][:5],
-                "template_fallbacks": self.template_fallbacks}
+                "template_fallbacks": self.template_fallbacks,
+                "breaker_skips": self.breaker_skips,
+                "backoff_s": round(self._case_backoff_s, 1)}
 
     def _egress(self, purpose: str, system: str, prompt: str, ok: bool, err: str = "") -> None:
         """Every call that leaves the bank boundary, with what it carried."""
@@ -145,12 +193,18 @@ class LLMClient:
             self.usage.output_tokens += int(blob.get("output_tokens", 0))
             return blob["text"]
 
+        if self.breaker_open() and not drilling:
+            self.template_fallbacks += 1
+            self.breaker_skips += 1
+            return ""
         try:
             text, in_tok, out_tok = self._invoke_with_backoff(
                 system, prompt, max_tokens or self.cfg.max_tokens)
             self._egress("prose", system, prompt, True)
+            self._consecutive_failures = 0
         except Exception as exc:                      # pragma: no cover - network
             self._egress("prose", system, prompt, False, str(exc))
+            self._trip(exc)
             self.template_fallbacks += 1
             self.usage.errors.append(f"{self._provider}: {exc}")
             if self.cfg.fallback_provider and self._provider != self.cfg.fallback_provider:
@@ -187,13 +241,21 @@ class LLMClient:
                 return self._invoke_timed(system, prompt, max_tokens)
             except Exception as exc:                  # pragma: no cover - network
                 msg = str(exc).lower()
-                limited = "429" in msg or "quota" in msg or "rate limit" in msg                     or "resource_exhausted" in msg or "resourceexhausted" in msg
+                limited = ("429" in msg or "quota" in msg or "rate limit" in msg
+                           or "resource_exhausted" in msg or "resourceexhausted" in msg)
                 tries += 1
-                # A timeout or garbage gets exactly one retry with a short
-                # backoff; only a rate limit earns the long schedule.
-                if delay is None or (not limited and tries > 1):
+                # Garbage gets exactly one retry with a short backoff; only a
+                # rate limit earns the long schedule. Out of quota is not
+                # transient, a timeout already cost the full timeout, and no
+                # case waits longer than its backoff budget.
+                quota = "current quota" in msg or "billing" in msg or "insufficient_quota" in msg
+                timed_out = isinstance(exc, TimeoutError)
+                wait = delay if limited else 1.0
+                if (delay is None or quota or timed_out or (not limited and tries > 1)
+                        or self._case_backoff_s + (wait or 0) > self.backoff_budget_s):
                     raise
-                time.sleep(delay if limited else 1.0)
+                self._case_backoff_s += wait
+                time.sleep(wait)
         raise RuntimeError("unreachable")
 
     def _invoke_timed(self, system: str, prompt: str, max_tokens: int) -> tuple[str, int, int]:

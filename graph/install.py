@@ -47,7 +47,7 @@ STAGED_CSV = PATHS.staged / "graph_csv"
 STEPS = ["schema", "vectors", "load", "queries", "projections", "algorithms", "final_round",
          "verify"]
 FINAL_QUERIES = ["ring_at_asof", "origin_counts", "origin_touchers", "ring_exposure",
-                 "precedent_by_facts", "compromise_watch", "data_gaps", "case_write",
+                 "precedent_by_facts", "compromise_watch", "data_gaps", "recipient_window", "case_write",
                  "governance_write"]
 
 # (job, [(DEFINE FILENAME variable, staged csv), ...]). RESTPP routes each
@@ -139,6 +139,9 @@ def step_queries(conn, dry: bool) -> None:
 
 
 def step_load(conn, dry: bool) -> None:
+    from fraudagent.governance.drift_gate import require_open
+
+    require_open("install:load")
     if not STAGED_CSV.exists():
         raise SystemExit(f"{STAGED_CSV} is missing — run `python ingest/06_stage_graph_csv.py`")
     log("loading jobs")
