@@ -374,6 +374,11 @@ theme, responsive down to phone width, keyboard-navigable.
 The status pill reads **TigerGraph · via MCP** when the graph is reached through
 the MCP server, and **Local mirror** when the workspace is unreachable.
 
+**API reference:** the console's HTTP API is specified in
+[`docs/openapi.yaml`](docs/openapi.yaml) (OpenAPI 3.1). With the console running,
+browse it at `/docs` or `/redoc`. `tests/test_openapi.py` fails if a route and the
+spec disagree.
+
 ---
 
 ## Repository map
