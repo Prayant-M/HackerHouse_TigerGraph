@@ -27,11 +27,10 @@
     <nav class="nav-links" id="nav-links" aria-label="Primary">
       <a href="#/" data-route="home">Home</a>
       <a href="#/cases" data-route="cases">Cases</a>
-      <a href="#/scoreboard" data-route="scoreboard">Scoreboard</a>
+      <a href="#/challenges" data-route="challenges">Challenges</a>
       <a href="#/approvals" data-route="approvals">Approvals <span class="badge" id="approval-count" hidden></span></a>
-      <a href="#/monitoring" data-route="monitoring">Monitoring</a>
       <a href="#/insights" data-route="insights">Insights</a>
-      <a href="api-docs/">API docs</a>
+      <a href="api-docs/" target="_blank" rel="noopener">API docs</a>
     </nav>
 
     <div class="nav-right">
@@ -217,42 +216,14 @@
     </div>
   </section>
 
-  <!-- ═════════════════════════════════════════════════ SCOREBOARD ══ -->
-  <section class="view" id="view-scoreboard" data-view="scoreboard">
+  <!-- ═════════════════════════════════════════════════ CHALLENGES ══ -->
+  <section class="view" id="view-challenges" data-view="challenges">
     <div class="container page">
       <div class="page-head">
         <div>
-          <h1>Scoreboard</h1>
-          <p class="muted">Every decision side by side, each checked against the raw data and the bank's policy.</p>
-        </div>
-        <div class="head-actions">
-          <label class="select"><span>Verdict</span>
-            <select id="sb-verdict"><option value="all">All</option><option value="fraud">Fraud</option>
-              <option value="uncertain">Uncertain</option><option value="legitimate">Legitimate</option></select></label>
-          <button class="btn btn-ghost" id="sb-csv">⬇ CSV</button>
+          <h1>Challenges</h1>
         </div>
       </div>
-      <div class="kpis" id="sb-kpis"></div>
-      <div class="card" style="padding:0">
-        <div class="table-wrap sb-wrap"><table class="sb" id="sb-table"></table></div>
-      </div>
-      <p class="muted small" style="margin-top:10px">Audit = <code>eval/audit_answers.py</code>: data integrity, approval routes (§2), case and SAR rules (§3a), exposure (§4), R1, R2, R3, R7, stopping (§6) and graph read-back. There is no answer key, so this proves consistency, not correctness.</p>
-    </div>
-  </section>
-
-  <!-- ═════════════════════════════════════════════════ MONITORING ══ -->
-  <section class="view" id="view-monitoring" data-view="monitoring">
-    <div class="container page">
-      <div class="page-head">
-        <div>
-          <h1>Proactive monitoring</h1>
-          <p class="muted">Alerts nobody raised. The agent swept November–December on its own and investigated what it found, end to end, under the same policy.</p>
-        </div>
-        <label class="select"><span>Found by</span>
-          <select id="mon-source"><option value="all">Every sweep</option></select></label>
-      </div>
-      <div class="source-grid" id="mon-sources"></div>
-      <div class="approval-list" id="mon-list"></div>
     </div>
   </section>
 
@@ -280,14 +251,24 @@
       <div class="page-head">
         <div>
           <h1>Insights</h1>
-          <p class="muted">How the agent was calibrated, and the bank policy it has to follow.</p>
+          <p class="muted">What the agent found on its own, how it was calibrated, and the bank policy it has to follow.</p>
         </div>
       </div>
       <div class="seg" role="tablist" id="insight-tabs">
-        <button role="tab" class="active" data-tab="calibration" aria-selected="true">Calibration</button>
+        <button role="tab" class="active" data-tab="monitoring" aria-selected="true">Monitoring</button>
+        <button role="tab" data-tab="calibration" aria-selected="false">Calibration</button>
         <button role="tab" data-tab="policy" aria-selected="false">Bank policy</button>
       </div>
-      <div class="insight-pane" id="pane-calibration"></div>
+      <div class="insight-pane" id="pane-monitoring">
+        <div class="page-head">
+          <p class="muted">Alerts nobody raised. The agent swept November–December on its own and investigated what it found, end to end, under the same policy.</p>
+          <label class="select"><span>Found by</span>
+            <select id="mon-source"><option value="all">Every sweep</option></select></label>
+        </div>
+        <div class="source-grid" id="mon-sources"></div>
+        <div class="approval-list" id="mon-list"></div>
+      </div>
+      <div class="insight-pane" id="pane-calibration" hidden></div>
       <div class="insight-pane" id="pane-policy" hidden></div>
     </div>
   </section>

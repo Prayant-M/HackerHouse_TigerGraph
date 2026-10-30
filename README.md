@@ -376,10 +376,9 @@ theme, responsive down to phone width, keyboard-navigable.
 |---|---|
 | **Home** | What the agent does in five steps, live counts from the answer files, three "start here" cases |
 | **Cases** | Search + dropdown filters (verdict, trigger, sort, revised, SAR). Each case has five tabs, each deep-linkable (`#/cases/HHG-019/evidence`): **Overview** (fraud gauge, uncertainty in bits, open questions, first recommendation → question → final decision, SAR with copy), **Evidence** (the probability path from the trigger's prior through every ledger entry to the final figure, belief by hypothesis, every item's measured movement, claim-type badges and filter), **Graph** (the written case subgraph; zoom, pan, click to inspect), **Similar cases** (hybrid recall scores), **Audit trail** (step-by-step replay, hash-chained ledger, graph read-back checks, full trace). **Re-run live** streams the reasoning; **⬇ JSON** downloads the answer file. |
-| **Scoreboard** | All 20 decisions in one sortable matrix with each case's audit status and a CSV export |
+| **Challenges** | Reserved; currently empty |
 | **Approvals** | L1 / L2 actions waiting for a person; approving writes an `APPROVED_BY` edge |
-| **Monitoring** | Alerts the agent raised itself, compared by sweep (structuring, device hub, bank model) |
-| **Insights** | Measured likelihood ratios; the bank policy as a searchable accordion |
+| **Insights** | **Monitoring** (alerts the agent raised itself, compared by sweep: structuring, device hub, bank model), **Calibration** (measured likelihood ratios), **Bank policy** (a searchable accordion) |
 
 The status pill reads **TigerGraph · via MCP** when the graph is reached through
 the MCP server, and **Local mirror** when the workspace is unreachable.
@@ -614,8 +613,8 @@ everything mechanical: `python eval/audit_answers.py` verifies every ID against
 the dataset, that nothing postdates the alert, exposure (§4), approval routes
 (§2), case and SAR rules (§3a), R1, R2, R3, R7, the stop rule (§6) and graph
 read-back. Current result: **0 issues across 38 files**
-(`eval/reports/answer_audit.md`). The console's Scoreboard shows the same audit
-per case.
+(`eval/reports/answer_audit.md`). `GET /api/audit` returns the same audit per
+case.
 
 ---
 

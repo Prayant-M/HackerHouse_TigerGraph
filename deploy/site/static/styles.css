@@ -511,18 +511,10 @@ td.num, th.num { text-align: right; font-family: var(--mono); white-space: nowra
   html { scroll-behavior: auto; }
 }
 
-/* ───────────────────────────── scoreboard, monitoring, provenance, replay ── */
+/* ───────────────────────────────────────── monitoring, provenance, replay ── */
 .small { font-size: 12.5px; }
 .nowrap { white-space: nowrap; }
 .btn-sm { padding: 6px 12px; font-size: 13px; border-radius: 10px; }
-.head-actions { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
-.sb-wrap { border: 0; border-radius: var(--r-lg); }
-table.sb td { vertical-align: middle; }
-table.sb tr:hover td { background: #fafbff; }
-th.sortable { cursor: pointer; user-select: none; }
-th.sortable::after { content: " ↕"; color: #c5cadb; }
-th.sortable.asc::after { content: " ↑"; color: var(--brand); }
-th.sortable.desc::after { content: " ↓"; color: var(--brand); }
 .pbar { width: 70px; height: 6px; background: var(--line-2); border-radius: 99px; overflow: hidden; display: inline-block; vertical-align: middle; margin-right: 8px; }
 .pbar span { display: block; height: 100%; border-radius: 99px; }
 .pbar.big { width: 100%; height: 8px; margin: 10px 0; display: block; }
@@ -574,14 +566,8 @@ ol.stepper li.on .lbl { color: var(--ink); }
 }
 @media (max-width: 640px) {
   .hide-sm { display: none; }
-  .head-actions { width: 100%; }
-  .head-actions .select { flex: 1; }
   .gctl { top: 6px; right: 6px; }
 }
-table.sb td:first-child a { white-space: nowrap; }
-table.sb .chips { max-width: 230px; }
-table.sb .chip-act { white-space: normal; }
-table.sb td, table.sb th { padding: 10px 10px; }
 
 /* ───────────────────────────── probability path (Evidence tab) ── */
 .ppath { display: grid; gap: 2px; }

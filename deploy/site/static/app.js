@@ -95,7 +95,7 @@ function parseRoute() {
 
 async function route() {
   const r = parseRoute();
-  const view = ["home", "cases", "scoreboard", "approvals", "monitoring", "insights"].includes(r.view) ? r.view : "home";
+  const view = ["home", "cases", "challenges", "approvals", "insights"].includes(r.view) ? r.view : "home";
   $$(".view").forEach(v => v.classList.toggle("active", v.dataset.view === view));
   $$(".nav-links a").forEach(a => a.classList.toggle("active", a.dataset.route === view));
   closeMenu();
@@ -116,9 +116,7 @@ async function route() {
     }
   }
   if (view === "approvals") loadApprovals();
-  if (view === "scoreboard") loadScoreboard();
-  if (view === "monitoring") loadMonitoring();
-  if (view === "insights") showInsight(S.insightTab || "calibration");
+  if (view === "insights") showInsight(S.insightTab || "monitoring");
   requestAnimationFrame(() => observeReveals());
 }
 
@@ -134,8 +132,6 @@ async function boot() {
   bindToolbar();
   bindInsights();
   $("#f-approval").onchange = e => { S.approvalFilter = e.target.value; renderApprovals(); };
-  $("#sb-verdict").onchange = () => renderScoreboard();
-  $("#sb-csv").onclick = downloadScoreboardCsv;
   $("#mon-source").onchange = () => renderMonitoring();
   $("#drawer-close").onclick = closeDrawer;
   $("#drawer-backdrop").onclick = closeDrawer;
@@ -824,60 +820,6 @@ function renderApprovals() {
   }));
 }
 
-/* ═════════════════════════════════════════════════════ SCOREBOARD ══ */
-S.sbSort = { key: "case", dir: 1 };
-async function loadScoreboard() {
-  if (!S.audit) {
-    $("#sb-table").innerHTML = `<tr><td><div class="skel" style="height:260px"></div></td></tr>`;
-    try { S.audit = await getJSON("/api/audit"); } catch { S.audit = { rows: [], issues: 0 }; }
-  }
-  renderScoreboard();
-}
-function scoreRows() {
-  const byId = Object.fromEntries(S.cases.map(c => [c.case_id, c]));
-  return (S.audit?.rows || []).map(r => ({ ...r, ...(byId[r.case] || {}), audit: r.issues || [] }));
-}
-function renderScoreboard() {
-  const all = scoreRows(), v = $("#sb-verdict").value;
-  const rows = all.filter(r => v === "all" || r.verdict === v);
-  const { key, dir } = S.sbSort;
-  const val = r => ({ case: r.case, p: r.fraud_probability, exp: r.exposure_usd, conn: r.n_connected })[key];
-  rows.sort((a, b) => (val(a) > val(b) ? 1 : val(a) < val(b) ? -1 : 0) * dir);
-  const kpi = (k, v2, cls = "") => `<div class="kpi"><div class="k">${k}</div><div class="v ${cls}">${v2}</div></div>`;
-  const clean = all.filter(r => !r.audit.length).length;
-  $("#sb-kpis").innerHTML =
-    kpi("Fraud · legitimate", `${all.filter(r => r.verdict === "fraud").length} · ${all.filter(r => r.verdict === "legitimate").length}`) +
-    kpi("SARs filed", all.filter(r => r.sar).length, "t-fraud") +
-    kpi("Changed after evidence", all.filter(r => r.changed).length) +
-    kpi("Audit clean", `${clean} / ${all.length}`, clean === all.length ? "t-legit" : "t-warn");
-  const th = (k, l) => `<th data-k="${k}" class="sortable ${key === k ? (dir > 0 ? "asc" : "desc") : ""}">${l}</th>`;
-  $("#sb-table").innerHTML =
-    `<tr>${th("case", "Case")}<th>Trigger</th><th>Verdict</th>${th("p", "Fraud likelihood")}<th>Pattern</th>` +
-    `${th("exp", "Money at risk")}${th("conn", "Linked cards")}<th>SAR</th><th>Asked?</th><th>Final decision</th><th>Audit</th></tr>` +
-    rows.map(r => `<tr>
-      <td><a class="mono" href="#/cases/${esc(r.case)}"><b>${esc(r.case)}</b></a></td>
-      <td class="nowrap">${trig(r.trigger).ico} ${esc(trig(r.trigger).label)}</td>
-      <td>${verdictPill(r.verdict)}</td>
-      <td class="nowrap"><div class="pbar"><span style="width:${Math.max(3, r.fraud_probability * 100)}%;background:${tone(r.fraud_probability)}"></span></div><span class="mono small">${pct(r.fraud_probability)}</span></td>
-      <td>${esc(patternName(r.pattern))}</td>
-      <td class="num">${r.exposure_usd ? money(r.exposure_usd) : "—"}</td>
-      <td class="num">${r.n_connected || "—"}</td>
-      <td>${r.sar ? `<span class="pill fraud">Filed</span>` : `<span class="muted small">—</span>`}</td>
-      <td>${r.requests ? `<span class="pill brand">Yes</span>` : `<span class="muted small">No</span>`}</td>
-      <td><div class="chips">${(r.final || []).map(a => `<span class="chip-act">${esc(ACTION[a] || humanize(a))}</span>`).join("")}</div></td>
-      <td>${r.audit.length ? `<span class="pill uncertain" title="${esc(r.audit.join("; "))}">⚠ ${r.audit.length}</span>` : `<span class="pill legitimate">✓ Clean</span>`}</td>
-    </tr>`).join("");
-  $$("#sb-table th.sortable").forEach(h => h.onclick = () => {
-    S.sbSort = { key: h.dataset.k, dir: S.sbSort.key === h.dataset.k ? -S.sbSort.dir : 1 };
-    renderScoreboard();
-  });
-}
-function downloadScoreboardCsv() {
-  const cols = ["case", "trigger", "verdict", "fraud_probability", "pattern", "exposure_usd", "n_connected", "sar", "requests", "final", "audit"];
-  const q = v => `"${String(Array.isArray(v) ? v.join(" | ") : v ?? "").replace(/"/g, '""')}"`;
-  const csv = [cols.join(",")].concat(scoreRows().map(r => cols.map(c => q(r[c])).join(","))).join("\n");
-  saveFile("scoreboard.csv", csv, "text/csv");
-}
 function saveFile(name, text, type = "application/json") {
   const a = document.createElement("a");
   a.href = URL.createObjectURL(new Blob([text], { type }));
@@ -935,9 +877,10 @@ function bindInsights() {
 function showInsight(tab) {
   S.insightTab = tab;
   $$("#insight-tabs button").forEach(b => { b.classList.toggle("active", b.dataset.tab === tab); b.setAttribute("aria-selected", b.dataset.tab === tab); });
+  $("#pane-monitoring").hidden = tab !== "monitoring";
   $("#pane-calibration").hidden = tab !== "calibration";
   $("#pane-policy").hidden = tab !== "policy";
-  tab === "calibration" ? loadCalibration() : loadPolicy();
+  ({ monitoring: loadMonitoring, calibration: loadCalibration, policy: loadPolicy })[tab]();
 }
 
 async function loadCalibration() {

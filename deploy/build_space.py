@@ -71,8 +71,8 @@ A public, read-only copy of the analyst console from the TigerGraph × Hacker
 House Goa 2026 agentic fraud investigation project. It shows the benchmark
 investigations exactly as the agent wrote them: evidence and how
 each piece moved the probability, the case subgraph, similar past cases, the
-hash-chained audit trail, the approval queue, the scoreboard with its answer
-audit, and the cases the agent raised on its own.
+hash-chained audit trail, the approval queue, and the cases the agent raised
+on its own.
 
 The agent itself ran against TigerGraph Savanna through the TigerGraph MCP
 server. This copy serves a snapshot of those results, so it needs no graph
@@ -174,7 +174,7 @@ def build_static(out: Path) -> None:
     page = (ROOT / "ui" / "static" / "index.html").read_text(encoding="utf-8")
     page = page.replace('href="/static/', 'href="static/').replace('src="/static/', 'src="static/')
     page = page.replace("<html ", '<html data-static="1" ', 1)
-    page = page.replace('<a href="/docs">', '<a href="api-docs/">')
+    page = page.replace('href="/docs"', 'href="api-docs/"')
     assert 'data-static="1"' in page, "index.html has no <html ...> tag to mark"
     (out / "index.html").write_text(page, encoding="utf-8")
 

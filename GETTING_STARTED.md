@@ -117,13 +117,12 @@ python ui/server.py                        # http://127.0.0.1:8080
 ```
 
 - [ ] The status pill reads **TigerGraph · via MCP**. "Local mirror" means the workspace was asleep at start-up: ping it and restart the server.
-- [ ] **Scoreboard**: 9 · 11, 2 SARs, 5 changed, audit clean 20 / 20.
 - [ ] **Cases → HHG-018**: Overview shows first recommendation → question → final decision (R7, no block).
 - [ ] **Cases → HHG-014 → Graph**: zoom, pan, click a node; the device ring sits on the right.
 - [ ] **Cases → HHG-019 → Evidence** (or open `#/cases/HHG-019/evidence`): the probability path starts at 38% and the `peer_purchases` row adds about 51 points; the item carries a "Derived inference" badge. Fraud, blocked, no SAR.
 - [ ] **Audit trail**: press ▶ Play; the ledger checks "Graph write verified by read-back".
 - [ ] **Approvals**: approve one; the toast confirms the `APPROVED_BY` edge.
-- [ ] **Monitoring**: the structuring sweep finds fraud the bank's model misses.
+- [ ] **Insights → Monitoring**: the structuring sweep finds fraud the bank's model misses.
 
 ---
 
