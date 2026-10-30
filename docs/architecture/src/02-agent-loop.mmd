@@ -1,0 +1,35 @@
+%%{init: {"theme": "base", "themeVariables": {
+  "fontFamily": "Arial", "fontSize": "15px",
+  "primaryColor": "#FFF4EC", "primaryBorderColor": "#F58220", "primaryTextColor": "#1F2430",
+  "lineColor": "#5B6475", "secondaryColor": "#EEF4FF", "tertiaryColor": "#F6F7F9",
+  "clusterBkg": "#FBFBFC", "clusterBorder": "#C9CED6"},
+  "flowchart": {"htmlLabels": false, "padding": 18, "nodeSpacing": 45, "rankSpacing": 55}}}%%
+flowchart TB
+  T["1 trigger_intake<br/>as_of fixed · text → UntrustedText<br/>text facts + hostile spans"]:::guard
+  O["2 case_opener<br/>trigger-conditioned prior<br/>(January: softened, risk prior neutral)"]:::core
+  P["3 evidence_planner (LLM)<br/>suggests tools · full toolkit runs anyway<br/>text only inside a data block"]:::llm
+  R["4 graph_retrieval<br/>28 measured signals via installed GSQL"]:::tg
+  M["5 memory_recall<br/>hybrid_case_recall (vector ⨝ traversal)<br/>compromise_watch read-back"]:::tg
+  G["6 policy_grounding<br/>policy_retrieve (GraphRAG over policy)"]:::tg
+  L["7 ledger_update<br/>Bayes in log space · feedback scaling<br/>p_graph_only for conformal"]:::core
+  U{"8 uncertainty_assessor<br/>two-sided stopping rule<br/>VOI per unit of friction"}:::core
+  PV["9 record_provisional<br/>initial actions + routes<br/>(before any evidence returns)"]:::core
+  E["10 evidence_gap_resolver<br/>ask ONE question (simulated reply)<br/>customer · step-up · analyst"]:::human
+  AR["11 action_recommender<br/>verdict → conformal → policy → proof → gate<br/>→ containment → detectors"]:::core
+  PG["12 permission_gate<br/>execute auto only · L1/L2 wait"]:::guard
+  X["13 explainer (LLM)<br/>prose from fixed brief · template fallback"]:::llm
+  CW["14 case_writer<br/>case_write → read-back check"]:::tg
+  MC["15 memory_consolidator<br/>verify hash chain"]:::ok
+
+  T --> O --> P --> R --> M --> G --> L --> U
+  U -->|"not enough, round ＜ 3"| PV --> E --> U
+  U -->|"decisive / exhausted / cap / budget"| AR --> PG --> X --> CW --> MC
+
+classDef tg fill:#FFE8D6,stroke:#F58220,stroke-width:2px,color:#1F2430;
+classDef core fill:#E8F1FF,stroke:#2F6FEB,stroke-width:2px,color:#10233F;
+classDef llm fill:#F3E8FF,stroke:#8B5CF6,stroke-width:1.5px,color:#2A1450,stroke-dasharray:4 3;
+classDef guard fill:#FFECEC,stroke:#D64545,stroke-width:2px,color:#4A1010;
+classDef ok fill:#E9F8EF,stroke:#1E9E5A,stroke-width:2px,color:#0D3B22;
+classDef human fill:#FFF8DB,stroke:#C79A00,stroke-width:2px,color:#3A2E00;
+classDef data fill:#F1F3F6,stroke:#7A8394,stroke-width:1.5px,color:#1F2430;
+classDef eval fill:#E6FAF8,stroke:#0F9D8F,stroke-width:1.5px,color:#08332F;

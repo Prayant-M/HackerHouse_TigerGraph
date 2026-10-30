@@ -25,6 +25,16 @@ It needs a side-effect-free decision function and a fact vector for every closed
 ## Measurements
 
 <!-- numbers:start -->
+- **18 cases** answered by `benchmark/run_case.py --all` on backend `tigergraph`: verdicts {'legitimate': 10, 'fraud': 7, 'uncertain': 1}; 7 carry a block or report; the proof gate changed the action on **1** (HHF-016).
+- p95 latency **283.6 s**, mean 248.7 s; 380 LLM tokens and $0.0018 per case; 199 attestations in total.
+- hostile text flagged on 6 cases; data-quality taint on 5.
+- **Proof gate (October holdout, 2015 replays, fitted on Jul–Sep):** harmful-action error rate 0.3591 at margin k=1 vs 0.1613 at k≥2; legitimate customers acted against 70 → 5, frauds acted on 142 → 26. Gate claimed: **yes**.
+- **Conformal (α=0.1):** October coverage 0.8605 overall (fraud 0.8111, legit 0.9377), mean set size 1.754.
+- **Metamorphic relations** (violations/runs): M1 0/18, M2 0/720, M4 0/18, M5 0/90, M6 0/18, M7 0/18.
+- **Predictive containment** (80 rings, origin found on 38): origin-lift precision 0.2642 (lift 3.57×) on 246 free step-ups vs raw counts 0.0392 (lift 0.53×); zero blocks on innocents.
+- **Evasion attacks:** 3 evaded before hardening, 0 after; hardening's legitimate cost on the history: 67.
+- **Drills:** 11/11 pass (`eval/reports/drills.md`).
+- **Attestation re-run:** 18 of 18 answer files pass.
 <!-- numbers:end -->
 
 * Holdout table by margin and by precedent agreement, and the ablation (no gate / margin only / precedent only / both): `eval/reports/proof_holdout.md`.

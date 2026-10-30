@@ -1,0 +1,110 @@
+# 01 · System architecture — end to end
+
+![System architecture — end to end](../diagrams/01-system.png)
+
+```mermaid
+%%{init: {"theme": "base", "themeVariables": {
+  "fontFamily": "Arial", "fontSize": "15px",
+  "primaryColor": "#FFF4EC", "primaryBorderColor": "#F58220", "primaryTextColor": "#1F2430",
+  "lineColor": "#5B6475", "secondaryColor": "#EEF4FF", "tertiaryColor": "#F6F7F9",
+  "clusterBkg": "#FBFBFC", "clusterBorder": "#C9CED6"},
+  "flowchart": {"htmlLabels": false, "padding": 18, "nodeSpacing": 45, "rankSpacing": 55}}}%%
+flowchart TB
+  subgraph IN["Alert sources"]
+    direction LR
+    A1["risk_score alert<br/>(bank model)"]:::data
+    A2["customer_report<br/>(dispute message)"]:::data
+    A3["analyst_request<br/>(analyst note)"]:::data
+    A4["alert inbox<br/>alert_pipeline.py (C9)"]:::data
+  end
+
+  subgraph RUN["One command: make case CASE=HHF-0xx (benchmark/run_case.py)"]
+    direction TB
+    V["Input guardrails<br/>schema · ids · trigger type · txn exists<br/>exit 3 on invalid input"]:::guard
+    W["Workspace wake + health precondition<br/>graph loaded? else FAILED_DEPENDENCY (exit 2)"]:::guard
+    REC["RecordingStore<br/>every tool call hashed + stored<br/>canary check · fail-closed wrapper"]:::guard
+  end
+
+  subgraph AG["Agent (LangGraph, 15 nodes) — src/fraudagent/agent"]
+    direction TB
+    FW["Hostile-text firewall<br/>UntrustedText · allow-listed facts only"]:::guard
+    LOOP["Investigate → recall → ledger → VOI<br/>ask one question → re-assess (≤3 rounds)"]:::core
+    LAY["Decision layers<br/>policy R1–R10 · §3a · conformal · proof gate · containment"]:::core
+    EXP["Explainer (LLM prose only)<br/>grounded() · quality floor · template fallback"]:::llm
+    CW["case_writer → case_write (1 installed query)<br/>read-back via case_chain"]:::tg
+  end
+
+  subgraph TGX["TigerGraph Savanna 4.2.5 — graph FraudGraph"]
+    direction TB
+    MCP["tigergraph-mcp (stdio)<br/>client allow-list: run_installed_query, get_node, get_node_edges"]:::tg
+    Q["34 installed GSQL queries<br/>agent_role: EXECUTE on 25"]:::tg
+    G[("650,938 txns · 14,849 cards · 13,553 customers<br/>9,729 devices · 5,585 closed cases<br/>TigerVector 384-d narratives + 64-d behaviour")]:::tg
+    GDS["GDS WCC + PageRank<br/>time-sliced WCC ring_at_asof"]:::tg
+  end
+
+  subgraph OUT["Outputs"]
+    direction LR
+    ANS["cases/HHF-0xx.json<br/>case · SAR · actions before/after<br/>proof · attestations · telemetry"]:::ok
+    UI["Analyst console (FastAPI)<br/>Proof · Containment · Replay · Case life"]:::ok
+    GOV["Governance<br/>signed approvals · feedback · detectors"]:::human
+  end
+
+  IN --> V --> W --> REC --> FW --> LOOP --> LAY --> EXP --> CW
+  LOOP <-->|"graph reads"| MCP
+  CW -->|"single write path"| MCP
+  MCP --> Q --> G
+  G --- GDS
+  CW --> ANS --> UI
+  UI -->|"Bearer token → role (server-side)"| GOV
+  GOV -->|"governance_write (console-only)"| Q
+  LLMP["LLM provider (Google)<br/>sees evidence brief only"]:::llm
+  EXP -.->|"egress logged"| LLMP
+
+classDef tg fill:#FFE8D6,stroke:#F58220,stroke-width:2px,color:#1F2430;
+classDef core fill:#E8F1FF,stroke:#2F6FEB,stroke-width:2px,color:#10233F;
+classDef llm fill:#F3E8FF,stroke:#8B5CF6,stroke-width:1.5px,color:#2A1450,stroke-dasharray:4 3;
+classDef guard fill:#FFECEC,stroke:#D64545,stroke-width:2px,color:#4A1010;
+classDef ok fill:#E9F8EF,stroke:#1E9E5A,stroke-width:2px,color:#0D3B22;
+classDef human fill:#FFF8DB,stroke:#C79A00,stroke-width:2px,color:#3A2E00;
+classDef data fill:#F1F3F6,stroke:#7A8394,stroke-width:1.5px,color:#1F2430;
+classDef eval fill:#E6FAF8,stroke:#0F9D8F,stroke-width:1.5px,color:#08332F;
+```
+
+**What it is.** A fraud-investigation agent a bank could run. Every alert enters through
+one command, is checked before anything runs, is investigated against TigerGraph through
+the TigerGraph MCP server, is decided by a deterministic policy core that cannot import an
+LLM, and leaves a case written back to the graph plus an answer file in which every claim
+is attested.
+
+**Read it top to bottom**
+
+1. **Alert sources.** The three trigger types in the brief (11 risk-score, 4 customer-report,
+   3 analyst-request cases in the final pack), and an alert inbox for the autonomous pipeline
+   (C9), which runs the same code path.
+2. **One command** (`benchmark/run_case.py`). Input guardrails reject an unknown case id, a
+   missing field, a bad trigger type or a transaction that is not in the graph (exit 3, no answer
+   file). A health precondition refuses an empty or unreachable graph (exit 2, signed
+   `FAILED_DEPENDENCY`), and waits a bounded time for an auto-stopped Savanna workspace.
+   `RecordingStore` wraps every graph call: it records the response by content hash, turns any
+   graph error into a named dependency failure, and aborts if a future-dated canary leaks
+   through the temporal wall.
+3. **Agent** (LangGraph, 15 nodes). Free text is `UntrustedText` from intake on; only
+   allow-listed extractor facts (denies / recognises / analyst asks about a ring) can reach a
+   decision. The loop investigates, recalls prior cases (vector + traversal fused in one GSQL
+   query), folds measured likelihood ratios into a 7-hypothesis posterior, picks the one question
+   with the highest information per unit of customer friction, and re-assesses (≤ 3 rounds,
+   wall-clock and token budgets). The decision layers run in a fixed order. The LLM writes prose
+   only, and only from a brief whose figures are already fixed.
+4. **TigerGraph.** All reads go through installed queries reached via the MCP server; the
+   agent's graph role may execute 25 of the 34 installed queries and nothing else; the one write
+   is `case_write`. Graph algorithms: WCC/PageRank on the anonymous-proxy projection and a
+   *time-sliced* WCC that feeds the containment plan.
+5. **Outputs.** The answer file (graded 18/18 clean by the organisers' grader), the analyst
+   console, and governance: approvals are bearer-token → role on the server, Ed25519-signed and
+   hash-chained, and mirrored into the graph through a console-only query.
+
+**Egress.** Savanna (all graph data) and the LLM provider (evidence brief only). Nothing else.
+Embeddings are computed locally. See `11-trust-boundaries.md`.
+
+---
+[← index](README.md)

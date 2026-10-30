@@ -1,0 +1,50 @@
+%%{init: {"theme": "base", "themeVariables": {
+  "fontFamily": "Arial", "fontSize": "15px",
+  "primaryColor": "#FFF4EC", "primaryBorderColor": "#F58220", "primaryTextColor": "#1F2430",
+  "lineColor": "#5B6475", "secondaryColor": "#EEF4FF", "tertiaryColor": "#F6F7F9",
+  "clusterBkg": "#FBFBFC", "clusterBorder": "#C9CED6"},
+  "flowchart": {"htmlLabels": false, "padding": 18, "nodeSpacing": 45, "rankSpacing": 55}}}%%
+flowchart LR
+  subgraph G1["Find patterns nobody wrote down"]
+    C1["C1 New typologies<br/>origin · dormant_wake · micro_charges<br/>recipient_fanin · frontier detectors"]:::eval
+    C2["C2 Self-growing detective<br/>mine → spec → backtest → PROPOSED<br/>fraud-manager approval"]:::eval
+    C3["C3 Policy text → detector<br/>R5/R6 compiled from prose<br/>agree/disagree with ids"]:::eval
+  end
+  subgraph G2["Explain and prove"]
+    C4["C4 Evidence to SAR<br/>every sentence cited"]:::ok
+    C5["C5 Ring replay<br/>time slider from attested txns"]:::ok
+    C6["C6 Regulator's view<br/>proof-first · recorded I/O · re-run"]:::ok
+  end
+  subgraph G3["Act on it"]
+    C7["C7 Containment planner<br/>block set + forward protection"]:::tg
+  end
+  subgraph G4["Work with analysts"]
+    C8["C8 Analyst in the loop"]:::human
+    C9["C9 Speed ＆ autonomy<br/>p95 · cost/case"]:::human
+    C14["C14 Case management<br/>lifecycle · WATCH · handover"]:::human
+  end
+  subgraph G5["Defend the agent"]
+    C10["C10 Break the agent<br/>720 fuzz · ATK-* · provenance"]:::guard
+  end
+  subgraph G6["Messy and changing data"]
+    C11["C11 Data quality detective<br/>taint → conformal widening"]:::core
+    C12["C12 Schema drift survival<br/>diff → explain → approve → re-map"]:::core
+    C13["C13 Someone else's schema<br/>byo.py end to end"]:::core
+  end
+  I1(("Innov. 1<br/>Proof")):::core
+  I2(("Innov. 2<br/>Containment")):::tg
+  I3(("Innov. 3<br/>Label-free eval")):::eval
+  I4(("Innov. 4<br/>Conformal")):::core
+  I1 --- C6 & C4
+  I2 --- C7 & C1 & C5 & C14
+  I3 --- C10
+  I4 --- C11
+
+classDef tg fill:#FFE8D6,stroke:#F58220,stroke-width:2px,color:#1F2430;
+classDef core fill:#E8F1FF,stroke:#2F6FEB,stroke-width:2px,color:#10233F;
+classDef llm fill:#F3E8FF,stroke:#8B5CF6,stroke-width:1.5px,color:#2A1450,stroke-dasharray:4 3;
+classDef guard fill:#FFECEC,stroke:#D64545,stroke-width:2px,color:#4A1010;
+classDef ok fill:#E9F8EF,stroke:#1E9E5A,stroke-width:2px,color:#0D3B22;
+classDef human fill:#FFF8DB,stroke:#C79A00,stroke-width:2px,color:#3A2E00;
+classDef data fill:#F1F3F6,stroke:#7A8394,stroke-width:1.5px,color:#1F2430;
+classDef eval fill:#E6FAF8,stroke:#0F9D8F,stroke-width:1.5px,color:#08332F;
