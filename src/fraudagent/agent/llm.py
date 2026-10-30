@@ -204,7 +204,8 @@ class LLMClient:
             self._consecutive_failures = 0
         except Exception as exc:                      # pragma: no cover - network
             self._egress("prose", system, prompt, False, str(exc))
-            self._trip(exc)
+            if not drilling:                          # a simulated fault trips nothing real
+                self._trip(exc)
             self.template_fallbacks += 1
             self.usage.errors.append(f"{self._provider}: {exc}")
             if self.cfg.fallback_provider and self._provider != self.cfg.fallback_provider:

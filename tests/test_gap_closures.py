@@ -231,3 +231,19 @@ def test_llm_breaker_is_shared_and_trips_on_a_timeout(tmp_path, monkeypatch):
     a._provider = b._provider = "google"
     a._trip(TimeoutError("model call exceeded 45s"))
     assert a.breaker_open() and b.breaker_open()      # another worker sees it
+
+
+def test_a_drill_never_trips_the_real_breaker(tmp_path, monkeypatch):
+    from fraudagent.agent.llm import LLMClient
+
+    monkeypatch.setattr(LLMClient, "BREAKER_FILE", tmp_path / "breaker.json")
+    monkeypatch.setenv("LLM_DRILL", "timeout")
+    c = LLMClient()
+    c.available = True
+    c.cfg = type("Cfg", (), {"model": "m", "cache_enabled": False, "max_tokens": 10,
+                             "fallback_provider": ""})()
+    monkeypatch.setattr(c, "_egress", lambda *a, **k: None)
+    monkeypatch.setattr(c, "timeout_s", 0.01)
+    assert c.complete("s", "p") == ""
+    monkeypatch.delenv("LLM_DRILL")
+    assert not c.breaker_open() and not (tmp_path / "breaker.json").exists()
