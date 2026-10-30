@@ -1,0 +1,1311 @@
+openapi: 3.1.0
+info:
+  title: FraudGraph Analyst Console API
+  version: 1.0.0
+  summary: HTTP API behind the agentic fraud investigation console on TigerGraph.
+  description: |
+    The console is one FastAPI process (`ui/server.py`). It serves the analyst
+    page and this API: saved investigations, the proof behind each decision,
+    human approvals, analyst feedback, detector governance and live re-runs.
+
+    ## Run it
+
+    ```bash
+    python ui/server.py    # http://127.0.0.1:8080
+    ```
+
+    The interactive reference is at `/docs` (Swagger UI) and `/redoc`, and this
+    document is served at `/openapi.json`. `HOST` and `PORT` change the bind address.
+
+    ## Authentication
+
+    Only three operations take a token: `POST /api/approvals/{case_id}/{index}`,
+    `POST /api/feedback/{case_id}` and `POST /api/detectors/{detector_id}`. Send
+    `Authorization: Bearer <token>`.
+
+    The server resolves the token to an actor and a role from `APPROVAL_TOKENS`,
+    a comma-separated list of `actor_id:role:sha256(token)` triples. Generate
+    them with `scripts/make_tokens.py`. A role in the request body is ignored
+    and recorded as ignored.
+
+    | Role | Can do |
+    |---|---|
+    | `analyst` | Give feedback |
+    | `team_lead` | Give feedback, approve L1 actions |
+    | `fraud_manager` | Give feedback, approve L1 and L2 actions, decide detectors |
+
+    All other routes are unauthenticated, including three that do work on the
+    server: `GET /api/investigate/{case_id}`, `POST /api/proof/{case_id}/flip`
+    and `POST /api/replay/{case_id}/rerun/{seq}`. Bind the console to a trusted
+    network or enable read-only mode.
+
+    ## Read-only mode
+
+    `CONSOLE_READONLY=1` is for public hosting. It serves the answer files and a
+    snapshot of graph health and the audit, and needs no TigerGraph credentials,
+    LLM key or staged data. Live re-runs, approvals and tool re-runs return 403.
+    `POST /api/feedback/{case_id}` and `POST /api/detectors/{detector_id}` are
+    not blocked by this mode.
+
+    ## Error bodies
+
+    Two shapes are in use. FastAPI errors return `{"detail": ...}`. The governed
+    write routes return `{"error": ...}`, and approval refusals add `status`.
+
+    ## Simulated actions
+
+    Customer contact, step-up authentication, card blocks and regulatory filings
+    are simulated, as the challenge brief permits. Every receipt says so with
+    `simulated: true`.
+
+    ## Outside this API
+
+    The command line (`make case`, `make byo`, `make drills`) and the agent's
+    graph access through the TigerGraph MCP server are not HTTP APIs of this
+    project. See `README.md` and `docs/ARCHITECTURE.md`.
+servers:
+  - url: http://127.0.0.1:8080
+    description: Local console
+tags:
+  - name: Cases
+    description: Saved investigations and their case subgraphs.
+  - name: Live runs
+    description: Re-run the agent and stream its reasoning.
+  - name: Approvals
+    description: Human sign-off on actions the agent may not execute, kept in a signed ledger.
+  - name: Proof and replay
+    description: Why a decision holds, what would flip it, and what the agent saw.
+  - name: Case history
+    description: Ring replay and the case lifecycle.
+  - name: Feedback
+    description: Analyst decisions on findings, which change later investigations.
+  - name: Detectors
+    description: Proposed detectors, which join the toolkit only with fraud manager approval.
+  - name: Monitoring
+    description: Alerts the agent raised itself, and the log of executed actions.
+  - name: Reference
+    description: Calibration, policy and audit data.
+  - name: System
+    description: Health and the console page.
+security: []
+paths:
+  /api/health:
+    get:
+      tags: [System]
+      operationId: getHealth
+      summary: Report backend, dataset and index status
+      description: In read-only mode, `graph` comes from the snapshot taken at the last live run.
+      responses:
+        '200':
+          description: Service status.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Health' }
+  /api/cases:
+    get:
+      tags: [Cases]
+      operationId: listCases
+      summary: List every investigation, summarised
+      description: Reads `cases/HHF-*.json` (final round) and `cases/HHG-*.json` (Round 1).
+      responses:
+        '200':
+          description: One summary per answer file.
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: '#/components/schemas/CaseSummary' }
+  /api/cases/{case_id}:
+    get:
+      tags: [Cases]
+      operationId: getCase
+      summary: Get one full investigation record
+      parameters:
+        - $ref: '#/components/parameters/CaseId'
+      responses:
+        '200':
+          description: The saved answer file.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Answer' }
+        '404': { $ref: '#/components/responses/NotFound' }
+  /api/graph/{case_id}:
+    get:
+      tags: [Cases]
+      operationId: getCaseGraph
+      summary: Get the case subgraph for the canvas
+      description: |
+        Built from the written case. The view is capped at 24 transactions,
+        4 device profiles, 18 connected cards and 6 recalled cases.
+      parameters:
+        - $ref: '#/components/parameters/CaseId'
+      responses:
+        '200':
+          description: Nodes and edges.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/CaseGraph' }
+        '404': { $ref: '#/components/responses/NotFound' }
+  /api/investigate/{case_id}:
+    get:
+      tags: [Live runs]
+      operationId: investigateCase
+      summary: Re-run the agent and stream its reasoning
+      description: |
+        Server-sent events. Each message is `data: <json>` with `type` and `data`:
+
+        | `type` | `data` |
+        |---|---|
+        | `step` | One reasoning trace entry, with `node`, `at` and node-specific fields |
+        | `done` | The complete answer (see `Answer`). The stream ends |
+        | `error` | An error message string. The stream ends |
+
+        This is a GET with side effects, and it takes no token. The run writes the
+        case to the graph and appends to the simulated action log. It does not
+        update the answer file in `cases/`.
+      parameters:
+        - $ref: '#/components/parameters/CaseId'
+      responses:
+        '200':
+          description: Event stream.
+          content:
+            text/event-stream:
+              schema:
+                type: string
+              example: |+
+                data: {"type": "step", "data": {"node": "trigger_intake", "at": 0.001, "flagged_txn_id": "3611043"}}
+
+                data: {"type": "done", "data": {"case_id": "HHF-016"}}
+
+        '403': { $ref: '#/components/responses/ReadOnly' }
+        '404': { $ref: '#/components/responses/NotFound' }
+  /api/approvals:
+    get:
+      tags: [Approvals]
+      operationId: listApprovals
+      summary: List actions that need human sign-off
+      description: Every L1 or L2 action across all cases, with any decision from the ledger.
+      responses:
+        '200':
+          description: Routed actions.
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: '#/components/schemas/ApprovalItem' }
+  /api/approvals/verify:
+    get:
+      tags: [Approvals]
+      operationId: verifyApprovalLedger
+      summary: Verify the signed, hash-chained ledger
+      description: Detects an edited, reordered or transplanted record.
+      responses:
+        '200':
+          description: Verification result.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/LedgerVerification' }
+  /api/ledger:
+    get:
+      tags: [Approvals]
+      operationId: getApprovalLedger
+      summary: Read the latest 200 ledger records
+      description: Includes decisions, refusals and detector decisions.
+      responses:
+        '200':
+          description: Ledger records, oldest first.
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: '#/components/schemas/LedgerRecord' }
+  /api/approvals/{case_id}/{index}:
+    post:
+      tags: [Approvals]
+      operationId: decideApproval
+      summary: Approve or reject one routed action
+      description: |
+        L1 actions need `team_lead` or `fraud_manager`. L2 actions need
+        `fraud_manager`. Every decision and every refusal enters the hash chain,
+        and no endpoint edits or deletes a record.
+
+        A request with no token is refused with 401 and also logged.
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/CaseId'
+        - name: index
+          in: path
+          required: true
+          description: Position of the action in `next_best_actions.final`.
+          schema: { type: integer, minimum: 0 }
+          example: 0
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/ApprovalRequest' }
+            example: { approved: true, note: Device confirmed compromised. }
+      responses:
+        '200':
+          description: The sealed ledger record.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/LedgerRecord' }
+        '400':
+          description: The action is on the `auto` route and needs no approval.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ApiError' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403':
+          description: Wrong role, self-approval, or a read-only deployment.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ApiError' }
+              example: { error: 'L1 action BLOCK_CARD needs fraud_manager or team_lead; token is analyst', status: 403 }
+        '404':
+          description: Unknown case, or no action at that index.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ApiError' }
+        '409':
+          description: Already decided, or a replayed approval record.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ApiError' }
+        '422': { $ref: '#/components/responses/ValidationFailed' }
+  /api/proof/{case_id}:
+    get:
+      tags: [Proof and replay]
+      operationId: getProof
+      summary: Get the proof-first examiner view
+      description: |
+        The minimal facts that force the action, the flip set, precedent, the gate
+        result and conformal output. Fields are empty for older answers saved
+        before the proof layer existed.
+      parameters:
+        - $ref: '#/components/parameters/CaseId'
+      responses:
+        '200':
+          description: Proof view.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ProofView' }
+        '404': { $ref: '#/components/responses/NotFound' }
+  /api/proof/{case_id}/flip:
+    post:
+      tags: [Proof and replay]
+      operationId: flipFacts
+      summary: Remove facts and recompute the decision
+      description: |
+        Replays the case from its recording, so it needs no graph or model. The
+        recording lives in `.cache/recordings/`, which is not in git, and is
+        created by running the case first (`make case CASE=<id>`).
+      parameters:
+        - $ref: '#/components/parameters/CaseId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/FlipRequest' }
+            example: { remove: [match_flag_anomaly] }
+      responses:
+        '200':
+          description: The decision before and after removing the facts.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/FlipResult' }
+        '404': { $ref: '#/components/responses/NotFound' }
+        '422': { $ref: '#/components/responses/ValidationFailed' }
+  /api/replay/{case_id}:
+    get:
+      tags: [Proof and replay]
+      operationId: getReplay
+      summary: Get what the agent saw at each step
+      description: The reasoning trace joined to recorded tool I/O. `tool_calls` is empty when the case has no recording.
+      parameters:
+        - $ref: '#/components/parameters/CaseId'
+      responses:
+        '200':
+          description: Replay view.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ReplayView' }
+        '404': { $ref: '#/components/responses/NotFound' }
+  /api/replay/{case_id}/rerun/{seq}:
+    post:
+      tags: [Proof and replay]
+      operationId: rerunToolCall
+      summary: Re-run one recorded call against the live store
+      description: Compares the live response digest with the digest the agent saw. Recorded writes cannot be re-run.
+      parameters:
+        - $ref: '#/components/parameters/CaseId'
+        - name: seq
+          in: path
+          required: true
+          description: Sequence number from `tool_calls`.
+          schema: { type: integer, minimum: 1 }
+          example: 1
+      responses:
+        '200':
+          description: Digest comparison.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/RerunResult' }
+        '403': { $ref: '#/components/responses/ReadOnly' }
+        '404': { $ref: '#/components/responses/NotFound' }
+  /api/ring/{case_id}:
+    get:
+      tags: [Case history]
+      operationId: getRingReplay
+      summary: Replay a ring forming, frame by frame
+      description: |
+        Built from attested transactions. A case with fewer than two cards returns
+        empty `frames` and a `note`. Ring cases read the graph store, so they need
+        a store even in read-only mode.
+      parameters:
+        - $ref: '#/components/parameters/CaseId'
+      responses:
+        '200':
+          description: Ring frames.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/RingReplay' }
+        '404': { $ref: '#/components/responses/NotFound' }
+  /api/lifecycle/{case_id}:
+    get:
+      tags: [Case history]
+      operationId: getLifecycle
+      summary: Get state changes, approvals and handover
+      parameters:
+        - $ref: '#/components/parameters/CaseId'
+      responses:
+        '200':
+          description: Lifecycle view.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Lifecycle' }
+        '404': { $ref: '#/components/responses/NotFound' }
+  /api/feedback:
+    get:
+      tags: [Feedback]
+      operationId: listFeedback
+      summary: List feedback and its effect
+      description: '`effective` shows the adjustments later investigations will apply.'
+      responses:
+        '200':
+          description: Feedback records and active adjustments.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/FeedbackList' }
+  /api/feedback/{case_id}:
+    post:
+      tags: [Feedback]
+      operationId: giveFeedback
+      summary: Accept or reject one finding
+      description: |
+        Any authenticated role may give feedback. A rejected finding is suppressed
+        on later investigations of the same card. A signal rejected on at least two
+        more cases than it was accepted has its weight reduced.
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/CaseId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/FeedbackRequest' }
+            example: { finding: anonymising_proxy, accepted: false, note: Customer's work VPN. }
+      responses:
+        '200':
+          description: The recorded feedback.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/FeedbackRecord' }
+        '400':
+          description: The finding did not fire on this case.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ApiError' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '404': { $ref: '#/components/responses/NotFound' }
+        '422': { $ref: '#/components/responses/ValidationFailed' }
+  /api/detectors:
+    get:
+      tags: [Detectors]
+      operationId: listDetectors
+      summary: List the detector registry
+      responses:
+        '200':
+          description: Proposed and decided detectors.
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: '#/components/schemas/Detector' }
+  /api/detectors/{detector_id}:
+    post:
+      tags: [Detectors]
+      operationId: decideDetector
+      summary: Approve or reject a proposed detector
+      description: Requires the `fraud_manager` role. The decision enters the signed ledger.
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: detector_id
+          in: path
+          required: true
+          schema: { type: string }
+          example: POL-R5
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/DetectorDecisionRequest' }
+            example: { approved: true }
+      responses:
+        '200':
+          description: The updated detector and its ledger record.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/DetectorDecision' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403':
+          description: The token is not a fraud manager's.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ApiError' }
+        '404':
+          description: No such detector.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ApiError' }
+        '409':
+          description: The detector is already decided.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ApiError' }
+        '422': { $ref: '#/components/responses/ValidationFailed' }
+  /api/autonomous:
+    get:
+      tags: [Monitoring]
+      operationId: listAutonomous
+      summary: List alerts the agent raised itself
+      description: Results of `benchmark/monitor.py`, kept apart from the benchmark answers.
+      responses:
+        '200':
+          description: One summary per autonomous investigation.
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: '#/components/schemas/AutonomousSummary' }
+  /api/autonomous/{case_id}:
+    get:
+      tags: [Monitoring]
+      operationId: getAutonomous
+      summary: Get one autonomous investigation in full
+      parameters:
+        - name: case_id
+          in: path
+          required: true
+          schema: { type: string }
+          example: AUTO-001
+      responses:
+        '200':
+          description: The saved investigation.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/AutonomousAnswer' }
+        '404': { $ref: '#/components/responses/NotFound' }
+  /api/actions:
+    get:
+      tags: [Monitoring]
+      operationId: listActions
+      summary: Read the latest 400 simulated actions
+      responses:
+        '200':
+          description: Action receipts. Empty when no log exists.
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: '#/components/schemas/ExecutedAction' }
+  /api/calibration:
+    get:
+      tags: [Reference]
+      operationId: getCalibration
+      summary: Get the measured likelihood-ratio table
+      responses:
+        '200':
+          description: Likelihood ratios, strongest first, with holdout metrics.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Calibration' }
+        '404': { $ref: '#/components/responses/NotFound' }
+  /api/policy:
+    get:
+      tags: [Reference]
+      operationId: getPolicy
+      summary: Get the compiled policy rules with clause text
+      responses:
+        '200':
+          description: Rules and their source text.
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: '#/components/schemas/PolicyClause' }
+  /api/audit:
+    get:
+      tags: [Reference]
+      operationId: getAudit
+      summary: Run the policy and data audit over the answer files
+      description: |
+        Runs `eval/audit_answers.py` and caches the result until the files change.
+        Read-only mode returns the saved snapshot.
+
+        **Known issue:** in live mode this returns 500 when `case_pack_final.csv`
+        is present. The audit looks up `HHG-*` cases in that file, which holds only
+        the final-round cases.
+      responses:
+        '200':
+          description: Audit result per case.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Audit' }
+        '500':
+          description: The audit failed. The body is plain text. See the known issue above.
+          content:
+            text/plain:
+              schema: { type: string }
+  /:
+    get:
+      tags: [System]
+      operationId: getConsole
+      summary: Serve the analyst console page
+      responses:
+        '200':
+          description: The single-page console.
+          content:
+            text/html:
+              schema: { type: string }
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      description: A plaintext token whose SHA-256 hash is listed in `APPROVAL_TOKENS`.
+  parameters:
+    CaseId:
+      name: case_id
+      in: path
+      required: true
+      description: Answer file id. `HHF-*` is the final round and `HHG-*` is Round 1.
+      schema: { type: string }
+      example: HHF-016
+  responses:
+    NotFound:
+      description: The resource does not exist or has not been produced yet.
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/HttpError' }
+    ReadOnly:
+      description: Refused on a read-only deployment.
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/HttpError' }
+    Unauthorized:
+      description: The bearer token is missing or unknown.
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/ApiError' }
+          example: { error: missing bearer token, status: 401 }
+    ValidationFailed:
+      description: The body is missing or is not a JSON object.
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/ValidationError' }
+  schemas:
+    HttpError:
+      type: object
+      required: [detail]
+      properties:
+        detail: { type: string }
+    ValidationError:
+      type: object
+      required: [detail]
+      properties:
+        detail:
+          type: array
+          items:
+            type: object
+            required: [type, loc, msg]
+            properties:
+              type: { type: string }
+              loc:
+                type: array
+                items: { type: [string, integer] }
+              msg: { type: string }
+              input: {}
+    ApiError:
+      type: object
+      required: [error]
+      properties:
+        error: { type: string }
+        status: { type: integer, description: HTTP status, present on approval refusals. }
+    Verdict:
+      type: string
+      enum: [fraud, legitimate, uncertain]
+    CaseStatus:
+      type: string
+      enum: [open, closed_legitimate, closed_fraud, escalated]
+    Pattern:
+      type: string
+      enum: [none, card_testing, card_not_present_fraud, card_not_present_new_device, out_of_region_use, account_takeover, undocumented]
+    TriggerType:
+      type: string
+      enum: [risk_score, customer_report, analyst_request]
+    Route:
+      type: string
+      description: '`auto` runs without approval. `L1` needs a team lead or fraud manager. `L2` needs a fraud manager.'
+      enum: [auto, L1, L2]
+    Action:
+      type: string
+      enum: [ALLOW_TRANSACTION, DECLINE_TRANSACTION, MONITOR_CARD, MONITOR_CONNECTED_CARDS, WARN_CUSTOMER, VERIFY_WITH_CUSTOMER, STEP_UP_AUTH, BLOCK_CARD, BLOCK_ALL_CARDS, GENERATE_REPORT, CREATE_CASE, FILE_REPORT, ESCALATE_TO_ANALYST, CLOSE_NO_FRAUD]
+    Health:
+      type: object
+      required: [ok, readonly, graph, answer_files, calibration]
+      properties:
+        ok: { type: boolean }
+        readonly: { type: boolean }
+        graph:
+          type: object
+          description: Store health. Fields depend on the backend.
+          required: [backend]
+          properties:
+            backend: { type: string, examples: [tigergraph, local, snapshot] }
+            ok: { type: boolean }
+          additionalProperties: true
+        answer_files: { type: integer }
+        calibration: { type: boolean, description: Whether the likelihood-ratio table exists. }
+        cases_dir: { type: string, description: Live mode only. }
+        captured_at: { type: [string, 'null'], description: Read-only mode only. }
+    CaseSummary:
+      type: object
+      required: [case_id, trigger, trigger_text, status, verdict, pattern, fraud_probability, exposure_usd, n_affected, n_connected, sar, initial, final, changed, requests, summary, round, minimal_facts, gate_applied, conformal_set, hostile_text, tainted, at_risk]
+      properties:
+        case_id: { type: string, examples: [HHF-016] }
+        trigger: { $ref: '#/components/schemas/TriggerType' }
+        trigger_text: { type: string }
+        status: { $ref: '#/components/schemas/CaseStatus' }
+        verdict: { $ref: '#/components/schemas/Verdict' }
+        pattern: { $ref: '#/components/schemas/Pattern' }
+        fraud_probability: { type: number, minimum: 0, maximum: 1 }
+        exposure_usd: { type: number }
+        n_affected: { type: integer }
+        n_connected: { type: integer }
+        sar: { type: boolean, description: Whether a suspicious activity report is filed. }
+        initial:
+          type: array
+          description: Actions recommended before evidence.
+          items: { $ref: '#/components/schemas/Action' }
+        final:
+          type: array
+          description: Actions recommended after evidence.
+          items: { $ref: '#/components/schemas/Action' }
+        changed: { type: boolean, description: Whether evidence changed the recommendation. }
+        requests: { type: integer, description: Number of evidence requests. }
+        summary: { type: string }
+        latency_s: { type: [number, 'null'] }
+        tool_calls: { type: [integer, 'null'] }
+        round: { type: string, enum: [final, round1] }
+        margin_k: { type: [integer, 'null'], description: Proof margin. Facts that must be removed to flip the action. }
+        minimal_facts:
+          type: array
+          items: { type: string }
+        gate_applied: { type: boolean, description: Whether the proof gate removed a harmful action. }
+        conformal_set:
+          type: array
+          items: { type: string }
+        hostile_text: { type: boolean }
+        tainted: { type: boolean, description: Whether data quality checks tainted the case. }
+        origin: { type: [string, 'null'], description: Entity type of the compromise origin on ring cases. }
+        at_risk: { type: integer }
+    Answer:
+      type: object
+      description: One saved investigation. `agent_record` holds the full audit trail.
+      required: [case_id, case, evidence_requests, next_best_actions, sar, stop_reason, tool_calls, tokens, latency_s, agent_record, audit_chain, executed_actions, pending_approval]
+      properties:
+        case_id: { type: string }
+        case: { $ref: '#/components/schemas/CaseRecord' }
+        evidence_requests:
+          type: array
+          items: { $ref: '#/components/schemas/EvidenceRequest' }
+        next_best_actions: { $ref: '#/components/schemas/NextBestActions' }
+        sar: { $ref: '#/components/schemas/Sar' }
+        stop_reason: { type: string }
+        tool_calls: { type: integer }
+        tokens: { type: integer }
+        latency_s: { type: number }
+        executed_actions:
+          type: array
+          items: { $ref: '#/components/schemas/ExecutedAction' }
+        pending_approval:
+          type: array
+          items: { $ref: '#/components/schemas/PendingAction' }
+        audit_chain: { $ref: '#/components/schemas/AuditChain' }
+        agent_record: { $ref: '#/components/schemas/AgentRecord' }
+    AutonomousAnswer:
+      allOf:
+        - $ref: '#/components/schemas/Answer'
+        - type: object
+          required: [found_by]
+          properties:
+            found_by: { type: string, description: The sweep that raised the alert. }
+    CaseRecord:
+      type: object
+      required: [status, verdict, fraud_probability, pattern, pattern_description, affected_txn_ids, first_suspicious_txn_id, connected_card_ids, connected_device_profiles, exposure_usd, evidence, similar_prior_cases, summary, written_to_graph, graph_case_id]
+      properties:
+        status: { $ref: '#/components/schemas/CaseStatus' }
+        verdict: { $ref: '#/components/schemas/Verdict' }
+        fraud_probability: { type: number, minimum: 0, maximum: 1 }
+        pattern: { $ref: '#/components/schemas/Pattern' }
+        pattern_description: { type: string }
+        affected_txn_ids:
+          type: array
+          items: { type: string }
+        first_suspicious_txn_id: { type: string }
+        connected_card_ids:
+          type: array
+          items: { type: string }
+        connected_device_profiles:
+          type: array
+          items: { type: string }
+        exposure_usd: { type: number }
+        evidence:
+          type: array
+          items: { $ref: '#/components/schemas/EvidenceItem' }
+        similar_prior_cases:
+          type: array
+          items: { type: string }
+        summary: { type: string }
+        written_to_graph: { type: boolean, description: True only after the case read back from the graph. }
+        graph_case_id: { type: string }
+    EvidenceItem:
+      type: object
+      required: [claim, entity_ids, ref, source]
+      properties:
+        claim: { type: string }
+        entity_ids:
+          type: array
+          items: { type: string }
+        ref: { type: string }
+        source: { type: string }
+    EvidenceRequest:
+      type: object
+      required: [type, asked_after_step, assumed_response]
+      properties:
+        type: { type: string, enum: [customer_validation, step_up_auth, analyst_info] }
+        asked_after_step: { type: integer }
+        assumed_response: { type: string, description: The simulated reply and why it was assumed. }
+    RoutedAction:
+      type: object
+      required: [action, reason, route]
+      properties:
+        action: { $ref: '#/components/schemas/Action' }
+        reason: { type: string }
+        route: { $ref: '#/components/schemas/Route' }
+    NextBestActions:
+      type: object
+      required: [initial, final, what_changed]
+      properties:
+        initial:
+          type: array
+          items: { $ref: '#/components/schemas/RoutedAction' }
+        final:
+          type: array
+          items: { $ref: '#/components/schemas/RoutedAction' }
+        what_changed: { type: string, description: '`nothing` when evidence changed no action.' }
+    Sar:
+      type: object
+      required: [file, reason, narrative, subjects, total_amount_usd, activity_dates]
+      properties:
+        file: { type: boolean }
+        reason: { type: string }
+        narrative: { type: string }
+        subjects:
+          type: array
+          items: { type: string }
+        total_amount_usd: { type: number }
+        activity_dates:
+          type: array
+          items: { type: string }
+    ExecutedAction:
+      type: object
+      required: [action, case_id, card_id, customer_id, route, executed, simulated, reference, executed_at, effect, customer_impact]
+      properties:
+        action: { $ref: '#/components/schemas/Action' }
+        case_id: { type: string }
+        card_id: { type: string }
+        customer_id: { type: string }
+        route: { $ref: '#/components/schemas/Route' }
+        executed: { type: boolean }
+        simulated: { type: boolean }
+        reference: { type: string, examples: [SIM-03DAEE8C99] }
+        executed_at: { type: string }
+        effect: { type: string }
+        customer_impact: { type: string }
+    PendingAction:
+      type: object
+      required: [action, route, awaiting]
+      properties:
+        action: { $ref: '#/components/schemas/Action' }
+        route: { $ref: '#/components/schemas/Route' }
+        awaiting: { type: string, enum: [team lead, fraud manager] }
+    AuditChain:
+      type: object
+      required: [intact, detail, head]
+      properties:
+        intact: { type: boolean }
+        detail: { type: string }
+        head: { type: string, description: Hash of the last decision in the chain. }
+    AgentRecord:
+      type: object
+      description: |
+        The full audit trail, including the trace, decisions, posterior and VoI
+        ranking. `proof`, `gate`, `conformal`, `quality`, `containment`, `lifecycle`
+        and `handover` are absent from older answers saved before the final round.
+      required: [trigger, as_of, trace, decisions]
+      properties:
+        trigger: { $ref: '#/components/schemas/Trigger' }
+        as_of: { type: string, description: The time wall. No read may look past it. }
+        trace:
+          type: array
+          items: { $ref: '#/components/schemas/TraceEvent' }
+        decisions:
+          type: array
+          items: { type: object, additionalProperties: true }
+        proof: { $ref: '#/components/schemas/Proof' }
+        gate: { $ref: '#/components/schemas/Gate' }
+      additionalProperties: true
+    Trigger:
+      type: object
+      required: [type, text, flagged_txn_id, card_id, customer_id, opened_at]
+      properties:
+        type: { type: string, description: 'One of the trigger types, or the sweep name on autonomous alerts.' }
+        text: { type: string, description: Untrusted text. It never reaches a decision. }
+        flagged_txn_id: { type: string }
+        card_id: { type: string }
+        customer_id: { type: string }
+        opened_at: { type: string }
+        risk_score: { type: [number, 'null'] }
+    TraceEvent:
+      type: object
+      required: [node, at]
+      properties:
+        node: { type: string, examples: [uncertainty_assessor] }
+        at: { type: number, description: Seconds since the run started. }
+      additionalProperties: true
+    CaseGraph:
+      type: object
+      required: [nodes, edges]
+      properties:
+        nodes:
+          type: array
+          items:
+            type: object
+            required: [id, label, kind]
+            properties:
+              id: { type: string }
+              label: { type: string }
+              kind: { type: string, enum: [case, customer, card, transaction, device, connected_card, closed_case] }
+              verdict: { $ref: '#/components/schemas/Verdict' }
+              p: { type: number }
+              flagged: { type: boolean }
+        edges:
+          type: array
+          items:
+            type: object
+            required: [from, to, label]
+            properties:
+              from: { type: string }
+              to: { type: string }
+              label: { type: string, examples: [INVESTIGATES_TXN] }
+    ApprovalItem:
+      type: object
+      required: [key, case_id, index, action, route, reason, approver, exposure_usd, fraud_probability, decision]
+      properties:
+        key: { type: string, examples: ['HHF-017:0'] }
+        case_id: { type: string }
+        index: { type: integer }
+        action: { $ref: '#/components/schemas/Action' }
+        route: { type: string, enum: [L1, L2] }
+        reason: { type: string }
+        approver: { type: string, enum: [team lead, fraud manager] }
+        exposure_usd: { type: number }
+        fraud_probability: { type: number }
+        decision:
+          oneOf:
+            - $ref: '#/components/schemas/LedgerRecord'
+            - type: 'null'
+    ApprovalRequest:
+      type: object
+      properties:
+        approved: { type: boolean, description: True approves. False or omitted rejects. }
+        note: { type: string, maxLength: 500, description: Longer notes are truncated. }
+        proposed_by: { type: string, default: agent, description: Proposer. That actor cannot approve the action. }
+        record:
+          type: object
+          description: A record carried over from elsewhere. It must match this case, action and decision.
+          additionalProperties: true
+        role: { type: string, description: Ignored, and recorded as ignored. }
+        analyst_role: { type: string, description: Ignored, and recorded as ignored. }
+    LedgerRecord:
+      type: object
+      description: One sealed entry. Fields beyond the seal depend on `kind`.
+      required: [kind, case_id, index, at, seq, prev_hash, hash, signature]
+      properties:
+        kind: { type: string, enum: [decision, refusal, detector_decision] }
+        case_id: { type: string, description: The case id, or the detector id on a detector decision. }
+        index: { type: integer, description: Action index, or -1 on detector records. }
+        at: { type: string }
+        seq: { type: integer }
+        prev_hash: { type: string }
+        hash: { type: string }
+        signature: { type: string, description: Ed25519 signature by the server key, in hex. }
+        action: { $ref: '#/components/schemas/Action' }
+        route: { $ref: '#/components/schemas/Route' }
+        approved: { type: boolean }
+        actor_id: { type: string }
+        actor_role: { type: string }
+        graph_case_id: { type: string }
+        answer_hash: { type: string, description: Binds the record to one exact decision. }
+        proposed_by: { type: string }
+        note: { type: string }
+        claimed_role_in_body_ignored: { type: string }
+        status: { type: integer, description: HTTP status of a refusal. }
+        reason: { type: string, description: Why the request was refused. }
+        existing_seq: { type: integer }
+        graph_write: { type: string, description: Set when the record reached TigerGraph. }
+        graph_write_error: { type: string }
+      additionalProperties: true
+    LedgerVerification:
+      type: object
+      required: [ok, detail, public_key, records]
+      properties:
+        ok: { type: boolean }
+        detail: { type: string }
+        public_key: { type: string, description: Ed25519 public key in hex. }
+        records: { type: integer }
+    ProofView:
+      type: object
+      required: [case_id, proof, gate, conformal, quality, final, verdict, attestations]
+      properties:
+        case_id: { type: string }
+        proof: { $ref: '#/components/schemas/Proof' }
+        gate: { $ref: '#/components/schemas/Gate' }
+        conformal: { type: object, additionalProperties: true }
+        quality: { type: object, additionalProperties: true }
+        final:
+          type: array
+          items: { $ref: '#/components/schemas/RoutedAction' }
+        verdict: { $ref: '#/components/schemas/Verdict' }
+        attestations:
+          type: array
+          items: { type: object, additionalProperties: true }
+    Proof:
+      type: object
+      description: Computed proof. Empty on older answers.
+      properties:
+        facts:
+          type: array
+          items: { type: string }
+        action_class:
+          type: array
+          items: { type: string }
+        minimal_sufficient_facts:
+          type: array
+          description: The smallest fact set that forces the action.
+          items: { type: string }
+        flip_set:
+          type: array
+          description: The smallest fact set whose removal flips the action.
+          items: { type: string }
+        margin_k: { type: [integer, 'null'], description: Size of the flip set. }
+        flips_to: { type: [object, 'null'], additionalProperties: true }
+        single_fact_flips:
+          type: array
+          items: { type: object, additionalProperties: true }
+        precedent:
+          type: object
+          description: How the bank ruled on closed cases with these facts.
+          additionalProperties: true
+      additionalProperties: true
+    Gate:
+      type: object
+      description: One-way proof gate result. Empty on older answers.
+      properties:
+        applied: { type: boolean }
+        harmful_actions:
+          type: array
+          items: { type: string }
+        margin_k: { type: [integer, 'null'] }
+        removed:
+          type: array
+          items: { type: string }
+        added:
+          type: array
+          items: { type: string }
+        reason: { type: string }
+      additionalProperties: true
+    FlipRequest:
+      type: object
+      properties:
+        remove:
+          type: array
+          description: Facts to remove. Omitted means none.
+          items: { type: string }
+    FlipOutcome:
+      type: object
+      required: [action_class, verdict, p_fraud, actions]
+      properties:
+        action_class:
+          type: array
+          items: { type: string }
+        verdict: { $ref: '#/components/schemas/Verdict' }
+        p_fraud: { type: number }
+        actions:
+          type: array
+          items: { $ref: '#/components/schemas/Action' }
+    FlipResult:
+      type: object
+      required: [removed, facts, before, after, flips]
+      properties:
+        removed:
+          type: array
+          items: { type: string }
+        facts:
+          type: array
+          items: { type: string }
+        before: { $ref: '#/components/schemas/FlipOutcome' }
+        after: { $ref: '#/components/schemas/FlipOutcome' }
+        flips: { type: boolean }
+    ReplayView:
+      type: object
+      required: [case_id, trace, decisions, tool_calls, n_calls, proof]
+      properties:
+        case_id: { type: string }
+        trace:
+          type: array
+          items: { $ref: '#/components/schemas/TraceEvent' }
+        decisions:
+          type: array
+          items: { type: object, additionalProperties: true }
+        tool_calls:
+          type: array
+          items: { $ref: '#/components/schemas/ToolCall' }
+        n_calls: { type: integer }
+        proof: { $ref: '#/components/schemas/Proof' }
+    ToolCall:
+      type: object
+      required: [seq, method, params, digest, latency_ms, ok, error, bytes, response_preview]
+      properties:
+        seq: { type: integer }
+        method: { type: string, examples: [get_transaction] }
+        params: { type: string, description: JSON-encoded args and kwargs. }
+        digest: { type: [string, 'null'] }
+        latency_ms: { type: number }
+        ok: { type: boolean }
+        error: { type: [string, 'null'] }
+        bytes: { type: [integer, 'null'] }
+        response_preview: { type: string, description: The first 600 characters of the response. }
+    RerunResult:
+      type: object
+      required: [seq, method, recorded_digest, live_digest, matches]
+      properties:
+        seq: { type: integer }
+        method: { type: string }
+        recorded_digest: { type: string }
+        live_digest: { type: string }
+        matches: { type: boolean }
+    RingReplay:
+      type: object
+      required: [case_id, frames]
+      properties:
+        case_id: { type: string }
+        frames:
+          type: array
+          items:
+            type: object
+            required: [txn_id, ts, card_id, amount, device, proxy, cards_in_ring, cumulative_usd, new_card]
+            properties:
+              txn_id: { type: string }
+              ts: { type: string }
+              card_id: { type: string }
+              amount: { type: number }
+              device: { type: string }
+              proxy: { type: [string, 'null'] }
+              cards_in_ring: { type: integer }
+              cumulative_usd: { type: number }
+              new_card: { type: boolean }
+        note: { type: string, description: Present when the case is not a ring. }
+        origin: { type: [string, 'null'] }
+        cards:
+          type: array
+          items: { type: string }
+        joined_at:
+          type: object
+          description: First attested transaction time per card.
+          additionalProperties: { type: string }
+        attested_txn_ids:
+          type: array
+          items: { type: string }
+    Lifecycle:
+      type: object
+      required: [case_id, state_changes, history, approvals, handover, watch_children]
+      properties:
+        case_id: { type: string }
+        state_changes:
+          type: array
+          items: { type: object, additionalProperties: true }
+        history:
+          type: array
+          items: { type: object, additionalProperties: true }
+        approvals:
+          type: array
+          description: Every ledger record for this case, including refusals.
+          items: { $ref: '#/components/schemas/LedgerRecord' }
+        handover: { type: object, additionalProperties: true }
+        watch_children:
+          type: array
+          items: { type: object, additionalProperties: true }
+    FeedbackRequest:
+      type: object
+      properties:
+        finding: { type: string, description: A signal that fired on this case. }
+        accepted: { type: boolean, description: True accepts. False or omitted rejects. }
+        note: { type: string, maxLength: 400, description: Longer notes are truncated. }
+    FeedbackRecord:
+      type: object
+      required: [id, case_id, graph_case_id, target, card_id, customer_id, accepted, analyst, role, note, at, prev_hash, hash]
+      properties:
+        id: { type: string, examples: [FB-00001] }
+        case_id: { type: string }
+        graph_case_id: { type: string }
+        target: { type: string }
+        card_id: { type: string }
+        customer_id: { type: string }
+        accepted: { type: boolean }
+        analyst: { type: string }
+        role: { type: string }
+        note: { type: string }
+        at: { type: string }
+        prev_hash: { type: string }
+        hash: { type: string }
+    FeedbackList:
+      type: object
+      required: [records, effective]
+      properties:
+        records:
+          type: array
+          items: { $ref: '#/components/schemas/FeedbackRecord' }
+        effective:
+          type: object
+          required: [signal, entity]
+          properties:
+            signal:
+              type: object
+              description: Signals whose weight is reduced, keyed by signal name.
+              additionalProperties: true
+            entity:
+              type: object
+              description: Findings suppressed on one card, keyed by `signal|card_id`.
+              additionalProperties: true
+    Detector:
+      type: object
+      required: [id, name, origin, status, spec]
+      properties:
+        id: { type: string, examples: [POL-R5] }
+        name: { type: string }
+        origin: { type: string }
+        status: { type: string, enum: [proposed, approved, rejected] }
+        approved_by: { type: string }
+        approval_seq: { type: integer }
+        spec: { type: object, additionalProperties: true }
+        backtest_october: { type: object, additionalProperties: true }
+      additionalProperties: true
+    DetectorDecisionRequest:
+      type: object
+      properties:
+        approved: { type: boolean, description: True approves. False or omitted rejects. }
+    DetectorDecision:
+      type: object
+      required: [detector, ledger]
+      properties:
+        detector: { $ref: '#/components/schemas/Detector' }
+        ledger: { $ref: '#/components/schemas/LedgerRecord' }
+    AutonomousSummary:
+      type: object
+      required: [case_id, found_by, verdict, pattern, fraud_probability, exposure_usd, sar, n_connected, flagged_txn_id, summary, final]
+      properties:
+        case_id: { type: string, examples: [AUTO-001] }
+        found_by: { type: string }
+        verdict: { $ref: '#/components/schemas/Verdict' }
+        pattern: { $ref: '#/components/schemas/Pattern' }
+        fraud_probability: { type: number }
+        exposure_usd: { type: number }
+        sar: { type: boolean }
+        n_connected: { type: integer }
+        flagged_txn_id: { type: string }
+        summary: { type: string }
+        final:
+          type: array
+          items: { $ref: '#/components/schemas/Action' }
+    Calibration:
+      type: object
+      required: [holdout, damping, n_cases, operating_priors, likelihood_ratios]
+      properties:
+        holdout: { type: [object, 'null'], additionalProperties: true }
+        damping: { type: [number, 'null'] }
+        n_cases: { type: [integer, 'null'] }
+        operating_priors: { type: [object, 'null'], additionalProperties: true }
+        likelihood_ratios:
+          type: array
+          items:
+            type: object
+            required: [signal, lr_fired]
+            properties:
+              signal: { type: string }
+              lr_fired: { type: number }
+            additionalProperties: true
+    PolicyClause:
+      type: object
+      required: [rule, text]
+      properties:
+        rule: { type: string, examples: [R7] }
+        text: { type: string }
+    Audit:
+      type: object
+      required: [rows, issues]
+      properties:
+        rows:
+          type: array
+          items:
+            type: object
+            required: [case, trigger, verdict, p, pattern, exposure, sar, final, issues]
+            properties:
+              case: { type: string }
+              trigger: { type: string }
+              verdict: { type: string }
+              p: { type: number }
+              pattern: { type: string }
+              exposure: { type: number }
+              sar: { type: boolean }
+              final: { type: string }
+              issues:
+                type: array
+                items: { type: string }
+        issues: { type: integer, description: Total issues across all files. }

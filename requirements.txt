@@ -21,6 +21,8 @@ mcp>=1.0
 # Analyst console
 fastapi>=0.110
 uvicorn[standard]>=0.29
+pyyaml>=6.0
+jsonschema>=4.18
 
 # Convenience
 python-dotenv>=1.0
