@@ -72,6 +72,7 @@ from fraudagent.mcp_servers.simulated_actions import read_log  # noqa: E402
 
 STATIC = Path(__file__).parent / "static"
 SNAPSHOT = Path(__file__).parent / "snapshot"
+OPENAPI_SPEC = ROOT / "docs" / "openapi.yaml"
 READONLY = os.environ.get("CONSOLE_READONLY", "").strip().lower() in {"1", "true", "yes"}
 app = FastAPI(title="TigerGraph Agentic Fraud Investigation — Analyst Console")
 
@@ -727,6 +728,23 @@ def index() -> FileResponse:
 
 if STATIC.exists():
     app.mount("/static", StaticFiles(directory=STATIC), name="static")
+
+
+_generated_openapi = app.openapi
+
+
+def _published_openapi() -> dict[str, Any]:
+    """Serve docs/openapi.yaml at /openapi.json, /docs and /redoc. It carries the
+    bearer auth, refusals and response shapes the generated schema cannot see.
+    Hosted bundles ship without docs/ and keep the generated one."""
+    if app.openapi_schema is None and OPENAPI_SPEC.exists():
+        import yaml
+
+        app.openapi_schema = yaml.safe_load(OPENAPI_SPEC.read_text(encoding="utf-8"))
+    return app.openapi_schema or _generated_openapi()
+
+
+app.openapi = _published_openapi
 
 
 if __name__ == "__main__":

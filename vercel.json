@@ -1,0 +1,7 @@
+{
+  "$schema": "https://openapi.vercel.sh/vercel.json",
+  "framework": null,
+  "installCommand": "",
+  "buildCommand": "mkdir -p build/api-docs && cp deploy/api-docs/index.html docs/openapi.yaml build/api-docs/",
+  "outputDirectory": "build/api-docs"
+}
