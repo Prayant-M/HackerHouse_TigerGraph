@@ -102,6 +102,7 @@ async function route() {
 
   if (view === "home") {
     renderHome();
+    paintStory();
     if (r.anchor) requestAnimationFrame(() => document.getElementById(r.anchor)?.scrollIntoView({ behavior: "smooth" }));
     else window.scrollTo({ top: 0 });
   } else window.scrollTo({ top: 0 });
@@ -115,6 +116,7 @@ async function route() {
       if (!S.current && S.cases.length && matchMedia("(min-width: 901px)").matches) openCase(S.cases[0].case_id);
     }
   }
+  if (view === "challenges") showChallenge(r.id);
   if (view === "approvals") loadApprovals();
   if (view === "insights") showInsight(S.insightTab || "monitoring");
   requestAnimationFrame(() => observeReveals());
@@ -131,6 +133,7 @@ async function boot() {
   };
   bindToolbar();
   bindInsights();
+  bindStory();
   $("#f-approval").onchange = e => { S.approvalFilter = e.target.value; renderApprovals(); };
   $("#mon-source").onchange = () => renderMonitoring();
   $("#drawer-close").onclick = closeDrawer;
@@ -150,15 +153,12 @@ function closeMenu() { $("#nav-links").classList.remove("open"); $("#menu-btn").
 
 async function loadHealth() {
   const st = $("#status"), txt = $(".status-text", st);
+  st.hidden = STATIC_SITE;
   try {
     const h = S.health = await getJSON("/api/health");
     const g = h.graph || {};
     if (h.readonly) {
-      st.className = "status snap";
-      txt.textContent = "Read-only snapshot";
-      st.title = `A public, read-only copy: the answer files and graph statistics from the last live run against TigerGraph` +
-        (g.mcp_calls ? ` (${g.mcp_calls.toLocaleString()} MCP calls, ${g.mcp_fallbacks || 0} fallbacks)` : "") +
-        `. Live re-runs need the repository and a TigerGraph workspace.`;
+      st.hidden = true;
       $("#footer-backend").textContent = `Read-only snapshot${h.captured_at ? ` of ${h.captured_at.slice(0, 10)}` : ""} · graph ${g.graph || "FraudGraph"} on TigerGraph Savanna`;
       if (parseRoute().view === "home") renderHome();
       return;
@@ -196,38 +196,125 @@ function renderHome() {
       } else run();
     } else if (homeCounted) nums.forEach((el, i) => el.textContent = vals[i].toLocaleString());
   }
-  renderFeatured();
 }
 
-function renderFeatured() {
-  const box = $("#featured");
-  if (box.dataset.done || !S.cases.length) return;
-  // Chosen from the data, not hard-coded: the final-round pack when it is
-  // present, one case per shape the demo plan covers.
-  const pool = S.cases.filter(c => c.round === "final").length ? S.cases.filter(c => c.round === "final") : S.cases;
-  const used = new Set();
-  const take = (pred, make) => { const c = pool.find(x => !used.has(x.case_id) && pred(x)); if (!c) return null; used.add(c.case_id); return make(c); };
-  const pick = [
-    take(c => c.origin || c.n_connected > 1, c => ({ id: c.case_id, tag: "Ring · predictive containment",
-      title: c.origin ? `Compromise origin found: ${humanize(c.origin)}` : `${c.n_connected} connected cards`,
-      body: `${c.at_risk} cards that passed through the same point are protected before they are hit, with step-up and monitoring only. ${c.summary || ""}`.slice(0, 260) })),
-    take(c => c.gate_applied || c.verdict === "uncertain", c => ({ id: c.case_id, tag: c.gate_applied ? "Proof gate · harm avoided" : "Uncertain · escalated",
-      title: c.gate_applied ? `A block that rested on margin ${c.margin_k}` : `Set {${(c.conformal_set || []).join(", ")}} — hand it to a person`,
-      body: `The decision rests on ${(c.minimal_facts || []).map(humanize).join(", ") || "its facts"}. ${c.summary || ""}`.slice(0, 260) })),
-    take(c => c.hostile_text, c => ({ id: c.case_id, tag: "Hostile text · treated as data",
-      title: "Free text that tried to instruct the agent",
-      body: `The trigger text carried instructions aimed at the model. They were flagged and ignored, never obeyed and never inverted. ${c.summary || ""}`.slice(0, 260) })),
-  ].filter(Boolean);
-  box.innerHTML = pick.map((f, i) => {
-    const c = S.cases.find(x => x.case_id === f.id) || {};
-    return `<a class="fcase reveal" style="transition-delay:${i * .08}s" href="#/cases/${f.id}">
-      <div class="top"><span class="cid">${f.id}</span>${c.verdict ? verdictPill(c.verdict) : ""}</div>
-      <span class="pill brand" style="align-self:flex-start">${esc(f.tag)}</span>
-      <h3>${esc(f.title)}</h3><p>${esc(f.body)}</p>
-      <span class="go">Open the case <span>→</span></span></a>`;
-  }).join("");
-  box.dataset.done = 1;
-  observeReveals(box);
+/* Scroll-driven home scenes. Each scene gets p, 0 to 1, across its pinned
+   stretch. Nothing runs under reduced motion or on short screens, so the page
+   then reads as plain finished sections. */
+let paintStory = () => {};
+function bindStory() {
+  const home = $("#view-home"), scenes = $$("[data-scene]", home), bar = $("#home-progress");
+  const calm = matchMedia("(prefers-reduced-motion: reduce)"), roomy = matchMedia("(min-height: 560px)");
+  const clamp = v => Math.min(1, Math.max(0, v));
+  const stage = (p, from, to) => clamp((p - from) / (to - from));
+  const usd = n => n.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  const show = (el, g, dy = 16) => { el.style.opacity = g; el.style.transform = `translateY(${(1 - g) * dy}px)`; };
+
+  const words = [];
+  const split = node => [...node.childNodes].forEach(n => {
+    if (n.nodeType !== 3) return split(n);
+    const box = document.createDocumentFragment();
+    n.textContent.split(/(\s+)/).forEach(w => {
+      if (!w.trim()) return box.append(w);
+      const s = document.createElement("span"); s.textContent = w; words.push(s); box.append(s);
+    });
+    n.replaceWith(box);
+  });
+  split($("#answer-words"));
+
+  const pays = $$("#pay-bars .paybar"), links = $$(".ring-links path"), dots = $$(".ring-cards circle");
+  const hub = $(".ring-hub"), hardCards = $$("#hard-cards > div");
+  const chevs = $$("#chevs .chev"), cards = $$("#wstage .wcard");
+  const paint = {
+    open(p) {
+      $("#open-title").style.transform = `scale(${1 - .14 * stage(p, 0, .5)})`;
+      show($("#open-fact"), stage(p, .12, .5));
+      show($("#open-cue"), 1 - stage(p, 0, .12), 0);
+      $("#open-count").textContent = `$${(33.83 * (1 - Math.pow(1 - stage(p, .15, .7), 3))).toFixed(2)} billion`;
+    },
+    pay(p) {
+      let sum = 0;
+      pays.forEach((b, i) => {
+        const g = stage(p, .06 + i * .2, .22 + i * .2);
+        b.style.setProperty("--g", g); sum += g * Number(b.dataset.v);
+      });
+      $("#pay-total b").textContent = `$${usd(sum)}`;
+      show($("#pay-total"), stage(p, .04, .14));
+    },
+    ring(p) {
+      show($("#ring-count").parentNode, stage(p, .04, .14));
+      hub.style.opacity = stage(p, .06, .16);
+      hub.style.transform = `scale(${.4 + .6 * stage(p, .06, .16)})`;
+      let linked = 0;
+      links.forEach((l, i) => {
+        const g = stage(p, .14 + i * .04, .2 + i * .04);
+        l.style.strokeDashoffset = 1 - g;
+        dots[i].classList.toggle("off", g < 1);
+        if (g === 1) linked++;
+      });
+      $("#ring-count").textContent = linked;
+    },
+    hard(p) {
+      hardCards.forEach((c, i) => {
+        const g = stage(p, .08 + i * .3, .34 + i * .3);
+        c.style.opacity = g; c.style.transform = `translateX(${(1 - g) * (i ? 60 : -60)}px)`;
+      });
+      show($("#hard-line"), stage(p, .68, .86));
+    },
+    answer(p) {
+      words.forEach((w, i) => { w.style.opacity = .14 + .86 * stage(p, i / words.length * .72, (i + 1.5) / words.length * .72); });
+      show($("#answer-next"), stage(p, .78, .92));
+    },
+    walk(p) {
+      const at = Math.min(chevs.length - 1, Math.floor(p * chevs.length));
+      chevs.forEach((c, i) => {
+        const g = stage(p, i / chevs.length, (i + .6) / chevs.length);
+        c.style.setProperty("--g", g); c.classList.toggle("lit", g > .45);
+      });
+      cards.forEach((c, i) => { c.classList.toggle("on", i === at); c.classList.toggle("past", i < at); });
+    },
+  };
+
+  const measure = s => {
+    const top = parseFloat(getComputedStyle(s.firstElementChild).top) || 0;
+    return { top, span: Math.max(1, s.offsetHeight - s.firstElementChild.offsetHeight) };
+  };
+  const reset = () => {
+    $$("[style]", home).forEach(el => { if (!el.matches(".paybar, .why-card")) el.removeAttribute("style"); });
+    pays.forEach(b => b.style.removeProperty("--g"));
+    words.forEach(w => w.removeAttribute("style"));
+    dots.forEach(d => d.classList.remove("off"));
+    chevs.forEach(c => c.classList.add("lit"));
+    $("#open-count").textContent = "$33.83 billion";
+    $("#ring-count").textContent = links.length;
+    $("#pay-total b").textContent = "$1,906.07";
+  };
+  let queued = false;
+  const frame = () => {
+    queued = false;
+    if (!home.classList.contains("active") || !home.classList.contains("scrolly")) return;
+    scenes.forEach(s => {
+      const { top, span } = measure(s);
+      paint[s.dataset.scene](clamp((top - s.getBoundingClientRect().top) / span), s);
+    });
+    const max = document.documentElement.scrollHeight - innerHeight;
+    bar.style.transform = `scaleX(${max > 0 ? clamp(scrollY / max) : 0})`;
+  };
+  paintStory = () => { if (!queued) { queued = true; requestAnimationFrame(frame); } };
+  const decide = () => {
+    const on = !calm.matches && roomy.matches;
+    if (home.classList.toggle("scrolly", on)) frame();
+    else reset();
+  };
+  chevs.forEach((c, i) => c.onclick = () => {
+    if (!home.classList.contains("scrolly")) return;
+    const s = c.closest("[data-scene]"), { top, span } = measure(s);
+    window.scrollTo({ top: s.getBoundingClientRect().top + scrollY - top + span * (i + .62) / chevs.length });
+  });
+  addEventListener("scroll", paintStory, { passive: true });
+  addEventListener("resize", paintStory, { passive: true });
+  calm.addEventListener("change", decide); roomy.addEventListener("change", decide);
+  decide();
 }
 
 /* ══════════════════════════════════════════════════════════ CASES ══ */
@@ -825,6 +912,69 @@ function saveFile(name, text, type = "application/json") {
   a.href = URL.createObjectURL(new Blob([text], { type }));
   a.download = name; a.click();
   setTimeout(() => URL.revokeObjectURL(a.href), 1000);
+}
+
+/* ═════════════════════════════════════════════════════ CHALLENGES ══ */
+const CH_DEPTH = {
+  target: ["Strong", "legitimate"], gaps: ["Strong, with gaps", "brand"],
+  built: ["Implemented", "neutral"], thin: ["Thin", "uncertain"],
+};
+const CH_GROUPS = [["Our targets", ["target", "gaps"]], ["Implemented", ["built"]], ["Present but thin", ["thin"]]];
+
+function challengeChart(ch) {
+  const max = Math.max(...ch.rows.map(r => r[1])) || 1, unit = ch.unit || "";
+  return `<figure class="ch-chart"><figcaption>${esc(ch.title)}</figcaption>
+    ${ch.rows.map(([l, v, hi]) => `<div class="ch-row" title="${esc(l)}: ${v}${unit}"><span class="ch-lbl">${esc(l)}</span>
+      <span class="ch-track"><span class="${hi ? "hi" : ""}" style="width:${v / max * 100}%"></span></span><b>${v.toLocaleString()}${unit}</b></div>`).join("")}
+    <p class="ch-note">${esc(ch.note)}</p></figure>`;
+}
+function showChallenge(id) {
+  const rail = $("#ch-rail");
+  if (!rail.dataset.done) {
+    rail.innerHTML = CH_GROUPS.map(([label, kinds]) => `<p class="ch-group">${label}</p>` +
+      CHALLENGES.filter(c => kinds.includes(c.depth)).map(c =>
+        `<a href="#/challenges/${c.id}" data-id="${c.id}"><span class="ch-id">${c.id}</span>${esc(c.name)}</a>`).join("")).join("");
+    rail.dataset.done = 1;
+  }
+  const at = Math.max(0, CHALLENGES.findIndex(c => c.id === id)), c = CHALLENGES[at];
+  $$("a", rail).forEach(a => {
+    const on = a.dataset.id === c.id;
+    a.classList.toggle("on", on);
+    if (on) a.setAttribute("aria-current", "true"); else a.removeAttribute("aria-current");
+  });
+  const [depth, cls] = CH_DEPTH[c.depth], prev = CHALLENGES[at - 1], next = CHALLENGES[at + 1];
+  $("#ch-detail").innerHTML = `
+    <header class="card chal-top">
+      <div class="ch-tags"><span class="ch-id">${c.id}</span><span class="pill ${cls}">${depth}</span></div>
+      <h2>${esc(c.name)}</h2><p class="ch-tagline">${esc(c.tagline)}</p>
+      <div class="ch-metrics">${c.metrics.map(([v, l]) => `<div><b>${esc(v)}</b><span>${esc(l)}</span></div>`).join("")}</div>
+    </header>
+    <section class="card ch-sec">
+      <h3><span>1</span>The problem</h3><p>${esc(c.problem)}</p>
+      ${c.like ? `<p class="ch-like"><b>Think of it like this.</b> ${esc(c.like)}</p>` : ""}
+    </section>
+    <section class="card ch-sec">
+      <h3><span>2</span>How the agent approaches it</h3>
+      <ol class="ch-steps">${c.approach.map(([t, d]) => `<li><b>${esc(t)}</b><p>${esc(d)}</p></li>`).join("")}</ol>
+      ${c.graph ? `<p class="ch-graph"><b>Where TigerGraph does the work.</b> ${esc(c.graph)}</p>` : ""}
+    </section>
+    ${c.charts || c.proof || c.kase ? `<section class="card ch-sec">
+      <h3><span>3</span>What it showed</h3>
+      ${c.proof ? `<p>${esc(c.proof)}</p>` : ""}
+      ${c.charts ? `<div class="ch-charts">${c.charts.map(challengeChart).join("")}</div>` : ""}
+      ${c.kase ? `<a class="ch-case" href="#/cases/${c.kase[0]}"><span class="mono">${c.kase[0]}</span><span>${esc(c.kase[1])}</span><b aria-hidden="true">→</b></a>` : ""}
+    </section>` : ""}
+    ${["built", "thin"].includes(c.depth) ? `<aside class="ch-limit"><b>Honest limits.</b> ${esc(c.limit)}</aside>` : ""}
+    <nav class="ch-pager" aria-label="More challenges">
+      ${prev ? `<a href="#/challenges/${prev.id}">← ${esc(prev.name)}</a>` : "<span></span>"}
+      ${next ? `<a href="#/challenges/${next.id}">${esc(next.name)} →</a>` : "<span></span>"}
+    </nav>`;
+  if (id) requestAnimationFrame(() => {
+    $("#ch-layout").scrollIntoView();
+    if (getComputedStyle(rail).overflowX === "auto") {
+      const a = $("a.on", rail); rail.scrollLeft = a.offsetLeft - (rail.clientWidth - a.offsetWidth) / 2;
+    }
+  });
 }
 
 /* ═════════════════════════════════════════════════════ MONITORING ══ */

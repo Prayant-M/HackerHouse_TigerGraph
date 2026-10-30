@@ -374,9 +374,9 @@ theme, responsive down to phone width, keyboard-navigable.
 
 | Page | What it shows |
 |---|---|
-| **Home** | What the agent does in five steps, live counts from the answer files, three "start here" cases |
+| **Home** | A scrolling story: the fraud problem, the five steps, a link into the cases, then the results with live counts from the answer files |
 | **Cases** | Search + dropdown filters (verdict, trigger, sort, revised, SAR). Each case has five tabs, each deep-linkable (`#/cases/HHG-019/evidence`): **Overview** (fraud gauge, uncertainty in bits, open questions, first recommendation → question → final decision, SAR with copy), **Evidence** (the probability path from the trigger's prior through every ledger entry to the final figure, belief by hypothesis, every item's measured movement, claim-type badges and filter), **Graph** (the written case subgraph; zoom, pan, click to inspect), **Similar cases** (hybrid recall scores), **Audit trail** (step-by-step replay, hash-chained ledger, graph read-back checks, full trace). **Re-run live** streams the reasoning; **⬇ JSON** downloads the answer file. |
-| **Challenges** | Reserved; currently empty |
+| **Challenges** | Each challenge we took on: the problem in plain words, how the agent approaches it, what we measured, and its honest limits |
 | **Approvals** | L1 / L2 actions waiting for a person; approving writes an `APPROVED_BY` edge |
 | **Insights** | **Monitoring** (alerts the agent raised itself, compared by sweep: structuring, device hub, bank model), **Calibration** (measured likelihood ratios), **Bank policy** (a searchable accordion) |
 
