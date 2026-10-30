@@ -100,13 +100,21 @@ def capture_snapshot(console_url: str) -> None:
     g = dict(h.get("graph", {}))
     for k in ("host", "mcp_calls", "mcp_fallbacks"):   # per-process counters and the private host
         g.pop(k, None)
+    ids = h.get("graph_case_ids")
+    if ids is None:  # read the case ids straight from the graph
+        try:
+            from fraudagent.graphstore.tigergraph import TigerGraphStore
+            ids = sorted(v["v_id"] for v in TigerGraphStore().conn.getVertices(
+                "FraudCase", select="status", limit=10000))
+        except Exception as exc:  # noqa: BLE001
+            print(f"[space] could not read case ids from the graph: {exc}")
     (SNAPSHOT / "health.json").write_text(json.dumps(
-        {"captured_at": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()), "graph": g},
-        indent=2), encoding="utf-8")
+        {"captured_at": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()), "graph": g,
+         "graph_case_ids": ids}, indent=2), encoding="utf-8")
 
     from audit_answers import audit
     from fraudagent.config import PATHS
-    rows, total = audit(PATHS.cases_out)
+    rows, total = audit(PATHS.cases_out, set(ids) if ids is not None else None)
     (SNAPSHOT / "audit.json").write_text(json.dumps({"rows": rows, "issues": total},
                                                     indent=2, default=str), encoding="utf-8")
     print(f"[space] snapshot: backend={g.get('backend')} "

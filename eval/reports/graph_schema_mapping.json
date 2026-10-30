@@ -1,0 +1,2827 @@
+[
+ {
+  "file": "E:\\Projects\\HackerHouse_TigerGraph\\schemas\\bank1_iso20022_payments.gsql",
+  "graph": "Bank_ISO20022",
+  "validation": {
+   "ok": true,
+   "problems": [],
+   "warnings": [],
+   "n_vertices": 10,
+   "n_edges": 19
+  },
+  "concepts": {
+   "Person": {
+    "kind": "filtered vertex",
+    "targets": [
+     "Pty"
+    ],
+    "filter": "IsCstmr = true",
+    "evidence": [
+     "Pty holds every party; IsCstmr separates customers from external parties"
+    ]
+   },
+   "Account": {
+    "kind": "vertex",
+    "targets": [
+     "CshAcct"
+    ],
+    "score": 3.6,
+    "evidence": [
+     "name tokens ['account', 'acct']",
+     "attributes ['currency', 'iban', 'opening', 'status']"
+    ]
+   },
+   "Transaction": {
+    "kind": "vertex",
+    "targets": [
+     "CdtTrfTxInf"
+    ],
+    "score": 5.6,
+    "evidence": [
+     "name tokens ['transaction', 'transfer']",
+     "attributes ['amount', 'currency', 'date', 'settlement']",
+     "money attribute IntrBkSttlmAmt",
+     "2 edges to accounts (debit and credit sides)"
+    ]
+   },
+   "Card": {
+    "kind": "unmapped",
+    "targets": [],
+    "evidence": []
+   },
+   "Device": {
+    "kind": "unmapped",
+    "targets": [],
+    "evidence": []
+   },
+   "IPAddress": {
+    "kind": "unmapped",
+    "targets": [],
+    "evidence": []
+   },
+   "LoginEvent": {
+    "kind": "unmapped",
+    "targets": [],
+    "evidence": []
+   },
+   "Merchant": {
+    "kind": "unmapped",
+    "targets": [],
+    "evidence": []
+   },
+   "InvestigationCase": {
+    "kind": "unmapped",
+    "targets": [],
+    "evidence": []
+   },
+   "Beneficiary": {
+    "kind": "filtered vertex (approximate)",
+    "targets": [
+     "Pty"
+    ],
+    "filter": "IsCstmr = false, reached by the creditor edge",
+    "evidence": [
+     "beneficiary is a role of a party, not a type"
+    ]
+   }
+  },
+  "edges": {
+   "OWNS": {
+    "kind": "exact",
+    "path": [
+     "CshAcct_Ownr"
+    ],
+    "vertices": [
+     "Pty",
+     "CshAcct"
+    ],
+    "score": 2.0,
+    "evidence": [
+     "1 hop(s) from Person to Account: CshAcct_Ownr",
+     "rejected: reverse_CdtTrfTxInf_Dbtr -> CdtTrfTxInf_DbtrAcct, reverse_CdtTrfTxInf_Dbtr -> CdtTrfTxInf_CdtrAcct, reverse_CdtTrfTxInf_UltmtDbtr -> CdtTrfTxInf_DbtrAcct"
+    ]
+   },
+   "INITIATED": {
+    "kind": "exact",
+    "path": [
+     "reverse_CdtTrfTxInf_DbtrAcct"
+    ],
+    "vertices": [
+     "CshAcct",
+     "CdtTrfTxInf"
+    ],
+    "score": 4.0,
+    "evidence": [
+     "1 hop(s) from Account to Transaction: reverse_CdtTrfTxInf_DbtrAcct",
+     "rejected: reverse_CshAcct_Ownr -> reverse_CdtTrfTxInf_Dbtr, CshAcct_Svcr -> reverse_CdtTrfTxInf_DbtrAgt, reverse_PmtInf_DbtrAcct -> PmtInf_CdtTrfTxInf"
+    ]
+   },
+   "PAYS_TO_ACCOUNT": {
+    "kind": "exact",
+    "path": [
+     "CdtTrfTxInf_CdtrAcct"
+    ],
+    "vertices": [
+     "CdtTrfTxInf",
+     "CshAcct"
+    ],
+    "score": 4.0,
+    "evidence": [
+     "1 hop(s) from Transaction to Account: CdtTrfTxInf_CdtrAcct",
+     "rejected: CdtTrfTxInf_Cdtr -> CshAcct_Ownr, CdtTrfTxInf_CdtrAgt -> reverse_CshAcct_Svcr, CdtTrfTxInf_UltmtCdtr -> CshAcct_Ownr"
+    ]
+   },
+   "PAYS": {
+    "kind": "exact",
+    "path": [
+     "CdtTrfTxInf_Cdtr"
+    ],
+    "vertices": [
+     "CdtTrfTxInf",
+     "Pty"
+    ],
+    "score": 4.0,
+    "evidence": [
+     "1 hop(s) from Transaction to Beneficiary: CdtTrfTxInf_Cdtr",
+     "rejected: CdtTrfTxInf_UltmtCdtr, CdtTrfTxInf_Dbtr, reverse_TxInf_OrgnlTx -> TxInf_RtrChain_Dbtr"
+    ]
+   },
+   "FROM_DEVICE": {
+    "kind": "unmapped",
+    "path": [],
+    "evidence": [
+     "Transaction or Device is unmapped or only an attribute"
+    ]
+   },
+   "FROM_IP": {
+    "kind": "unmapped",
+    "path": [],
+    "evidence": [
+     "Transaction or IPAddress is unmapped or only an attribute"
+    ]
+   },
+   "AT": {
+    "kind": "unmapped",
+    "path": [],
+    "evidence": [
+     "Transaction or Merchant is unmapped or only an attribute"
+    ]
+   },
+   "VIA": {
+    "kind": "unmapped",
+    "path": [],
+    "evidence": [
+     "Transaction or Card is unmapped or only an attribute"
+    ]
+   },
+   "HOLDS": {
+    "kind": "unmapped",
+    "path": [],
+    "evidence": [
+     "Account or Card is unmapped or only an attribute"
+    ]
+   },
+   "LOGGED_IN": {
+    "kind": "unmapped",
+    "path": [],
+    "evidence": [
+     "LoginEvent or Account is unmapped or only an attribute"
+    ]
+   },
+   "LOGIN_FROM_DEVICE": {
+    "kind": "unmapped",
+    "path": [],
+    "evidence": [
+     "LoginEvent or Device is unmapped or only an attribute"
+    ]
+   },
+   "LOGIN_FROM_IP": {
+    "kind": "unmapped",
+    "path": [],
+    "evidence": [
+     "LoginEvent or IPAddress is unmapped or only an attribute"
+    ]
+   },
+   "INVESTIGATED_IN": {
+    "kind": "unmapped",
+    "path": [],
+    "evidence": [
+     "Account or InvestigationCase is unmapped or only an attribute"
+    ]
+   }
+  },
+  "attributes": {
+   "Transaction.amount": {
+    "kind": "attribute",
+    "target": "CdtTrfTxInf.IntrBkSttlmAmt",
+    "type": "DOUBLE",
+    "note": ""
+   },
+   "Transaction.timestamp": {
+    "kind": "attribute",
+    "target": "CdtTrfTxInf.AccptncDtTm",
+    "type": "DATETIME",
+    "note": ""
+   },
+   "Transaction.channel": {
+    "kind": "attribute",
+    "target": "CdtTrfTxInf.PmtTpInf_SvcLvl_Cd",
+    "type": "STRING",
+    "note": ""
+   },
+   "Account.open_date": {
+    "kind": "attribute",
+    "target": "CshAcct.OpngDt",
+    "type": "DATETIME",
+    "note": ""
+   },
+   "Account.status": {
+    "kind": "attribute",
+    "target": "CshAcct.Sts",
+    "type": "STRING",
+    "note": ""
+   },
+   "Person.kyc_verified_at": {
+    "kind": "unmapped",
+    "target": ""
+   },
+   "account_under_investigation": {
+    "kind": "attribute (approximate)",
+    "target": "CshAcct.AMLAlrtInd",
+    "note": "a flag / block code, not a case"
+   },
+   "Account.kyc_score": {
+    "kind": "unmapped",
+    "target": ""
+   },
+   "Person.anonymized_ssn_hash": {
+    "kind": "attribute (approximate)",
+    "target": "PrvtId.Id_Hash",
+    "note": ""
+   },
+   "Beneficiary.name_hash": {
+    "kind": "attribute",
+    "target": "Pty.Nm_Hash",
+    "note": ""
+   },
+   "Beneficiary.bank_identifier": {
+    "kind": "attribute (via edge)",
+    "target": "BranchAndFinInstnId.FinInstnId_BICFI via CdtTrfTxInf_CdtrAgt",
+    "note": ""
+   },
+   "InvestigationCase.status": {
+    "kind": "unmapped",
+    "target": ""
+   }
+  },
+  "score": {
+   "rows": [
+    {
+     "concept": "Person",
+     "kind": "exact",
+     "target": "Pty where IsCstmr = true",
+     "predicted": "filtered vertex: Pty [IsCstmr = true]",
+     "ok": true
+    },
+    {
+     "concept": "Account",
+     "kind": "exact",
+     "target": "CshAcct",
+     "predicted": "vertex: CshAcct",
+     "ok": true
+    },
+    {
+     "concept": "Transaction",
+     "kind": "exact",
+     "target": "CdtTrfTxInf",
+     "predicted": "vertex: CdtTrfTxInf",
+     "ok": true
+    },
+    {
+     "concept": "Beneficiary",
+     "kind": "approximate",
+     "target": "Pty where IsCstmr = false, reached by CdtTrfTxInf_Cdtr",
+     "predicted": "filtered vertex (approximate): Pty [IsCstmr = false, reached by the creditor edge]",
+     "ok": true
+    },
+    {
+     "concept": "Device",
+     "kind": "unmapped",
+     "target": "",
+     "predicted": "unmapped: \u2014",
+     "ok": true
+    },
+    {
+     "concept": "IPAddress",
+     "kind": "unmapped",
+     "target": "",
+     "predicted": "unmapped: \u2014",
+     "ok": true
+    },
+    {
+     "concept": "LoginEvent",
+     "kind": "unmapped",
+     "target": "",
+     "predicted": "unmapped: \u2014",
+     "ok": true
+    },
+    {
+     "concept": "Card",
+     "kind": "unmapped",
+     "target": "",
+     "predicted": "unmapped: \u2014",
+     "ok": true
+    },
+    {
+     "concept": "Merchant",
+     "kind": "unmapped",
+     "target": "",
+     "predicted": "unmapped: \u2014",
+     "ok": true
+    },
+    {
+     "concept": "InvestigationCase",
+     "kind": "unmapped",
+     "target": "",
+     "predicted": "unmapped: \u2014",
+     "ok": true
+    },
+    {
+     "concept": "OWNS",
+     "kind": "exact",
+     "target": "CshAcct_Ownr (Pty -> CshAcct)",
+     "predicted": "exact: CshAcct_Ownr",
+     "ok": true
+    },
+    {
+     "concept": "INITIATED",
+     "kind": "exact",
+     "target": "reverse_CdtTrfTxInf_DbtrAcct",
+     "predicted": "exact: reverse_CdtTrfTxInf_DbtrAcct",
+     "ok": true
+    },
+    {
+     "concept": "PAYS_TO_ACCOUNT",
+     "kind": "exact",
+     "target": "CdtTrfTxInf_CdtrAcct when the CshAcct is held here (CshAcct_Svcr to this bank's BICFI)",
+     "predicted": "exact: CdtTrfTxInf_CdtrAcct",
+     "ok": true
+    },
+    {
+     "concept": "PAYS",
+     "kind": "approximate",
+     "target": "CdtTrfTxInf_Cdtr to a Pty with IsCstmr = false",
+     "predicted": "exact: CdtTrfTxInf_Cdtr",
+     "ok": true
+    },
+    {
+     "concept": "Transaction.amount",
+     "kind": "exact",
+     "target": "IntrBkSttlmAmt (InstdAmt is the pre-FX amount)",
+     "predicted": "attribute: CdtTrfTxInf.IntrBkSttlmAmt",
+     "ok": true
+    },
+    {
+     "concept": "Transaction.timestamp",
+     "kind": "approximate",
+     "target": "AccptncDtTm; GrpHdr.CreDtTm via CdtTrfTxInf_GrpHdr",
+     "predicted": "attribute: CdtTrfTxInf.AccptncDtTm",
+     "ok": true
+    },
+    {
+     "concept": "Transaction.channel",
+     "kind": "approximate",
+     "target": "PmtTpInf_SvcLvl_Cd plus PmtTpInf_LclInstrm_Cd",
+     "predicted": "attribute: CdtTrfTxInf.PmtTpInf_SvcLvl_Cd",
+     "ok": true
+    },
+    {
+     "concept": "Account.open_date",
+     "kind": "exact",
+     "target": "OpngDt",
+     "predicted": "attribute: CshAcct.OpngDt",
+     "ok": true
+    },
+    {
+     "concept": "Account.status",
+     "kind": "exact",
+     "target": "Sts",
+     "predicted": "attribute: CshAcct.Sts",
+     "ok": true
+    },
+    {
+     "concept": "Account.kyc_score",
+     "kind": "unmapped",
+     "target": "",
+     "predicted": "unmapped: \u2014",
+     "ok": true
+    },
+    {
+     "concept": "Person.anonymized_ssn_hash",
+     "kind": "approximate",
+     "target": "PrvtId.Id_Hash where SchmeNm_Cd = \"NIDN\"",
+     "predicted": "attribute (approximate): PrvtId.Id_Hash",
+     "ok": true
+    },
+    {
+     "concept": "Person.kyc_verified_at",
+     "kind": "unmapped",
+     "target": "",
+     "predicted": "unmapped: \u2014",
+     "ok": true
+    },
+    {
+     "concept": "Beneficiary.bank_identifier",
+     "kind": "exact",
+     "target": "BranchAndFinInstnId.BICFI via CdtTrfTxInf_CdtrAgt",
+     "predicted": "attribute (via edge): BranchAndFinInstnId.FinInstnId_BICFI via CdtTrfTxInf_CdtrAgt",
+     "ok": true
+    },
+    {
+     "concept": "Beneficiary.name_hash",
+     "kind": "exact",
+     "target": "Pty.Nm_Hash",
+     "predicted": "attribute: Pty.Nm_Hash",
+     "ok": true
+    },
+    {
+     "concept": "account_under_investigation",
+     "kind": "approximate",
+     "target": "CshAcct.AMLAlrtInd = true (a flag, not a case)",
+     "predicted": "attribute (approximate): CshAcct.AMLAlrtInd (a flag / block code, not a case)",
+     "ok": true
+    }
+   ],
+   "n": 25,
+   "correct": 25,
+   "not_attempted": []
+  },
+  "vertices": {
+   "Pty": {
+    "pk": [
+     "PtyId",
+     "STRING"
+    ],
+    "attrs": {
+     "Nm_Hash": "STRING",
+     "BirthDt": "DATETIME",
+     "CityOfBirth": "STRING",
+     "CtryOfRes": "STRING",
+     "OrgId_AnyBIC": "STRING",
+     "OrgId_LEI": "STRING",
+     "IsCstmr": "BOOL"
+    }
+   },
+   "PrvtId": {
+    "pk": [
+     "PrvtIdKey",
+     "STRING"
+    ],
+    "attrs": {
+     "Id_Hash": "STRING",
+     "SchmeNm_Cd": "STRING",
+     "Issr": "STRING"
+    }
+   },
+   "PstlAdr": {
+    "pk": [
+     "PstlAdrKey",
+     "STRING"
+    ],
+    "attrs": {
+     "AdrTp_Cd": "STRING",
+     "StrtNm": "STRING",
+     "BldgNb": "STRING",
+     "PstCd": "STRING",
+     "TwnNm": "STRING",
+     "Ctry": "STRING"
+    }
+   },
+   "CshAcct": {
+    "pk": [
+     "AcctKey",
+     "STRING"
+    ],
+    "attrs": {
+     "Id_IBAN": "STRING",
+     "Id_Othr_Id": "STRING",
+     "Id_Othr_SchmeNm_Cd": "STRING",
+     "Tp_Cd": "STRING",
+     "Ccy": "STRING",
+     "Nm": "STRING",
+     "OpngDt": "DATETIME",
+     "Sts": "STRING",
+     "AMLAlrtInd": "BOOL"
+    }
+   },
+   "BranchAndFinInstnId": {
+    "pk": [
+     "AgtKey",
+     "STRING"
+    ],
+    "attrs": {
+     "FinInstnId_BICFI": "STRING",
+     "FinInstnId_ClrSysMmbId_MmbId": "STRING",
+     "FinInstnId_ClrSysMmbId_ClrSysId_Cd": "STRING",
+     "FinInstnId_Nm": "STRING",
+     "FinInstnId_PstlAdr_Ctry": "STRING"
+    }
+   },
+   "GrpHdr": {
+    "pk": [
+     "MsgId",
+     "STRING"
+    ],
+    "attrs": {
+     "MsgDefIdr": "STRING",
+     "CreDtTm": "DATETIME",
+     "NbOfTxs": "INT",
+     "SttlmInf_SttlmMtd": "STRING"
+    }
+   },
+   "PmtInf": {
+    "pk": [
+     "PmtInfId",
+     "STRING"
+    ],
+    "attrs": {
+     "PmtMtd": "STRING",
+     "BtchBookg": "BOOL",
+     "ReqdExctnDt": "DATETIME",
+     "CtrlSum": "DOUBLE",
+     "NbOfTxs": "INT"
+    }
+   },
+   "CdtTrfTxInf": {
+    "pk": [
+     "UETR",
+     "STRING"
+    ],
+    "attrs": {
+     "PmtId_InstrId": "STRING",
+     "PmtId_EndToEndId": "STRING",
+     "PmtId_TxId": "STRING",
+     "PmtTpInf_InstrPrty": "STRING",
+     "PmtTpInf_SvcLvl_Cd": "STRING",
+     "PmtTpInf_LclInstrm_Cd": "STRING",
+     "PmtTpInf_CtgyPurp_Cd": "STRING",
+     "IntrBkSttlmAmt": "DOUBLE",
+     "IntrBkSttlmAmt_Ccy": "STRING",
+     "IntrBkSttlmDt": "DATETIME",
+     "AccptncDtTm": "DATETIME",
+     "InstdAmt": "DOUBLE",
+     "InstdAmt_Ccy": "STRING",
+     "XchgRate": "DOUBLE",
+     "ChrgBr": "STRING",
+     "Purp_Cd": "STRING",
+     "RmtInf_Ustrd": "STRING"
+    }
+   },
+   "TxInf": {
+    "pk": [
+     "RtrId",
+     "STRING"
+    ],
+    "attrs": {
+     "OrgnlUETR": "STRING",
+     "RtrdIntrBkSttlmAmt": "DOUBLE",
+     "RtrdIntrBkSttlmAmt_Ccy": "STRING",
+     "IntrBkSttlmDt": "DATETIME",
+     "RtrRsnInf_Rsn_Cd": "STRING"
+    }
+   },
+   "RgltryRptg": {
+    "pk": [
+     "RgltryRptgKey",
+     "STRING"
+    ],
+    "attrs": {
+     "DbtCdtRptgInd": "STRING",
+     "Authrty_Ctry": "STRING",
+     "Dtls_Tp": "STRING",
+     "Dtls_Cd": "STRING",
+     "Dtls_Inf": "STRING"
+    }
+   }
+  },
+  "edge_types": {
+   "Pty_PrvtId": {
+    "directed": false,
+    "pairs": [
+     [
+      "Pty",
+      "PrvtId"
+     ]
+    ],
+    "reverse": ""
+   },
+   "Pty_PstlAdr": {
+    "directed": false,
+    "pairs": [
+     [
+      "Pty",
+      "PstlAdr"
+     ]
+    ],
+    "reverse": ""
+   },
+   "CshAcct_Ownr": {
+    "directed": true,
+    "pairs": [
+     [
+      "Pty",
+      "CshAcct"
+     ]
+    ],
+    "reverse": "reverse_CshAcct_Ownr"
+   },
+   "CshAcct_Svcr": {
+    "directed": true,
+    "pairs": [
+     [
+      "CshAcct",
+      "BranchAndFinInstnId"
+     ]
+    ],
+    "reverse": "reverse_CshAcct_Svcr"
+   },
+   "PmtInf_DbtrAcct": {
+    "directed": true,
+    "pairs": [
+     [
+      "PmtInf",
+      "CshAcct"
+     ]
+    ],
+    "reverse": "reverse_PmtInf_DbtrAcct"
+   },
+   "PmtInf_CdtTrfTxInf": {
+    "directed": true,
+    "pairs": [
+     [
+      "PmtInf",
+      "CdtTrfTxInf"
+     ]
+    ],
+    "reverse": "reverse_PmtInf_CdtTrfTxInf"
+   },
+   "CdtTrfTxInf_GrpHdr": {
+    "directed": true,
+    "pairs": [
+     [
+      "CdtTrfTxInf",
+      "GrpHdr"
+     ]
+    ],
+    "reverse": "reverse_CdtTrfTxInf_GrpHdr"
+   },
+   "CdtTrfTxInf_Dbtr": {
+    "directed": true,
+    "pairs": [
+     [
+      "CdtTrfTxInf",
+      "Pty"
+     ]
+    ],
+    "reverse": "reverse_CdtTrfTxInf_Dbtr"
+   },
+   "CdtTrfTxInf_DbtrAcct": {
+    "directed": true,
+    "pairs": [
+     [
+      "CdtTrfTxInf",
+      "CshAcct"
+     ]
+    ],
+    "reverse": "reverse_CdtTrfTxInf_DbtrAcct"
+   },
+   "CdtTrfTxInf_DbtrAgt": {
+    "directed": true,
+    "pairs": [
+     [
+      "CdtTrfTxInf",
+      "BranchAndFinInstnId"
+     ]
+    ],
+    "reverse": "reverse_CdtTrfTxInf_DbtrAgt"
+   },
+   "CdtTrfTxInf_UltmtDbtr": {
+    "directed": true,
+    "pairs": [
+     [
+      "CdtTrfTxInf",
+      "Pty"
+     ]
+    ],
+    "reverse": "reverse_CdtTrfTxInf_UltmtDbtr"
+   },
+   "CdtTrfTxInf_Cdtr": {
+    "directed": true,
+    "pairs": [
+     [
+      "CdtTrfTxInf",
+      "Pty"
+     ]
+    ],
+    "reverse": "reverse_CdtTrfTxInf_Cdtr"
+   },
+   "CdtTrfTxInf_CdtrAcct": {
+    "directed": true,
+    "pairs": [
+     [
+      "CdtTrfTxInf",
+      "CshAcct"
+     ]
+    ],
+    "reverse": "reverse_CdtTrfTxInf_CdtrAcct"
+   },
+   "CdtTrfTxInf_CdtrAgt": {
+    "directed": true,
+    "pairs": [
+     [
+      "CdtTrfTxInf",
+      "BranchAndFinInstnId"
+     ]
+    ],
+    "reverse": "reverse_CdtTrfTxInf_CdtrAgt"
+   },
+   "CdtTrfTxInf_UltmtCdtr": {
+    "directed": true,
+    "pairs": [
+     [
+      "CdtTrfTxInf",
+      "Pty"
+     ]
+    ],
+    "reverse": "reverse_CdtTrfTxInf_UltmtCdtr"
+   },
+   "CdtTrfTxInf_IntrmyAgt": {
+    "directed": true,
+    "pairs": [
+     [
+      "CdtTrfTxInf",
+      "BranchAndFinInstnId"
+     ]
+    ],
+    "reverse": "reverse_CdtTrfTxInf_IntrmyAgt"
+   },
+   "CdtTrfTxInf_RgltryRptg": {
+    "directed": true,
+    "pairs": [
+     [
+      "CdtTrfTxInf",
+      "RgltryRptg"
+     ]
+    ],
+    "reverse": "reverse_CdtTrfTxInf_RgltryRptg"
+   },
+   "TxInf_OrgnlTx": {
+    "directed": true,
+    "pairs": [
+     [
+      "TxInf",
+      "CdtTrfTxInf"
+     ]
+    ],
+    "reverse": "reverse_TxInf_OrgnlTx"
+   },
+   "TxInf_RtrChain_Dbtr": {
+    "directed": true,
+    "pairs": [
+     [
+      "TxInf",
+      "Pty"
+     ]
+    ],
+    "reverse": "reverse_TxInf_RtrChain_Dbtr"
+   }
+  },
+  "live": {
+   "ran": true,
+   "gsql_output_tail": "SO20022'.\nTrying to add local edge 'CdtTrfTxInf_RgltryRptg' and its reverse edge 'reverse_CdtTrfTxInf_RgltryRptg' to the graph 'Bank_ISO20022'.\nTrying to add local edge 'TxInf_OrgnlTx' and its reverse edge 'reverse_TxInf_OrgnlTx' to the graph 'Bank_ISO20022'.\nTrying to add local edge 'TxInf_RtrChain_Dbtr' and its reverse edge 'reverse_TxInf_RtrChain_Dbtr' to the graph 'Bank_ISO20022'.\n\nGraph Bank_ISO20022 updated to new version 1\nThe job setup_bank_iso20022 completes in 36.319 seconds!\nLocal schema change succeeded.\nSuccessfully dropped jobs on the graph 'Bank_ISO20022': [setup_bank_iso20022].",
+   "errors": [],
+   "vertex_types": 10,
+   "edge_types": 19,
+   "diffs": [],
+   "ok": true,
+   "dropped": true,
+   "drop_output": "The graph Bank_ISO20022 is dropped."
+  }
+ },
+ {
+  "file": "E:\\Projects\\HackerHouse_TigerGraph\\schemas\\bank2_bian_service_domains.gsql",
+  "graph": "Bank_BIAN",
+  "validation": {
+   "ok": true,
+   "problems": [],
+   "warnings": [],
+   "n_vertices": 16,
+   "n_edges": 21
+  },
+  "concepts": {
+   "Person": {
+    "kind": "filtered vertex",
+    "targets": [
+     "PartyReferenceDataDirectoryEntry"
+    ],
+    "filter": "partyType in (Individual, Organisation)",
+    "evidence": [
+     "PartyReferenceDataDirectoryEntry holds every party; partyType separates customers from counterparties"
+    ]
+   },
+   "Account": {
+    "kind": "vertex",
+    "targets": [
+     "CurrentAccountFacility",
+     "SavingsAccountFacility"
+    ],
+    "score": 3.6,
+    "evidence": [
+     "name tokens ['account', 'facility']",
+     "attributes ['currency', 'iban', 'start', 'status']"
+    ]
+   },
+   "Transaction": {
+    "kind": "vertex",
+    "targets": [
+     "PaymentExecutionProcedure",
+     "CardTransaction"
+    ],
+    "score": 5.2,
+    "evidence": [
+     "name tokens ['execution', 'payment']",
+     "attributes ['amount', 'currency', 'date']",
+     "money attribute paymentExecutionAmount",
+     "4 edges to accounts (debit and credit sides)",
+     "CardTransaction added as card payments (amount + edge to IssuedDeviceAllocation)"
+    ],
+    "approximate": [
+     "CardTransaction"
+    ]
+   },
+   "Card": {
+    "kind": "vertex",
+    "targets": [
+     "IssuedDeviceAllocation"
+    ],
+    "score": 3.6,
+    "evidence": [
+     "name tokens ['issued']",
+     "attributes ['card', 'expiry', 'masked', 'scheme']"
+    ]
+   },
+   "Device": {
+    "kind": "vertex",
+    "targets": [
+     "AccessDevice"
+    ],
+    "score": 2.8,
+    "evidence": [
+     "name tokens ['device']",
+     "attributes ['fingerprint', 'operating']"
+    ]
+   },
+   "IPAddress": {
+    "kind": "vertex",
+    "targets": [
+     "NetworkAddress"
+    ],
+    "score": 3.2,
+    "evidence": [
+     "name tokens ['network']",
+     "attributes ['anonymizer', 'geolocation', 'ip']"
+    ]
+   },
+   "LoginEvent": {
+    "kind": "vertex",
+    "targets": [
+     "PartyAuthenticationAssessment"
+    ],
+    "score": 3.6,
+    "evidence": [
+     "name tokens ['authentication']",
+     "attributes ['authentication', 'channel', 'method', 'result']"
+    ]
+   },
+   "Merchant": {
+    "kind": "vertex",
+    "targets": [
+     "MerchantRelationship"
+    ],
+    "score": 2.8,
+    "evidence": [
+     "name tokens ['merchant']",
+     "attributes ['category', 'merchant']"
+    ]
+   },
+   "InvestigationCase": {
+    "kind": "vertex",
+    "targets": [
+     "CustomerCaseProcedure"
+    ],
+    "score": 3.2,
+    "evidence": [
+     "name tokens ['case']",
+     "attributes ['case', 'resolution', 'status']"
+    ]
+   },
+   "Beneficiary": {
+    "kind": "filtered vertex (approximate)",
+    "targets": [
+     "PartyReferenceDataDirectoryEntry"
+    ],
+    "filter": "partyType = Counterparty",
+    "evidence": [
+     "counterparties are directory entries too"
+    ]
+   }
+  },
+  "edges": {
+   "OWNS": {
+    "kind": "path",
+    "path": [
+     "hasRelationshipPlan",
+     "planCoversFacility"
+    ],
+    "vertices": [
+     "PartyReferenceDataDirectoryEntry",
+     "CustomerRelationshipManagementPlan",
+     "CurrentAccountFacility"
+    ],
+    "score": 5.2,
+    "evidence": [
+     "2 hop(s) from Person to Account: hasRelationshipPlan -> planCoversFacility",
+     "rejected: reverse_executionCreditsCounterparty -> executionDebitsFacility, reverse_executionCreditsCounterparty -> executionDebitsFacility"
+    ]
+   },
+   "INITIATED": {
+    "kind": "exact",
+    "path": [
+     "reverse_executionDebitsFacility"
+    ],
+    "vertices": [
+     "CurrentAccountFacility",
+     "PaymentExecutionProcedure"
+    ],
+    "score": 2.0,
+    "evidence": [
+     "1 hop(s) from Account to Transaction: reverse_executionDebitsFacility",
+     "rejected: reverse_planCoversFacility -> planCoversFacility -> reverse_executionDebitsFacility, reverse_caseConcernsFacility -> caseConcernsFacility -> reverse_executionDebitsFacility"
+    ]
+   },
+   "PAYS_TO_ACCOUNT": {
+    "kind": "exact",
+    "path": [
+     "executionCreditsFacility"
+    ],
+    "vertices": [
+     "PaymentExecutionProcedure",
+     "CurrentAccountFacility"
+    ],
+    "score": 4.0,
+    "evidence": [
+     "1 hop(s) from Transaction to Account: executionCreditsFacility",
+     "rejected: executionCreditsCounterparty -> hasRelationshipPlan -> planCoversFacility, executionCreditsCounterparty -> hasRelationshipPlan -> planCoversFacility"
+    ]
+   },
+   "PAYS": {
+    "kind": "exact",
+    "path": [
+     "executionCreditsCounterparty"
+    ],
+    "vertices": [
+     "PaymentExecutionProcedure",
+     "PartyReferenceDataDirectoryEntry"
+    ],
+    "score": 2.0,
+    "evidence": [
+     "1 hop(s) from Transaction to Beneficiary: executionCreditsCounterparty",
+     "rejected: reverse_diagnosisOfExecution -> diagnosisOfExecution -> executionCreditsCounterparty, cardTransactionUsesDevice -> issuedDeviceOnFacility -> reverse_executionDebitsFacility -> executionCreditsCounterparty, cardTransactionUsesDevice -> issuedDeviceOnFacility -> reverse_executionCreditsFacility -> executionCreditsCounterparty"
+    ]
+   },
+   "FROM_DEVICE": {
+    "kind": "path",
+    "path": [
+     "executesOrder",
+     "orderAuthenticatedBy",
+     "authenticationUsedDevice"
+    ],
+    "vertices": [
+     "PaymentExecutionProcedure",
+     "PaymentOrderProcedure",
+     "PartyAuthenticationAssessment",
+     "AccessDevice"
+    ],
+    "score": 0.4,
+    "evidence": [
+     "3 hop(s) from Transaction to Device: executesOrder -> orderAuthenticatedBy -> authenticationUsedDevice",
+     "rejected: executionDebitsFacility -> reverse_orderDebitsFacility -> orderAuthenticatedBy -> authenticationUsedDevice"
+    ]
+   },
+   "FROM_IP": {
+    "kind": "path",
+    "path": [
+     "executesOrder",
+     "orderAuthenticatedBy",
+     "authenticationFromAddress"
+    ],
+    "vertices": [
+     "PaymentExecutionProcedure",
+     "PaymentOrderProcedure",
+     "PartyAuthenticationAssessment",
+     "NetworkAddress"
+    ],
+    "score": 0.4,
+    "evidence": [
+     "3 hop(s) from Transaction to IPAddress: executesOrder -> orderAuthenticatedBy -> authenticationFromAddress",
+     "rejected: executionDebitsFacility -> reverse_orderDebitsFacility -> orderAuthenticatedBy -> authenticationFromAddress, executionDebitsFacility -> reverse_orderDebitsFacility -> orderAuthenticatedBy -> authenticationFromAddress"
+    ]
+   },
+   "AT": {
+    "kind": "exact",
+    "path": [
+     "cardTransactionAtMerchant"
+    ],
+    "vertices": [
+     "CardTransaction",
+     "MerchantRelationship"
+    ],
+    "score": 2.0,
+    "evidence": [
+     "1 hop(s) from Transaction to Merchant: cardTransactionAtMerchant",
+     "rejected: reverse_diagnosisOfExecution -> diagnosisOfExecution -> cardTransactionAtMerchant, executionDebitsFacility -> reverse_issuedDeviceOnFacility -> reverse_cardTransactionUsesDevice -> cardTransactionAtMerchant, executionCreditsFacility -> reverse_issuedDeviceOnFacility -> reverse_cardTransactionUsesDevice -> cardTransactionAtMerchant"
+    ]
+   },
+   "VIA": {
+    "kind": "exact",
+    "path": [
+     "cardTransactionUsesDevice"
+    ],
+    "vertices": [
+     "CardTransaction",
+     "IssuedDeviceAllocation"
+    ],
+    "score": 6.0,
+    "evidence": [
+     "1 hop(s) from Transaction to Card: cardTransactionUsesDevice",
+     "rejected: reverse_diagnosisOfExecution -> diagnosisOfExecution -> cardTransactionUsesDevice, executionDebitsFacility -> reverse_issuedDeviceOnFacility, executionCreditsFacility -> reverse_issuedDeviceOnFacility"
+    ]
+   },
+   "HOLDS": {
+    "kind": "exact",
+    "path": [
+     "reverse_issuedDeviceOnFacility"
+    ],
+    "vertices": [
+     "CurrentAccountFacility",
+     "IssuedDeviceAllocation"
+    ],
+    "score": 4.0,
+    "evidence": [
+     "1 hop(s) from Account to Card: reverse_issuedDeviceOnFacility",
+     "rejected: reverse_planCoversFacility -> planCoversFacility -> reverse_issuedDeviceOnFacility, reverse_orderDebitsFacility -> orderDebitsFacility -> reverse_issuedDeviceOnFacility, reverse_executionDebitsFacility -> executionDebitsFacility -> reverse_issuedDeviceOnFacility"
+    ]
+   },
+   "LOGGED_IN": {
+    "kind": "path",
+    "path": [
+     "authenticationForParty",
+     "hasRelationshipPlan",
+     "planCoversFacility"
+    ],
+    "vertices": [
+     "PartyAuthenticationAssessment",
+     "PartyReferenceDataDirectoryEntry",
+     "CustomerRelationshipManagementPlan",
+     "CurrentAccountFacility"
+    ],
+    "score": 2.4,
+    "evidence": [
+     "3 hop(s) from LoginEvent to Account: authenticationForParty -> hasRelationshipPlan -> planCoversFacility"
+    ]
+   },
+   "LOGIN_FROM_DEVICE": {
+    "kind": "exact",
+    "path": [
+     "authenticationUsedDevice"
+    ],
+    "vertices": [
+     "PartyAuthenticationAssessment",
+     "AccessDevice"
+    ],
+    "score": 4.0,
+    "evidence": [
+     "1 hop(s) from LoginEvent to Device: authenticationUsedDevice",
+     "rejected: authenticationForParty -> reverse_activityForParty -> activityOnDevice"
+    ]
+   },
+   "LOGIN_FROM_IP": {
+    "kind": "exact",
+    "path": [
+     "authenticationFromAddress"
+    ],
+    "vertices": [
+     "PartyAuthenticationAssessment",
+     "NetworkAddress"
+    ],
+    "score": 4.0,
+    "evidence": [
+     "1 hop(s) from LoginEvent to IPAddress: authenticationFromAddress"
+    ]
+   },
+   "INVESTIGATED_IN": {
+    "kind": "exact",
+    "path": [
+     "reverse_caseConcernsFacility"
+    ],
+    "vertices": [
+     "CurrentAccountFacility",
+     "CustomerCaseProcedure"
+    ],
+    "score": 4.0,
+    "evidence": [
+     "1 hop(s) from Account to InvestigationCase: reverse_caseConcernsFacility",
+     "rejected: reverse_planCoversFacility -> reverse_hasRelationshipPlan -> reverse_caseConcernsParty, reverse_planCoversFacility -> planCoversFacility -> reverse_caseConcernsFacility"
+    ]
+   }
+  },
+  "attributes": {
+   "Transaction.amount": {
+    "kind": "attribute",
+    "target": "PaymentExecutionProcedure.paymentExecutionAmount",
+    "type": "DOUBLE",
+    "note": ""
+   },
+   "Transaction.timestamp": {
+    "kind": "attribute",
+    "target": "PaymentExecutionProcedure.paymentExecutionDateTime",
+    "type": "DATETIME",
+    "note": ""
+   },
+   "Transaction.channel": {
+    "kind": "attribute",
+    "target": "PaymentExecutionProcedure.paymentMechanismType",
+    "type": "STRING",
+    "note": ""
+   },
+   "Account.open_date": {
+    "kind": "attribute",
+    "target": "CurrentAccountFacility.facilityStartDate",
+    "type": "DATETIME",
+    "note": ""
+   },
+   "Account.status": {
+    "kind": "attribute",
+    "target": "CurrentAccountFacility.facilityStatus",
+    "type": "STRING",
+    "note": ""
+   },
+   "Person.kyc_verified_at": {
+    "kind": "attribute",
+    "target": "PartyReferenceDataDirectoryEntry.partyVerificationDate",
+    "type": "DATETIME",
+    "note": ""
+   },
+   "account_under_investigation": {
+    "kind": "edge",
+    "target": "caseConcernsFacility",
+    "note": "from an open case"
+   },
+   "Account.kyc_score": {
+    "kind": "attribute (approximate)",
+    "target": "PartyReferenceDataDirectoryEntry.partyRiskRating",
+    "note": "a rating, not a score"
+   },
+   "Person.anonymized_ssn_hash": {
+    "kind": "attribute",
+    "target": "PartyReferenceDataDirectoryEntry.partyLegalNameHash",
+    "note": ""
+   },
+   "Beneficiary.name_hash": {
+    "kind": "attribute",
+    "target": "PartyReferenceDataDirectoryEntry.partyLegalNameHash",
+    "note": ""
+   },
+   "Beneficiary.bank_identifier": {
+    "kind": "unmapped",
+    "target": ""
+   },
+   "InvestigationCase.status": {
+    "kind": "attribute",
+    "target": "CustomerCaseProcedure.customerCaseStatus",
+    "note": ""
+   }
+  },
+  "score": {
+   "rows": [
+    {
+     "concept": "Person",
+     "kind": "exact",
+     "target": "PartyReferenceDataDirectoryEntry where partyType in (Individual, Organisation)",
+     "predicted": "filtered vertex: PartyReferenceDataDirectoryEntry [partyType in (Individual, Organisation)]",
+     "ok": true
+    },
+    {
+     "concept": "Account",
+     "kind": "exact",
+     "target": "CurrentAccountFacility and SavingsAccountFacility",
+     "predicted": "vertex: CurrentAccountFacility, SavingsAccountFacility",
+     "ok": true
+    },
+    {
+     "concept": "Transaction",
+     "kind": "exact",
+     "target": "PaymentExecutionProcedure; approximate for card payments via CardTransaction",
+     "predicted": "vertex: PaymentExecutionProcedure, CardTransaction",
+     "ok": true
+    },
+    {
+     "concept": "Device",
+     "kind": "exact",
+     "target": "AccessDevice (not IssuedDeviceAllocation, which is a card)",
+     "predicted": "vertex: AccessDevice",
+     "ok": true
+    },
+    {
+     "concept": "IPAddress",
+     "kind": "exact",
+     "target": "NetworkAddress",
+     "predicted": "vertex: NetworkAddress",
+     "ok": true
+    },
+    {
+     "concept": "LoginEvent",
+     "kind": "exact",
+     "target": "PartyAuthenticationAssessment",
+     "predicted": "vertex: PartyAuthenticationAssessment",
+     "ok": true
+    },
+    {
+     "concept": "Beneficiary",
+     "kind": "approximate",
+     "target": "PartyReferenceDataDirectoryEntry where partyType = \"Counterparty\"",
+     "predicted": "filtered vertex (approximate): PartyReferenceDataDirectoryEntry [partyType = Counterparty]",
+     "ok": true
+    },
+    {
+     "concept": "Card",
+     "kind": "exact",
+     "target": "IssuedDeviceAllocation",
+     "predicted": "vertex: IssuedDeviceAllocation",
+     "ok": true
+    },
+    {
+     "concept": "Merchant",
+     "kind": "exact",
+     "target": "MerchantRelationship",
+     "predicted": "vertex: MerchantRelationship",
+     "ok": true
+    },
+    {
+     "concept": "InvestigationCase",
+     "kind": "exact",
+     "target": "CustomerCaseProcedure",
+     "predicted": "vertex: CustomerCaseProcedure",
+     "ok": true
+    },
+    {
+     "concept": "OWNS",
+     "kind": "exact",
+     "target": "path hasRelationshipPlan -> planCoversFacility",
+     "predicted": "path: hasRelationshipPlan -> planCoversFacility",
+     "ok": true
+    },
+    {
+     "concept": "INITIATED",
+     "kind": "exact",
+     "target": "reverse_executionDebitsFacility",
+     "predicted": "exact: reverse_executionDebitsFacility",
+     "ok": true
+    },
+    {
+     "concept": "PAYS_TO_ACCOUNT",
+     "kind": "exact",
+     "target": "executionCreditsFacility",
+     "predicted": "exact: executionCreditsFacility",
+     "ok": true
+    },
+    {
+     "concept": "PAYS",
+     "kind": "approximate",
+     "target": "executionCreditsCounterparty",
+     "predicted": "exact: executionCreditsCounterparty",
+     "ok": true
+    },
+    {
+     "concept": "FROM_DEVICE",
+     "kind": "approximate",
+     "target": "execution -> executesOrder -> orderAuthenticatedBy -> authenticationUsedDevice",
+     "predicted": "path: executesOrder -> orderAuthenticatedBy -> authenticationUsedDevice",
+     "ok": true
+    },
+    {
+     "concept": "FROM_IP",
+     "kind": "approximate",
+     "target": "execution -> executesOrder -> orderAuthenticatedBy -> authenticationFromAddress",
+     "predicted": "path: executesOrder -> orderAuthenticatedBy -> authenticationFromAddress",
+     "ok": true
+    },
+    {
+     "concept": "AT",
+     "kind": "exact",
+     "target": "cardTransactionAtMerchant",
+     "predicted": "exact: cardTransactionAtMerchant",
+     "ok": true
+    },
+    {
+     "concept": "VIA",
+     "kind": "exact",
+     "target": "cardTransactionUsesDevice",
+     "predicted": "exact: cardTransactionUsesDevice",
+     "ok": true
+    },
+    {
+     "concept": "HOLDS",
+     "kind": "exact",
+     "target": "reverse_issuedDeviceOnFacility",
+     "predicted": "exact: reverse_issuedDeviceOnFacility",
+     "ok": true
+    },
+    {
+     "concept": "LOGGED_IN",
+     "kind": "approximate",
+     "target": "authenticationForParty -> party -> plan -> facility",
+     "predicted": "path: authenticationForParty -> hasRelationshipPlan -> planCoversFacility",
+     "ok": true
+    },
+    {
+     "concept": "LOGIN_FROM_DEVICE",
+     "kind": "exact",
+     "target": "authenticationUsedDevice",
+     "predicted": "exact: authenticationUsedDevice",
+     "ok": true
+    },
+    {
+     "concept": "LOGIN_FROM_IP",
+     "kind": "exact",
+     "target": "authenticationFromAddress",
+     "predicted": "exact: authenticationFromAddress",
+     "ok": true
+    },
+    {
+     "concept": "INVESTIGATED_IN",
+     "kind": "exact",
+     "target": "reverse_caseConcernsFacility",
+     "predicted": "exact: reverse_caseConcernsFacility",
+     "ok": true
+    },
+    {
+     "concept": "Transaction.amount",
+     "kind": "exact",
+     "target": "paymentExecutionAmount",
+     "predicted": "attribute: PaymentExecutionProcedure.paymentExecutionAmount",
+     "ok": true
+    },
+    {
+     "concept": "Transaction.timestamp",
+     "kind": "exact",
+     "target": "paymentExecutionDateTime",
+     "predicted": "attribute: PaymentExecutionProcedure.paymentExecutionDateTime",
+     "ok": true
+    },
+    {
+     "concept": "Transaction.channel",
+     "kind": "exact",
+     "target": "paymentMechanismType",
+     "predicted": "attribute: PaymentExecutionProcedure.paymentMechanismType",
+     "ok": true
+    },
+    {
+     "concept": "Account.status",
+     "kind": "exact",
+     "target": "facilityStatus",
+     "predicted": "attribute: CurrentAccountFacility.facilityStatus",
+     "ok": true
+    },
+    {
+     "concept": "Account.open_date",
+     "kind": "exact",
+     "target": "facilityStartDate",
+     "predicted": "attribute: CurrentAccountFacility.facilityStartDate",
+     "ok": true
+    },
+    {
+     "concept": "Account.kyc_score",
+     "kind": "approximate",
+     "target": "PartyReferenceDataDirectoryEntry.partyRiskRating (party-level, a rating not a score)",
+     "predicted": "attribute (approximate): PartyReferenceDataDirectoryEntry.partyRiskRating (a rating, not a score)",
+     "ok": true
+    },
+    {
+     "concept": "Person.kyc_verified_at",
+     "kind": "exact",
+     "target": "partyVerificationDate",
+     "predicted": "attribute: PartyReferenceDataDirectoryEntry.partyVerificationDate",
+     "ok": true
+    },
+    {
+     "concept": "InvestigationCase.status",
+     "kind": "exact",
+     "target": "customerCaseStatus",
+     "predicted": "attribute: CustomerCaseProcedure.customerCaseStatus",
+     "ok": true
+    },
+    {
+     "concept": "account_under_investigation",
+     "kind": "exact",
+     "target": "caseConcernsFacility from an open CustomerCaseProcedure",
+     "predicted": "edge: caseConcernsFacility (from an open case)",
+     "ok": true
+    }
+   ],
+   "n": 32,
+   "correct": 32,
+   "not_attempted": []
+  },
+  "vertices": {
+   "PartyReferenceDataDirectoryEntry": {
+    "pk": [
+     "partyReference",
+     "STRING"
+    ],
+    "attrs": {
+     "partyType": "STRING",
+     "partyLegalNameHash": "STRING",
+     "partyDateOfBirth": "DATETIME",
+     "partyIdentificationHash": "STRING",
+     "partyIdentificationType": "STRING",
+     "partyVerificationDate": "DATETIME",
+     "partyRiskRating": "STRING",
+     "partyBankIdentifierCode": "STRING"
+    }
+   },
+   "ContactPoint": {
+    "pk": [
+     "contactPointReference",
+     "STRING"
+    ],
+    "attrs": {
+     "contactPointType": "STRING",
+     "contactPointValueHash": "STRING"
+    }
+   },
+   "CustomerRelationshipManagementPlan": {
+    "pk": [
+     "customerRelationshipManagementPlanReference",
+     "STRING"
+    ],
+    "attrs": {
+     "customerRelationshipRole": "STRING",
+     "customerRelationshipStartDate": "DATETIME",
+     "customerRelationshipEndDate": "DATETIME",
+     "customerSegment": "STRING"
+    }
+   },
+   "CurrentAccountFacility": {
+    "pk": [
+     "currentAccountFacilityReference",
+     "STRING"
+    ],
+    "attrs": {
+     "accountIdentificationIBAN": "STRING",
+     "accountCurrency": "STRING",
+     "facilityStatus": "STRING",
+     "facilityStartDate": "DATETIME",
+     "overdraftLimitAmount": "DOUBLE"
+    }
+   },
+   "SavingsAccountFacility": {
+    "pk": [
+     "savingsAccountFacilityReference",
+     "STRING"
+    ],
+    "attrs": {
+     "accountIdentificationIBAN": "STRING",
+     "accountCurrency": "STRING",
+     "facilityStatus": "STRING",
+     "facilityStartDate": "DATETIME",
+     "interestRate": "DOUBLE"
+    }
+   },
+   "IssuedDeviceAllocation": {
+    "pk": [
+     "issuedDeviceAllocationReference",
+     "STRING"
+    ],
+    "attrs": {
+     "issuedDeviceType": "STRING",
+     "cardScheme": "STRING",
+     "maskedPrimaryAccountNumberHash": "STRING",
+     "issuedDeviceStatus": "STRING",
+     "issuedDeviceExpiryDate": "DATETIME"
+    }
+   },
+   "PaymentOrderProcedure": {
+    "pk": [
+     "paymentOrderProcedureReference",
+     "STRING"
+    ],
+    "attrs": {
+     "paymentOrderType": "STRING",
+     "paymentOrderAmount": "DOUBLE",
+     "paymentOrderCurrency": "STRING",
+     "paymentOrderDateTime": "DATETIME",
+     "paymentOrderStatus": "STRING",
+     "paymentPurpose": "STRING"
+    }
+   },
+   "PaymentExecutionProcedure": {
+    "pk": [
+     "paymentExecutionProcedureReference",
+     "STRING"
+    ],
+    "attrs": {
+     "paymentMechanismType": "STRING",
+     "paymentExecutionAmount": "DOUBLE",
+     "paymentExecutionCurrency": "STRING",
+     "paymentExecutionDateTime": "DATETIME",
+     "paymentExecutionStatus": "STRING",
+     "clearingSystem": "STRING"
+    }
+   },
+   "CardTransaction": {
+    "pk": [
+     "cardTransactionReference",
+     "STRING"
+    ],
+    "attrs": {
+     "cardTransactionAmount": "DOUBLE",
+     "cardTransactionCurrency": "STRING",
+     "cardTransactionDateTime": "DATETIME",
+     "cardTransactionType": "STRING",
+     "posEntryMode": "STRING",
+     "authorisationResponseCode": "STRING"
+    }
+   },
+   "MerchantRelationship": {
+    "pk": [
+     "merchantReference",
+     "STRING"
+    ],
+    "attrs": {
+     "merchantName": "STRING",
+     "merchantCategoryCode": "STRING",
+     "merchantCountry": "STRING",
+     "acquirerReference": "STRING"
+    }
+   },
+   "PartyAuthenticationAssessment": {
+    "pk": [
+     "partyAuthenticationAssessmentReference",
+     "STRING"
+    ],
+    "attrs": {
+     "authenticationChannel": "STRING",
+     "authenticationMethod": "STRING",
+     "authenticationDateTime": "DATETIME",
+     "authenticationResult": "STRING"
+    }
+   },
+   "AccessDevice": {
+    "pk": [
+     "accessDeviceReference",
+     "STRING"
+    ],
+    "attrs": {
+     "deviceFingerprint": "STRING",
+     "deviceOperatingSystem": "STRING",
+     "deviceFirstSeenDateTime": "DATETIME",
+     "deviceTrustLevel": "STRING"
+    }
+   },
+   "NetworkAddress": {
+    "pk": [
+     "ipAddress",
+     "STRING"
+    ],
+    "attrs": {
+     "ipGeolocationCountry": "STRING",
+     "ipAnonymizerType": "STRING"
+    }
+   },
+   "ChannelActivityHistoryRecord": {
+    "pk": [
+     "channelActivityReference",
+     "STRING"
+    ],
+    "attrs": {
+     "channel": "STRING",
+     "activityType": "STRING",
+     "activityDateTime": "DATETIME"
+    }
+   },
+   "FraudDiagnosisAssessment": {
+    "pk": [
+     "fraudDiagnosisAssessmentReference",
+     "STRING"
+    ],
+    "attrs": {
+     "fraudDiagnosisType": "STRING",
+     "fraudScore": "DOUBLE",
+     "fraudDiagnosisResult": "STRING",
+     "fraudDiagnosisDateTime": "DATETIME"
+    }
+   },
+   "CustomerCaseProcedure": {
+    "pk": [
+     "customerCaseProcedureReference",
+     "STRING"
+    ],
+    "attrs": {
+     "customerCaseType": "STRING",
+     "customerCaseStatus": "STRING",
+     "customerCaseOpenDate": "DATETIME",
+     "customerCaseCloseDate": "DATETIME",
+     "customerCasePriority": "STRING",
+     "customerCaseResolution": "STRING"
+    }
+   }
+  },
+  "edge_types": {
+   "partyHasContactPoint": {
+    "directed": false,
+    "pairs": [
+     [
+      "PartyReferenceDataDirectoryEntry",
+      "ContactPoint"
+     ]
+    ],
+    "reverse": ""
+   },
+   "hasRelationshipPlan": {
+    "directed": true,
+    "pairs": [
+     [
+      "PartyReferenceDataDirectoryEntry",
+      "CustomerRelationshipManagementPlan"
+     ]
+    ],
+    "reverse": "reverse_hasRelationshipPlan"
+   },
+   "planCoversFacility": {
+    "directed": true,
+    "pairs": [
+     [
+      "CustomerRelationshipManagementPlan",
+      "CurrentAccountFacility"
+     ],
+     [
+      "CustomerRelationshipManagementPlan",
+      "SavingsAccountFacility"
+     ]
+    ],
+    "reverse": "reverse_planCoversFacility"
+   },
+   "issuedDeviceOnFacility": {
+    "directed": true,
+    "pairs": [
+     [
+      "IssuedDeviceAllocation",
+      "CurrentAccountFacility"
+     ]
+    ],
+    "reverse": "reverse_issuedDeviceOnFacility"
+   },
+   "orderDebitsFacility": {
+    "directed": true,
+    "pairs": [
+     [
+      "PaymentOrderProcedure",
+      "CurrentAccountFacility"
+     ],
+     [
+      "PaymentOrderProcedure",
+      "SavingsAccountFacility"
+     ]
+    ],
+    "reverse": "reverse_orderDebitsFacility"
+   },
+   "orderAuthenticatedBy": {
+    "directed": true,
+    "pairs": [
+     [
+      "PaymentOrderProcedure",
+      "PartyAuthenticationAssessment"
+     ]
+    ],
+    "reverse": "reverse_orderAuthenticatedBy"
+   },
+   "executesOrder": {
+    "directed": true,
+    "pairs": [
+     [
+      "PaymentExecutionProcedure",
+      "PaymentOrderProcedure"
+     ]
+    ],
+    "reverse": "reverse_executesOrder"
+   },
+   "executionDebitsFacility": {
+    "directed": true,
+    "pairs": [
+     [
+      "PaymentExecutionProcedure",
+      "CurrentAccountFacility"
+     ],
+     [
+      "PaymentExecutionProcedure",
+      "SavingsAccountFacility"
+     ]
+    ],
+    "reverse": "reverse_executionDebitsFacility"
+   },
+   "executionCreditsFacility": {
+    "directed": true,
+    "pairs": [
+     [
+      "PaymentExecutionProcedure",
+      "CurrentAccountFacility"
+     ],
+     [
+      "PaymentExecutionProcedure",
+      "SavingsAccountFacility"
+     ]
+    ],
+    "reverse": "reverse_executionCreditsFacility"
+   },
+   "executionCreditsCounterparty": {
+    "directed": true,
+    "pairs": [
+     [
+      "PaymentExecutionProcedure",
+      "PartyReferenceDataDirectoryEntry"
+     ]
+    ],
+    "reverse": "reverse_executionCreditsCounterparty"
+   },
+   "cardTransactionUsesDevice": {
+    "directed": true,
+    "pairs": [
+     [
+      "CardTransaction",
+      "IssuedDeviceAllocation"
+     ]
+    ],
+    "reverse": "reverse_cardTransactionUsesDevice"
+   },
+   "cardTransactionAtMerchant": {
+    "directed": true,
+    "pairs": [
+     [
+      "CardTransaction",
+      "MerchantRelationship"
+     ]
+    ],
+    "reverse": "reverse_cardTransactionAtMerchant"
+   },
+   "authenticationForParty": {
+    "directed": true,
+    "pairs": [
+     [
+      "PartyAuthenticationAssessment",
+      "PartyReferenceDataDirectoryEntry"
+     ]
+    ],
+    "reverse": "reverse_authenticationForParty"
+   },
+   "authenticationUsedDevice": {
+    "directed": true,
+    "pairs": [
+     [
+      "PartyAuthenticationAssessment",
+      "AccessDevice"
+     ]
+    ],
+    "reverse": "reverse_authenticationUsedDevice"
+   },
+   "authenticationFromAddress": {
+    "directed": true,
+    "pairs": [
+     [
+      "PartyAuthenticationAssessment",
+      "NetworkAddress"
+     ]
+    ],
+    "reverse": "reverse_authenticationFromAddress"
+   },
+   "activityForParty": {
+    "directed": true,
+    "pairs": [
+     [
+      "ChannelActivityHistoryRecord",
+      "PartyReferenceDataDirectoryEntry"
+     ]
+    ],
+    "reverse": "reverse_activityForParty"
+   },
+   "activityOnDevice": {
+    "directed": true,
+    "pairs": [
+     [
+      "ChannelActivityHistoryRecord",
+      "AccessDevice"
+     ]
+    ],
+    "reverse": "reverse_activityOnDevice"
+   },
+   "diagnosisOfExecution": {
+    "directed": true,
+    "pairs": [
+     [
+      "FraudDiagnosisAssessment",
+      "PaymentExecutionProcedure"
+     ],
+     [
+      "FraudDiagnosisAssessment",
+      "CardTransaction"
+     ]
+    ],
+    "reverse": "reverse_diagnosisOfExecution"
+   },
+   "caseCitesDiagnosis": {
+    "directed": true,
+    "pairs": [
+     [
+      "CustomerCaseProcedure",
+      "FraudDiagnosisAssessment"
+     ]
+    ],
+    "reverse": "reverse_caseCitesDiagnosis"
+   },
+   "caseConcernsFacility": {
+    "directed": true,
+    "pairs": [
+     [
+      "CustomerCaseProcedure",
+      "CurrentAccountFacility"
+     ],
+     [
+      "CustomerCaseProcedure",
+      "SavingsAccountFacility"
+     ]
+    ],
+    "reverse": "reverse_caseConcernsFacility"
+   },
+   "caseConcernsParty": {
+    "directed": true,
+    "pairs": [
+     [
+      "CustomerCaseProcedure",
+      "PartyReferenceDataDirectoryEntry"
+     ]
+    ],
+    "reverse": "reverse_caseConcernsParty"
+   }
+  },
+  "live": {
+   "ran": true,
+   "gsql_output_tail": "xecution' to the graph 'Bank_BIAN'.\nTrying to add local edge 'caseCitesDiagnosis' and its reverse edge 'reverse_caseCitesDiagnosis' to the graph 'Bank_BIAN'.\nTrying to add local edge 'caseConcernsFacility' and its reverse edge 'reverse_caseConcernsFacility' to the graph 'Bank_BIAN'.\nTrying to add local edge 'caseConcernsParty' and its reverse edge 'reverse_caseConcernsParty' to the graph 'Bank_BIAN'.\n\nGraph Bank_BIAN updated to new version 1\nThe job setup_bank_bian completes in 36.133 seconds!\nLocal schema change succeeded.\nSuccessfully dropped jobs on the graph 'Bank_BIAN': [setup_bank_bian].",
+   "errors": [],
+   "vertex_types": 16,
+   "edge_types": 21,
+   "diffs": [],
+   "ok": true,
+   "dropped": true,
+   "drop_output": "The graph Bank_BIAN is dropped."
+  }
+ },
+ {
+  "file": "E:\\Projects\\HackerHouse_TigerGraph\\schemas\\bank3_core_banking_t24.gsql",
+  "graph": "Bank_CoreT24",
+  "validation": {
+   "ok": true,
+   "problems": [],
+   "warnings": [
+    "DEPT_ACCT_OFFICER: INT primary id DAO_ID \u2014 ids must be cast when joined to string ids from other systems",
+    "CUSTOMER: INT primary id CUSTOMER_NO \u2014 ids must be cast when joined to string ids from other systems",
+    "CUSTOMER.DATE_OF_BIRTH: a date/time stored as STRING (needs parsing; as_of filters cannot use it directly)",
+    "CUSTOMER.LAST_KYC_REVIEW_DATE: a date/time stored as STRING (needs parsing; as_of filters cannot use it directly)",
+    "CUSTOMER.DATE_TIME: a date/time stored as STRING (needs parsing; as_of filters cannot use it directly)",
+    "ACCOUNT.OPENING_DATE: a date/time stored as STRING (needs parsing; as_of filters cannot use it directly)",
+    "ACCOUNT.DATE_TIME: a date/time stored as STRING (needs parsing; as_of filters cannot use it directly)",
+    "FUNDS_TRANSFER.DEBIT_VALUE_DATE: a date/time stored as STRING (needs parsing; as_of filters cannot use it directly)",
+    "FUNDS_TRANSFER.CREDIT_VALUE_DATE: a date/time stored as STRING (needs parsing; as_of filters cannot use it directly)",
+    "FUNDS_TRANSFER.PROCESSING_DATE: a date/time stored as STRING (needs parsing; as_of filters cannot use it directly)",
+    "FUNDS_TRANSFER.DATE_TIME: a date/time stored as STRING (needs parsing; as_of filters cannot use it directly)",
+    "TELLER.VALUE_DATE_1: a date/time stored as STRING (needs parsing; as_of filters cannot use it directly)",
+    "TELLER.DATE_TIME: a date/time stored as STRING (needs parsing; as_of filters cannot use it directly)",
+    "STMT_ENTRY.BOOKING_DATE: a date/time stored as STRING (needs parsing; as_of filters cannot use it directly)",
+    "STMT_ENTRY.VALUE_DATE: a date/time stored as STRING (needs parsing; as_of filters cannot use it directly)",
+    "BENEFICIARY.DATE_TIME: a date/time stored as STRING (needs parsing; as_of filters cannot use it directly)",
+    "CARD_ISSUE.ISSUE_DATE: a date/time stored as STRING (needs parsing; as_of filters cannot use it directly)",
+    "CARD_ISSUE.EXPIRY_DATE: a date/time stored as STRING (needs parsing; as_of filters cannot use it directly)",
+    "CARD_ISSUE.CANCELLATION_DATE: a date/time stored as STRING (needs parsing; as_of filters cannot use it directly)",
+    "EB_EXTERNAL_USER.START_DATE: a date/time stored as STRING (needs parsing; as_of filters cannot use it directly)",
+    "EB_EXTERNAL_USER.END_DATE: a date/time stored as STRING (needs parsing; as_of filters cannot use it directly)",
+    "PROTOCOL.PROCESS_DATE: a date/time stored as STRING (needs parsing; as_of filters cannot use it directly)",
+    "PROTOCOL.TIME_MSECS: a date/time stored as STRING (needs parsing; as_of filters cannot use it directly)",
+    "no DATETIME attribute with a time of day anywhere: event ordering and the temporal wall must parse strings"
+   ],
+   "n_vertices": 11,
+   "n_edges": 18
+  },
+  "concepts": {
+   "Person": {
+    "kind": "vertex",
+    "targets": [
+     "CUSTOMER"
+    ],
+    "score": 4.6,
+    "evidence": [
+     "name tokens ['customer']",
+     "attributes ['birth', 'kyc', 'legal', 'nationality', 'residence']",
+     "has a date of birth"
+    ]
+   },
+   "Account": {
+    "kind": "vertex",
+    "targets": [
+     "ACCOUNT"
+    ],
+    "score": 3.6,
+    "evidence": [
+     "name tokens ['account']",
+     "attributes ['balance', 'currency', 'opening', 'status']"
+    ]
+   },
+   "Transaction": {
+    "kind": "vertex",
+    "targets": [
+     "FUNDS_TRANSFER",
+     "TELLER"
+    ],
+    "score": 5.2,
+    "evidence": [
+     "name tokens ['transfer']",
+     "attributes ['amount', 'currency', 'date']",
+     "money attribute DEBIT_AMOUNT",
+     "2 edges to accounts (debit and credit sides)"
+    ]
+   },
+   "Card": {
+    "kind": "vertex",
+    "targets": [
+     "CARD_ISSUE"
+    ],
+    "score": 3.2,
+    "evidence": [
+     "name tokens ['card']",
+     "attributes ['card', 'expiry', 'pan']"
+    ]
+   },
+   "Device": {
+    "kind": "attribute (approximate)",
+    "targets": [
+     "PROTOCOL.TERMINAL_ID"
+    ],
+    "evidence": [
+     "no Device vertex type; PROTOCOL.TERMINAL_ID carries it per event"
+    ]
+   },
+   "IPAddress": {
+    "kind": "attribute (approximate)",
+    "targets": [
+     "PROTOCOL.IP_ADDRESS"
+    ],
+    "evidence": [
+     "no IPAddress vertex type; PROTOCOL.IP_ADDRESS carries it per event"
+    ]
+   },
+   "LoginEvent": {
+    "kind": "vertex",
+    "targets": [
+     "PROTOCOL"
+    ],
+    "score": 2.4,
+    "evidence": [
+     "name tokens ['protocol']",
+     "attributes ['terminal']"
+    ]
+   },
+   "Merchant": {
+    "kind": "unmapped",
+    "targets": [],
+    "evidence": []
+   },
+   "InvestigationCase": {
+    "kind": "unmapped",
+    "targets": [],
+    "evidence": []
+   },
+   "Beneficiary": {
+    "kind": "vertex",
+    "targets": [
+     "BENEFICIARY"
+    ],
+    "score": 3.2,
+    "evidence": [
+     "name tokens ['beneficiary']",
+     "attributes ['beneficiary', 'bic', 'sort']"
+    ]
+   }
+  },
+  "edges": {
+   "OWNS": {
+    "kind": "exact",
+    "path": [
+     "reverse_ACCOUNT_CUSTOMER",
+     "reverse_JOINT_HOLDER"
+    ],
+    "vertices": [
+     "CUSTOMER",
+     "ACCOUNT",
+     "CUSTOMER"
+    ],
+    "score": 2.0,
+    "evidence": [
+     "1 hop(s) from Person to Account: reverse_ACCOUNT_CUSTOMER",
+     "also: reverse_JOINT_HOLDER",
+     "rejected: reverse_BENEFICIARY_OWNING_CUSTOMER -> reverse_FT_BENEFICIARY -> FT_DEBIT_ACCT_NO, reverse_BENEFICIARY_OWNING_CUSTOMER -> reverse_FT_BENEFICIARY -> FT_CREDIT_ACCT_NO"
+    ]
+   },
+   "INITIATED": {
+    "kind": "exact",
+    "path": [
+     "reverse_FT_DEBIT_ACCT_NO",
+     "reverse_TT_ACCOUNT_1"
+    ],
+    "vertices": [
+     "ACCOUNT",
+     "FUNDS_TRANSFER",
+     "ACCOUNT"
+    ],
+    "score": 2.0,
+    "evidence": [
+     "1 hop(s) from Account to Transaction: reverse_FT_DEBIT_ACCT_NO",
+     "also: reverse_TT_ACCOUNT_1",
+     "rejected: reverse_FT_CREDIT_ACCT_NO, ACCOUNT_COMPANY -> reverse_FT_COMPANY"
+    ]
+   },
+   "PAYS_TO_ACCOUNT": {
+    "kind": "exact",
+    "path": [
+     "FT_CREDIT_ACCT_NO",
+     "TT_ACCOUNT_1"
+    ],
+    "vertices": [
+     "FUNDS_TRANSFER",
+     "ACCOUNT",
+     "TELLER"
+    ],
+    "score": 2.0,
+    "evidence": [
+     "1 hop(s) from Transaction to Account: FT_CREDIT_ACCT_NO",
+     "also: TT_ACCOUNT_1",
+     "rejected: TT_COMPANY -> reverse_FT_COMPANY -> FT_CREDIT_ACCT_NO, reverse_STMT_TRANS_REFERENCE -> STMT_TRANS_REFERENCE -> FT_CREDIT_ACCT_NO"
+    ]
+   },
+   "PAYS": {
+    "kind": "exact",
+    "path": [
+     "FT_BENEFICIARY"
+    ],
+    "vertices": [
+     "FUNDS_TRANSFER",
+     "BENEFICIARY"
+    ],
+    "score": 2.0,
+    "evidence": [
+     "1 hop(s) from Transaction to Beneficiary: FT_BENEFICIARY",
+     "rejected: TT_COMPANY -> reverse_CUSTOMER_COMPANY -> reverse_BENEFICIARY_OWNING_CUSTOMER, TT_COMPANY -> reverse_FT_COMPANY -> FT_BENEFICIARY, reverse_STMT_TRANS_REFERENCE -> STMT_TRANS_REFERENCE -> FT_BENEFICIARY"
+    ]
+   },
+   "FROM_DEVICE": {
+    "kind": "unmapped",
+    "path": [],
+    "evidence": [
+     "Transaction or Device is unmapped or only an attribute"
+    ]
+   },
+   "FROM_IP": {
+    "kind": "unmapped",
+    "path": [],
+    "evidence": [
+     "Transaction or IPAddress is unmapped or only an attribute"
+    ]
+   },
+   "AT": {
+    "kind": "unmapped",
+    "path": [],
+    "evidence": [
+     "Transaction or Merchant is unmapped or only an attribute"
+    ]
+   },
+   "VIA": {
+    "kind": "path",
+    "path": [
+     "TT_ACCOUNT_1",
+     "reverse_CARD_ISSUE_ACCOUNT"
+    ],
+    "vertices": [
+     "TELLER",
+     "ACCOUNT",
+     "CARD_ISSUE"
+    ],
+    "score": 1.2,
+    "evidence": [
+     "2 hop(s) from Transaction to Card: TT_ACCOUNT_1 -> reverse_CARD_ISSUE_ACCOUNT",
+     "rejected: TT_COMPANY -> reverse_ACCOUNT_COMPANY -> reverse_CARD_ISSUE_ACCOUNT"
+    ]
+   },
+   "HOLDS": {
+    "kind": "exact",
+    "path": [
+     "reverse_CARD_ISSUE_ACCOUNT"
+    ],
+    "vertices": [
+     "ACCOUNT",
+     "CARD_ISSUE"
+    ],
+    "score": 2.0,
+    "evidence": [
+     "1 hop(s) from Account to Card: reverse_CARD_ISSUE_ACCOUNT"
+    ]
+   },
+   "LOGGED_IN": {
+    "kind": "path",
+    "path": [
+     "PROTOCOL_USER",
+     "EXT_USER_CUSTOMER",
+     "reverse_ACCOUNT_CUSTOMER"
+    ],
+    "vertices": [
+     "PROTOCOL",
+     "EB_EXTERNAL_USER",
+     "CUSTOMER",
+     "ACCOUNT"
+    ],
+    "score": 0.4,
+    "evidence": [
+     "3 hop(s) from LoginEvent to Account: PROTOCOL_USER -> EXT_USER_CUSTOMER -> reverse_ACCOUNT_CUSTOMER"
+    ]
+   },
+   "LOGIN_FROM_DEVICE": {
+    "kind": "unmapped",
+    "path": [],
+    "evidence": [
+     "LoginEvent or Device is unmapped or only an attribute"
+    ]
+   },
+   "LOGIN_FROM_IP": {
+    "kind": "unmapped",
+    "path": [],
+    "evidence": [
+     "LoginEvent or IPAddress is unmapped or only an attribute"
+    ]
+   },
+   "INVESTIGATED_IN": {
+    "kind": "unmapped",
+    "path": [],
+    "evidence": [
+     "Account or InvestigationCase is unmapped or only an attribute"
+    ]
+   }
+  },
+  "attributes": {
+   "Transaction.amount": {
+    "kind": "attribute",
+    "target": "FUNDS_TRANSFER.DEBIT_AMOUNT",
+    "type": "DOUBLE",
+    "note": ""
+   },
+   "Transaction.timestamp": {
+    "kind": "attribute",
+    "target": "FUNDS_TRANSFER.DATE_TIME",
+    "type": "STRING",
+    "note": "stored as STRING: needs parsing"
+   },
+   "Transaction.channel": {
+    "kind": "attribute",
+    "target": "FUNDS_TRANSFER.TRANSACTION_TYPE",
+    "type": "STRING",
+    "note": ""
+   },
+   "Account.open_date": {
+    "kind": "attribute",
+    "target": "ACCOUNT.OPENING_DATE",
+    "type": "STRING",
+    "note": "stored as STRING: needs parsing"
+   },
+   "Account.status": {
+    "kind": "attribute",
+    "target": "ACCOUNT.POSTING_RESTRICT",
+    "type": "INT",
+    "note": ""
+   },
+   "Person.kyc_verified_at": {
+    "kind": "attribute",
+    "target": "CUSTOMER.LAST_KYC_REVIEW_DATE",
+    "type": "STRING",
+    "note": ""
+   },
+   "account_under_investigation": {
+    "kind": "attribute (approximate)",
+    "target": "ACCOUNT.POSTING_RESTRICT",
+    "note": "a flag / block code, not a case"
+   },
+   "Account.kyc_score": {
+    "kind": "unmapped",
+    "target": ""
+   },
+   "Person.anonymized_ssn_hash": {
+    "kind": "attribute",
+    "target": "CUSTOMER.LEGAL_ID_HASH",
+    "note": ""
+   },
+   "Beneficiary.name_hash": {
+    "kind": "attribute",
+    "target": "BENEFICIARY.BEN_SHORT_NAME_HASH",
+    "note": ""
+   },
+   "Beneficiary.bank_identifier": {
+    "kind": "attribute",
+    "target": "BENEFICIARY.BEN_BIC",
+    "note": ""
+   },
+   "InvestigationCase.status": {
+    "kind": "unmapped",
+    "target": ""
+   }
+  },
+  "score": {
+   "rows": [
+    {
+     "concept": "Person",
+     "kind": "exact",
+     "target": "CUSTOMER",
+     "predicted": "vertex: CUSTOMER",
+     "ok": true
+    },
+    {
+     "concept": "Account",
+     "kind": "exact",
+     "target": "ACCOUNT",
+     "predicted": "vertex: ACCOUNT",
+     "ok": true
+    },
+    {
+     "concept": "Transaction",
+     "kind": "exact",
+     "target": "FUNDS_TRANSFER and TELLER (not STMT_ENTRY)",
+     "predicted": "vertex: FUNDS_TRANSFER, TELLER",
+     "ok": true
+    },
+    {
+     "concept": "Beneficiary",
+     "kind": "exact",
+     "target": "BENEFICIARY",
+     "predicted": "vertex: BENEFICIARY",
+     "ok": true
+    },
+    {
+     "concept": "Card",
+     "kind": "exact",
+     "target": "CARD_ISSUE",
+     "predicted": "vertex: CARD_ISSUE",
+     "ok": true
+    },
+    {
+     "concept": "LoginEvent",
+     "kind": "exact",
+     "target": "PROTOCOL where APPLICATION = \"SIGN.ON\"",
+     "predicted": "vertex: PROTOCOL",
+     "ok": true
+    },
+    {
+     "concept": "Device",
+     "kind": "approximate",
+     "target": "PROTOCOL.TERMINAL_ID (attribute)",
+     "predicted": "attribute (approximate): PROTOCOL.TERMINAL_ID",
+     "ok": true
+    },
+    {
+     "concept": "IPAddress",
+     "kind": "approximate",
+     "target": "PROTOCOL.IP_ADDRESS (attribute)",
+     "predicted": "attribute (approximate): PROTOCOL.IP_ADDRESS",
+     "ok": true
+    },
+    {
+     "concept": "Merchant",
+     "kind": "unmapped",
+     "target": "",
+     "predicted": "unmapped: \u2014",
+     "ok": true
+    },
+    {
+     "concept": "InvestigationCase",
+     "kind": "unmapped",
+     "target": "",
+     "predicted": "unmapped: \u2014",
+     "ok": true
+    },
+    {
+     "concept": "OWNS",
+     "kind": "exact",
+     "target": "ACCOUNT_CUSTOMER and JOINT_HOLDER (both CUSTOMER <- ACCOUNT)",
+     "predicted": "exact: reverse_ACCOUNT_CUSTOMER -> reverse_JOINT_HOLDER",
+     "ok": true
+    },
+    {
+     "concept": "INITIATED",
+     "kind": "exact",
+     "target": "reverse_FT_DEBIT_ACCT_NO; TT_ACCOUNT_1 where DR_CR_MARKER = \"DEBIT\"",
+     "predicted": "exact: reverse_FT_DEBIT_ACCT_NO -> reverse_TT_ACCOUNT_1",
+     "ok": true
+    },
+    {
+     "concept": "PAYS_TO_ACCOUNT",
+     "kind": "exact",
+     "target": "FT_CREDIT_ACCT_NO; TT_ACCOUNT_1 where DR_CR_MARKER = \"CREDIT\"",
+     "predicted": "exact: FT_CREDIT_ACCT_NO -> TT_ACCOUNT_1",
+     "ok": true
+    },
+    {
+     "concept": "PAYS",
+     "kind": "exact",
+     "target": "FT_BENEFICIARY",
+     "predicted": "exact: FT_BENEFICIARY",
+     "ok": true
+    },
+    {
+     "concept": "HOLDS",
+     "kind": "exact",
+     "target": "reverse_CARD_ISSUE_ACCOUNT",
+     "predicted": "exact: reverse_CARD_ISSUE_ACCOUNT",
+     "ok": true
+    },
+    {
+     "concept": "LOGGED_IN",
+     "kind": "approximate",
+     "target": "PROTOCOL -> EB_EXTERNAL_USER -> CUSTOMER -> ACCOUNT",
+     "predicted": "path: PROTOCOL_USER -> EXT_USER_CUSTOMER -> reverse_ACCOUNT_CUSTOMER",
+     "ok": true
+    },
+    {
+     "concept": "Transaction.amount",
+     "kind": "exact",
+     "target": "DEBIT_AMOUNT (FT), AMOUNT_LOCAL_1 (TELLER)",
+     "predicted": "attribute: FUNDS_TRANSFER.DEBIT_AMOUNT",
+     "ok": true
+    },
+    {
+     "concept": "Transaction.timestamp",
+     "kind": "approximate",
+     "target": "DATE_TIME (YYMMDDHHMM string); PROCESSING_DATE is date only",
+     "predicted": "attribute: FUNDS_TRANSFER.DATE_TIME (stored as STRING: needs parsing)",
+     "ok": true
+    },
+    {
+     "concept": "Transaction.channel",
+     "kind": "approximate",
+     "target": "TRANSACTION_TYPE codes (FT), TRANSACTION_CODE (TELLER = cash)",
+     "predicted": "attribute: FUNDS_TRANSFER.TRANSACTION_TYPE",
+     "ok": true
+    },
+    {
+     "concept": "Account.open_date",
+     "kind": "approximate",
+     "target": "OPENING_DATE (YYYYMMDD string)",
+     "predicted": "attribute: ACCOUNT.OPENING_DATE (stored as STRING: needs parsing)",
+     "ok": true
+    },
+    {
+     "concept": "Account.status",
+     "kind": "approximate",
+     "target": "POSTING_RESTRICT code",
+     "predicted": "attribute: ACCOUNT.POSTING_RESTRICT",
+     "ok": true
+    },
+    {
+     "concept": "Account.kyc_score",
+     "kind": "unmapped",
+     "target": "(CUSTOMER.KYC_COMPLETE is YES/NO)",
+     "predicted": "unmapped: \u2014",
+     "ok": true
+    },
+    {
+     "concept": "Person.kyc_verified_at",
+     "kind": "approximate",
+     "target": "CUSTOMER.LAST_KYC_REVIEW_DATE (YYYYMMDD string)",
+     "predicted": "attribute: CUSTOMER.LAST_KYC_REVIEW_DATE",
+     "ok": true
+    },
+    {
+     "concept": "Beneficiary.bank_identifier",
+     "kind": "exact",
+     "target": "BEN_BANK_SORT_CODE or BEN_BIC",
+     "predicted": "attribute: BENEFICIARY.BEN_BIC",
+     "ok": true
+    },
+    {
+     "concept": "account_under_investigation",
+     "kind": "approximate",
+     "target": "ACCOUNT.POSTING_RESTRICT = 25 (a block, not a case)",
+     "predicted": "attribute (approximate): ACCOUNT.POSTING_RESTRICT (a flag / block code, not a case)",
+     "ok": true
+    }
+   ],
+   "n": 25,
+   "correct": 25,
+   "not_attempted": []
+  },
+  "vertices": {
+   "COMPANY": {
+    "pk": [
+     "CO_CODE",
+     "STRING"
+    ],
+    "attrs": {
+     "COMPANY_NAME": "STRING",
+     "LOCAL_CURRENCY": "STRING",
+     "LOCAL_COUNTRY": "STRING"
+    }
+   },
+   "DEPT_ACCT_OFFICER": {
+    "pk": [
+     "DAO_ID",
+     "INT"
+    ],
+    "attrs": {
+     "NAME": "STRING",
+     "DEPT_LEVEL": "STRING"
+    }
+   },
+   "CUSTOMER": {
+    "pk": [
+     "CUSTOMER_NO",
+     "INT"
+    ],
+    "attrs": {
+     "MNEMONIC": "STRING",
+     "SHORT_NAME": "STRING",
+     "NAME_1_HASH": "STRING",
+     "SECTOR": "INT",
+     "INDUSTRY": "INT",
+     "TARGET_MARKET": "INT",
+     "NATIONALITY": "STRING",
+     "RESIDENCE": "STRING",
+     "DATE_OF_BIRTH": "STRING",
+     "LEGAL_ID_HASH": "STRING",
+     "LEGAL_DOC_NAME": "STRING",
+     "CUSTOMER_STATUS": "INT",
+     "KYC_COMPLETE": "STRING",
+     "LAST_KYC_REVIEW_DATE": "STRING",
+     "CALC_RISK_CLASS": "STRING",
+     "MANUAL_RISK_CLASS": "STRING",
+     "AML_CHECK": "STRING",
+     "AML_RESULT": "STRING",
+     "PHONE_1_HASH": "STRING",
+     "EMAIL_1_HASH": "STRING",
+     "RECORD_STATUS": "STRING",
+     "DATE_TIME": "STRING"
+    }
+   },
+   "ACCOUNT": {
+    "pk": [
+     "ACCOUNT_NO",
+     "STRING"
+    ],
+    "attrs": {
+     "CATEGORY": "INT",
+     "ACCOUNT_TITLE_1": "STRING",
+     "CURRENCY": "STRING",
+     "OPENING_DATE": "STRING",
+     "POSTING_RESTRICT": "INT",
+     "WORKING_BALANCE": "DOUBLE",
+     "ONLINE_ACTUAL_BAL": "DOUBLE",
+     "LIMIT_REF": "STRING",
+     "RECORD_STATUS": "STRING",
+     "DATE_TIME": "STRING"
+    }
+   },
+   "FUNDS_TRANSFER": {
+    "pk": [
+     "FT_REF",
+     "STRING"
+    ],
+    "attrs": {
+     "TRANSACTION_TYPE": "STRING",
+     "DEBIT_CURRENCY": "STRING",
+     "DEBIT_AMOUNT": "DOUBLE",
+     "DEBIT_VALUE_DATE": "STRING",
+     "CREDIT_CURRENCY": "STRING",
+     "CREDIT_AMOUNT": "DOUBLE",
+     "CREDIT_VALUE_DATE": "STRING",
+     "PROCESSING_DATE": "STRING",
+     "ORDERING_CUST": "STRING",
+     "BEN_CUSTOMER_HASH": "STRING",
+     "BEN_ACCT_NO_HASH": "STRING",
+     "BEN_BANK": "STRING",
+     "PAYMENT_DETAILS": "STRING",
+     "CHARGES_ACCT_NO": "STRING",
+     "INPUTTER": "STRING",
+     "AUTHORISER": "STRING",
+     "RECORD_STATUS": "STRING",
+     "DATE_TIME": "STRING"
+    }
+   },
+   "TELLER": {
+    "pk": [
+     "TT_REF",
+     "STRING"
+    ],
+    "attrs": {
+     "TRANSACTION_CODE": "INT",
+     "DR_CR_MARKER": "STRING",
+     "CURRENCY_1": "STRING",
+     "AMOUNT_LOCAL_1": "DOUBLE",
+     "VALUE_DATE_1": "STRING",
+     "TELLER_ID_1": "STRING",
+     "NARRATIVE_1": "STRING",
+     "RECORD_STATUS": "STRING",
+     "DATE_TIME": "STRING"
+    }
+   },
+   "STMT_ENTRY": {
+    "pk": [
+     "STMT_ENTRY_ID",
+     "STRING"
+    ],
+    "attrs": {
+     "AMOUNT_LCY": "DOUBLE",
+     "AMOUNT_FCY": "DOUBLE",
+     "TRANSACTION_CODE": "INT",
+     "BOOKING_DATE": "STRING",
+     "VALUE_DATE": "STRING",
+     "TRANS_REFERENCE": "STRING",
+     "SYSTEM_ID": "STRING",
+     "PRODUCT_CATEGORY": "INT"
+    }
+   },
+   "BENEFICIARY": {
+    "pk": [
+     "BEN_ID",
+     "STRING"
+    ],
+    "attrs": {
+     "BEN_SHORT_NAME_HASH": "STRING",
+     "BEN_ACCT_NO_HASH": "STRING",
+     "BEN_BANK_SORT_CODE": "STRING",
+     "BEN_BIC": "STRING",
+     "BEN_COUNTRY": "STRING",
+     "TRANSACTION_TYPE": "STRING",
+     "DATE_TIME": "STRING"
+    }
+   },
+   "CARD_ISSUE": {
+    "pk": [
+     "CARD_ISSUE_ID",
+     "STRING"
+    ],
+    "attrs": {
+     "CARD_TYPE": "STRING",
+     "CARD_STATUS": "INT",
+     "PAN_LAST4_HASH": "STRING",
+     "ISSUE_DATE": "STRING",
+     "EXPIRY_DATE": "STRING",
+     "CANCELLATION_DATE": "STRING"
+    }
+   },
+   "EB_EXTERNAL_USER": {
+    "pk": [
+     "EXT_USER_ID",
+     "STRING"
+    ],
+    "attrs": {
+     "CHANNEL": "STRING",
+     "STATUS": "STRING",
+     "START_DATE": "STRING",
+     "END_DATE": "STRING"
+    }
+   },
+   "PROTOCOL": {
+    "pk": [
+     "PROTOCOL_ID",
+     "STRING"
+    ],
+    "attrs": {
+     "PROCESS_DATE": "STRING",
+     "TIME_MSECS": "STRING",
+     "TERMINAL_ID": "STRING",
+     "IP_ADDRESS": "STRING",
+     "APPLICATION": "STRING",
+     "LEVEL_FUNCTION": "STRING",
+     "REMARK": "STRING"
+    }
+   }
+  },
+  "edge_types": {
+   "CUSTOMER_COMPANY": {
+    "directed": true,
+    "pairs": [
+     [
+      "CUSTOMER",
+      "COMPANY"
+     ]
+    ],
+    "reverse": "reverse_CUSTOMER_COMPANY"
+   },
+   "CUSTOMER_ACCOUNT_OFFICER": {
+    "directed": true,
+    "pairs": [
+     [
+      "CUSTOMER",
+      "DEPT_ACCT_OFFICER"
+     ]
+    ],
+    "reverse": "reverse_CUSTOMER_ACCOUNT_OFFICER"
+   },
+   "RELATION_CUSTOMER": {
+    "directed": true,
+    "pairs": [
+     [
+      "CUSTOMER",
+      "CUSTOMER"
+     ]
+    ],
+    "reverse": "reverse_RELATION_CUSTOMER"
+   },
+   "ACCOUNT_CUSTOMER": {
+    "directed": true,
+    "pairs": [
+     [
+      "ACCOUNT",
+      "CUSTOMER"
+     ]
+    ],
+    "reverse": "reverse_ACCOUNT_CUSTOMER"
+   },
+   "JOINT_HOLDER": {
+    "directed": true,
+    "pairs": [
+     [
+      "ACCOUNT",
+      "CUSTOMER"
+     ]
+    ],
+    "reverse": "reverse_JOINT_HOLDER"
+   },
+   "ACCOUNT_COMPANY": {
+    "directed": true,
+    "pairs": [
+     [
+      "ACCOUNT",
+      "COMPANY"
+     ]
+    ],
+    "reverse": "reverse_ACCOUNT_COMPANY"
+   },
+   "FT_DEBIT_ACCT_NO": {
+    "directed": true,
+    "pairs": [
+     [
+      "FUNDS_TRANSFER",
+      "ACCOUNT"
+     ]
+    ],
+    "reverse": "reverse_FT_DEBIT_ACCT_NO"
+   },
+   "FT_CREDIT_ACCT_NO": {
+    "directed": true,
+    "pairs": [
+     [
+      "FUNDS_TRANSFER",
+      "ACCOUNT"
+     ]
+    ],
+    "reverse": "reverse_FT_CREDIT_ACCT_NO"
+   },
+   "FT_BENEFICIARY": {
+    "directed": true,
+    "pairs": [
+     [
+      "FUNDS_TRANSFER",
+      "BENEFICIARY"
+     ]
+    ],
+    "reverse": "reverse_FT_BENEFICIARY"
+   },
+   "FT_COMPANY": {
+    "directed": true,
+    "pairs": [
+     [
+      "FUNDS_TRANSFER",
+      "COMPANY"
+     ]
+    ],
+    "reverse": "reverse_FT_COMPANY"
+   },
+   "TT_ACCOUNT_1": {
+    "directed": true,
+    "pairs": [
+     [
+      "TELLER",
+      "ACCOUNT"
+     ]
+    ],
+    "reverse": "reverse_TT_ACCOUNT_1"
+   },
+   "TT_COMPANY": {
+    "directed": true,
+    "pairs": [
+     [
+      "TELLER",
+      "COMPANY"
+     ]
+    ],
+    "reverse": "reverse_TT_COMPANY"
+   },
+   "STMT_ACCOUNT_NUMBER": {
+    "directed": true,
+    "pairs": [
+     [
+      "STMT_ENTRY",
+      "ACCOUNT"
+     ]
+    ],
+    "reverse": "reverse_STMT_ACCOUNT_NUMBER"
+   },
+   "STMT_TRANS_REFERENCE": {
+    "directed": true,
+    "pairs": [
+     [
+      "STMT_ENTRY",
+      "FUNDS_TRANSFER"
+     ],
+     [
+      "STMT_ENTRY",
+      "TELLER"
+     ]
+    ],
+    "reverse": "reverse_STMT_TRANS_REFERENCE"
+   },
+   "BENEFICIARY_OWNING_CUSTOMER": {
+    "directed": true,
+    "pairs": [
+     [
+      "BENEFICIARY",
+      "CUSTOMER"
+     ]
+    ],
+    "reverse": "reverse_BENEFICIARY_OWNING_CUSTOMER"
+   },
+   "CARD_ISSUE_ACCOUNT": {
+    "directed": true,
+    "pairs": [
+     [
+      "CARD_ISSUE",
+      "ACCOUNT"
+     ]
+    ],
+    "reverse": "reverse_CARD_ISSUE_ACCOUNT"
+   },
+   "EXT_USER_CUSTOMER": {
+    "directed": true,
+    "pairs": [
+     [
+      "EB_EXTERNAL_USER",
+      "CUSTOMER"
+     ]
+    ],
+    "reverse": "reverse_EXT_USER_CUSTOMER"
+   },
+   "PROTOCOL_USER": {
+    "directed": true,
+    "pairs": [
+     [
+      "PROTOCOL",
+      "EB_EXTERNAL_USER"
+     ]
+    ],
+    "reverse": "reverse_PROTOCOL_USER"
+   }
+  },
+  "live": {
+   "ran": true,
+   "gsql_output_tail": " the graph 'Bank_CoreT24'.\nTrying to add local edge 'CARD_ISSUE_ACCOUNT' and its reverse edge 'reverse_CARD_ISSUE_ACCOUNT' to the graph 'Bank_CoreT24'.\nTrying to add local edge 'EXT_USER_CUSTOMER' and its reverse edge 'reverse_EXT_USER_CUSTOMER' to the graph 'Bank_CoreT24'.\nTrying to add local edge 'PROTOCOL_USER' and its reverse edge 'reverse_PROTOCOL_USER' to the graph 'Bank_CoreT24'.\n\nGraph Bank_CoreT24 updated to new version 1\nThe job setup_bank_core_t24 completes in 36.285 seconds!\nLocal schema change succeeded.\nSuccessfully dropped jobs on the graph 'Bank_CoreT24': [setup_bank_core_t24].",
+   "errors": [],
+   "vertex_types": 11,
+   "edge_types": 18,
+   "diffs": [],
+   "ok": true,
+   "dropped": true,
+   "drop_output": "The graph Bank_CoreT24 is dropped."
+  }
+ }
+]

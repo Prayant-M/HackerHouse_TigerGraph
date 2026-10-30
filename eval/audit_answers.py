@@ -41,7 +41,9 @@ from fraudagent.report.answer import validate  # noqa: E402
 ROUTE = {"DECLINE_TRANSACTION": "L1", "BLOCK_ALL_CARDS": "L2", "FILE_REPORT": "L2"}
 
 
-def audit(case_dir: Path) -> tuple[list[dict], int]:
+def audit(case_dir: Path, graph_ids: set[str] | None = None) -> tuple[list[dict], int]:
+    """graph_ids: FraudCase ids read from the live graph now. When given, the
+    graph check is against the graph, not the flag the answer recorded."""
     tx = pd.read_parquet(PATHS.staged / "transactions.parquet",
                          columns=["txn_id", "ts", "amount", "card_id"])
     tx["txn_id"] = tx["txn_id"].astype(str)
@@ -115,6 +117,8 @@ def audit(case_dir: Path) -> tuple[list[dict], int]:
             issues.append(f"§6: stopped at p={pr} without a permitted reason")
         if not c.get("written_to_graph"):                                    # graph
             issues.append("case not confirmed written to the graph")
+        elif graph_ids is not None and (c.get("graph_case_id") or f"CASE-{cid}") not in graph_ids:
+            issues.append("answer says written to the graph, but the case is not in the graph now")
 
         total += len(issues)
         rows.append({"case": cid, "trigger": p["trigger_type"], "verdict": c["verdict"],

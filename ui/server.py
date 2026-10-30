@@ -105,14 +105,48 @@ def health() -> dict[str, Any]:
                 "answer_files": len(_case_files()),
                 "calibration": PATHS.lr_table_json.exists()}
     store = get_store()
+    ids = graph_case_ids()
     return {"ok": True, "readonly": False, "graph": store.health(),
+            "graph_case_ids": sorted(ids) if ids is not None else None,
             "answer_files": len(_case_files()),
             "calibration": PATHS.lr_table_json.exists(),
             "cases_dir": str(PATHS.cases_out)}
 
 
+_GRAPH_IDS: dict[str, Any] = {"at": 0.0, "ids": None}
+
+
+def graph_case_ids() -> set[str] | None:
+    """FraudCase ids actually in the graph now (cached 60 s), so the "In graph"
+    badge reports the graph, not the flag the answer file recorded when it was
+    written. None when unknown (local backend, or the graph unreachable)."""
+    import time
+    if READONLY:
+        ids = (_snapshot("health") or {}).get("graph_case_ids")
+        return set(ids) if ids is not None else None
+    if time.time() - _GRAPH_IDS["at"] < 60:
+        return _GRAPH_IDS["ids"]
+    ids = None
+    try:
+        store = get_store()
+        conn = getattr(store, "conn", None)
+        if conn is not None:
+            ids = {v["v_id"] for v in conn.getVertices("FraudCase", select="status", limit=10000)}
+    except Exception:  # noqa: BLE001 - unknown, not "missing"
+        ids = None
+    _GRAPH_IDS.update(at=time.time(), ids=ids)
+    return ids
+
+
+def _in_graph(d: dict[str, Any], ids: set[str] | None) -> bool | None:
+    if ids is None:
+        return None
+    return (d["case"].get("graph_case_id") or f"CASE-{d['case_id']}") in ids
+
+
 @app.get("/api/cases")
 def cases() -> list[dict[str, Any]]:
+    ids = graph_case_ids()
     out = []
     for p in _case_files():
         d = json.loads(p.read_text(encoding="utf-8"))
@@ -142,13 +176,16 @@ def cases() -> list[dict[str, Any]]:
             "tainted": bool((rec.get("quality") or {}).get("tainted")),
             "origin": ((rec.get("containment") or {}).get("origin") or {}).get("entity_type"),
             "at_risk": len((rec.get("containment") or {}).get("at_risk") or []),
+            "in_graph": _in_graph(d, ids),
         })
     return out
 
 
 @app.get("/api/cases/{case_id}")
 def case_detail(case_id: str) -> dict[str, Any]:
-    return _load(case_id)
+    d = _load(case_id)
+    d["in_graph"] = _in_graph(d, graph_case_ids())
+    return d
 
 
 @app.get("/api/graph/{case_id}")

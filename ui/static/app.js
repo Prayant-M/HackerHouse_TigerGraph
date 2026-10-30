@@ -326,7 +326,9 @@ function renderDetail(d) {
           <div class="ch-title"><h2>${esc(d.case_id)}</h2>${verdictPill(c.verdict).replace('class="pill', 'class="pill ch-verdict')}
             ${d.sar?.file ? `<span class="pill fraud">SAR filed</span>` : ""}
             ${d.next_best_actions.what_changed !== "nothing" ? `<span class="pill brand">Decision changed</span>` : ""}
-            ${(d.agent_record || {}).write_verification?.read_back || c.written_to_graph ? `<span class="pill legitimate" title="The case was written to TigerGraph and read back">✓ In graph</span>` : ""}
+            ${d.in_graph === true ? `<span class="pill legitimate" title="Checked now: this case is in TigerGraph">✓ In graph</span>`
+              : d.in_graph === false ? `<span class="pill fraud" title="Checked now: the answer says it was written, but the case is not in TigerGraph">✗ Not in graph</span>`
+              : ((d.agent_record || {}).write_verification?.read_back || c.written_to_graph) ? `<span class="pill" title="Written and read back when the case ran; the graph could not be checked now">Written at run time</span>` : ""}
             ${(d.agent_record || {}).graph_transport === "mcp" ? `<span class="pill neutral" title="Graph reads and writes went through the TigerGraph MCP server">via MCP</span>` : ""}</div>
           <div class="muted" style="margin-top:6px;font-size:14px">${tg.ico} ${esc(tg.label)} · ${esc(patternName(c.pattern))} · opened ${esc((t.opened_at || "").slice(0, 16))}</div>
         </div>
