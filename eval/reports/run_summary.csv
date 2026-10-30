@@ -1,0 +1,4 @@
+case,trigger,verdict,pattern,p_fraud,status,exposure,sar,final,margin_k,gate,conformal_set,hostile_text,tainted,latency_s,tokens,tool_calls,cost_usd,attestations
+HHF-017,risk_score,fraud,card_not_present_new_device,0.956,closed_fraud,43.92,False,BLOCK_CARD|CREATE_CASE,1,False,"fraud,legit",False,False,137.77,392,34,0.00233,10
+HHF-012,risk_score,legitimate,none,0.02,closed_legitimate,0.0,False,CREATE_CASE|CLOSE_NO_FRAUD,1,False,"fraud,legit",False,False,224.62,0,26,0.0,9
+HHF-009,risk_score,legitimate,none,0.02,closed_legitimate,0.0,False,CREATE_CASE|CLOSE_NO_FRAUD,1,False,"fraud,legit",False,False,224.41,0,28,0.0,10

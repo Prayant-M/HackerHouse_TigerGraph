@@ -143,5 +143,107 @@ def main() -> None:
     log(f"wrote {PATHS.behaviour_parquet} ({len(out):,} rows) in {time.time()-t0:.1f}s")
 
 
+def rank_against(ref: np.ndarray, new: np.ndarray) -> np.ndarray:
+    """Rank-normalise `new` against the reference distribution `ref`, column by
+    column, so a new month is placed on the old scale instead of re-scaling it."""
+    out = np.zeros_like(new, dtype=np.float32)
+    for j in range(new.shape[1]):
+        r = ref[:, j]
+        r = np.sort(r[np.isfinite(r)])
+        if r.size < 2:
+            continue
+        col = new[:, j]
+        mask = np.isfinite(col)
+        pos = np.searchsorted(r, col[mask], side="left").astype(np.float32) / (r.size - 1)
+        out[mask, j] = np.clip(pos, 0.0, 1.0) * 2.0 - 1.0
+    return out
+
+
+def append() -> None:
+    """Final round: January arrives. Do NOT refit: refitting the PCA and the
+    rank scales would move every existing vector, invalidating the behaviour
+    index in the graph, the conformal support set and the closed-case fact
+    replays. Instead re-derive the Round 1 fit exactly (same chunks, same
+    medians), project only the new transactions through it, and rank them
+    against the Round 1 distribution. Existing vectors are kept byte-identical."""
+    t0 = time.time()
+    old = pd.read_parquet(PATHS.behaviour_parquet)
+    have = set(old["txn_id"].astype(str))
+    files = PATHS.transaction_files()
+    base_file, new_files = files[0], files[1:]
+    if not new_files:
+        log("no new transaction files; nothing to append")
+        return
+    log(f"refitting the Round 1 PCA on {base_file.name} (identical chunks)")
+    ipca = IncrementalPCA(n_components=N_PCA)
+    medians = None
+    for chunk in pd.read_csv(base_file, usecols=["TransactionID"] + V_COLS, chunksize=CHUNK):
+        vals = chunk[V_COLS].to_numpy(dtype=np.float32, na_value=np.nan)
+        if medians is None:
+            medians = np.nanmedian(vals, axis=0)
+            medians = np.where(np.isfinite(medians), medians, 0.0).astype(np.float32)
+        vals = np.where(np.isfinite(vals), vals, medians)
+        ipca.partial_fit(np.sign(vals) * np.log1p(np.abs(vals)))
+
+    def project(path):
+        parts = []
+        for chunk in pd.read_csv(path, usecols=["TransactionID"] + V_COLS, chunksize=CHUNK):
+            vals = chunk[V_COLS].to_numpy(dtype=np.float32, na_value=np.nan)
+            vals = np.where(np.isfinite(vals), vals, medians)
+            comp = ipca.transform(np.sign(vals) * np.log1p(np.abs(vals))).astype(np.float32)
+            parts.append(pd.DataFrame(comp, index=chunk["TransactionID"].to_numpy()))
+        return pd.concat(parts)
+
+    ref_v = project(base_file)
+    new_v = pd.concat([project(f) for f in new_files])
+    log(f"projected {len(new_v):,} new transactions through the Round 1 PCA")
+
+    cols = ["TransactionID", "txn_id", "amount_log", "hour", "dist1", "dist2", "risk_score",
+            "amt_zscore_card", "gap_hours", "m_mismatch_count", "m_missing_count"] \
+        + C_COLS + D_COLS + M_TRI
+    tx = pd.read_parquet(PATHS.tx_parquet, columns=cols).set_index("TransactionID")
+
+    def raw_blocks(t: pd.DataFrame):
+        base = np.column_stack([
+            t["amount_log"].to_numpy(dtype=np.float32),
+            t["amt_zscore_card"].to_numpy(dtype=np.float32),
+            np.log1p(t["gap_hours"].fillna(-1).clip(lower=-1).to_numpy(dtype=np.float32) + 1),
+            t["risk_score"].to_numpy(dtype=np.float32),
+            t["dist1"].to_numpy(dtype=np.float32, na_value=np.nan),
+            t["dist2"].to_numpy(dtype=np.float32, na_value=np.nan),
+            t["m_mismatch_count"].to_numpy(dtype=np.float32),
+            t["m_missing_count"].to_numpy(dtype=np.float32)])
+        cd = t[C_COLS + D_COLS].to_numpy(dtype=np.float32, na_value=np.nan)
+        return base, cd
+
+    ref_t = tx.loc[ref_v.index]
+    new_t = tx.loc[new_v.index]
+    rb, rcd = raw_blocks(ref_t)
+    nb, ncd = raw_blocks(new_t)
+    base_cols = rank_against(rb, nb)
+    rcd_ranked = rank_normalise(rcd)
+    cd = rank_against(rcd, ncd)
+    v_emb = rank_against(ref_v.to_numpy(dtype=np.float32), new_v.to_numpy(dtype=np.float32))
+    hour = new_t["hour"].to_numpy(dtype=np.float32)
+    cyc = np.column_stack([np.sin(2 * np.pi * hour / 24.0), np.cos(2 * np.pi * hour / 24.0)])
+    mtri = new_t[M_TRI].to_numpy(dtype=np.float32)
+    d_summary = rank_against(rcd_ranked[:, 14:], cd[:, 14:])[:, :7]
+    feat = np.column_stack([base_cols, cyc, cd[:, :14], mtri, v_emb, d_summary]).astype(np.float32)
+    feat = np.nan_to_num(feat, nan=0.0, posinf=0.0, neginf=0.0)
+    norms = np.linalg.norm(feat, axis=1, keepdims=True)
+    feat = feat / np.where(norms == 0, 1.0, norms)
+    add = pd.DataFrame({"txn_id": new_t["txn_id"].astype(str).to_numpy()})
+    add["behaviour_emb"] = list(feat)
+    add = add[~add["txn_id"].isin(have)]
+    out = pd.concat([old, add], ignore_index=True)
+    out.to_parquet(PATHS.behaviour_parquet, index=False)
+    log(f"appended {len(add):,} vectors (kept {len(old):,} unchanged) in {time.time()-t0:.0f}s")
+
+
+if __name__ == "__main__" and "--append" in sys.argv:
+    append()
+    raise SystemExit(0)
+
+
 if __name__ == "__main__":
     main()

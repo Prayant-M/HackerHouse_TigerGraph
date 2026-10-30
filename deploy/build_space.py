@@ -145,9 +145,69 @@ def build(out: Path) -> None:
     print(f"[space] bundle at {out} · {size / 1e6:.1f} MB")
 
 
+STATIC_README = SPACE_README.replace("sdk: docker\napp_port: 7860\n", "sdk: static\napp_file: index.html\n")
+
+
+def build_static(out: Path) -> None:
+    """Pre-render every read-only API response to JSON beside the page.
+
+    No server at all: any static host (Hugging Face static Spaces, GitHub
+    Pages, Netlify) can serve the result, including under a sub-path.
+    """
+    import os
+    os.environ["CONSOLE_READONLY"] = "1"
+    sys.path.insert(0, str(ROOT / "ui"))
+    import server  # noqa: WPS433 - reads CONSOLE_READONLY at import
+
+    if out.exists():
+        shutil.rmtree(out)
+    shutil.copytree(ROOT / "ui" / "static", out / "static",
+                    ignore=shutil.ignore_patterns("_probe.html", "index.html"))
+    page = (ROOT / "ui" / "static" / "index.html").read_text(encoding="utf-8")
+    page = page.replace('href="/static/', 'href="static/').replace('src="/static/', 'src="static/')
+    page = page.replace("<html ", '<html data-static="1" ', 1)
+    assert 'data-static="1"' in page, "index.html has no <html ...> tag to mark"
+    (out / "index.html").write_text(page, encoding="utf-8")
+
+    def clean(x):
+        # Python's json writes NaN, which no browser will parse; the page reads null.
+        if isinstance(x, float) and (x != x or x in (float("inf"), float("-inf"))):
+            return None
+        if isinstance(x, dict):
+            return {k: clean(v) for k, v in x.items()}
+        if isinstance(x, (list, tuple)):
+            return [clean(v) for v in x]
+        return x
+
+    def dump(rel: str, data) -> None:
+        f = out / f"{rel}.json"
+        f.parent.mkdir(parents=True, exist_ok=True)
+        f.write_text(json.dumps(clean(data), default=str, allow_nan=False), encoding="utf-8")
+
+    dump("api/health", server.health())
+    cases = server.cases()
+    dump("api/cases", cases)
+    for c in cases:
+        dump(f"api/cases/{c['case_id']}", server.case_detail(c["case_id"]))
+        dump(f"api/graph/{c['case_id']}", server.case_graph(c["case_id"]))
+    dump("api/approvals", server.approvals())
+    dump("api/calibration", server.calibration())
+    dump("api/policy", server.policy())
+    dump("api/audit", server.answer_audit())
+    dump("api/autonomous", server.autonomous())
+    (out / "README.md").write_text(STATIC_README, encoding="utf-8")
+
+    leaked = [p for p in out.rglob("*") if p.name == ".env" or p.suffix == ".parquet"]
+    assert not leaked, f"refusing to ship {leaked}"
+    size = sum(p.stat().st_size for p in out.rglob("*") if p.is_file())
+    print(f"[space] static site at {out} · {size / 1e6:.1f} MB")
+
+
 def main() -> int:
     ap = argparse.ArgumentParser()
-    ap.add_argument("--out", default=str(ROOT / "build" / "space"))
+    ap.add_argument("--out", default=None)
+    ap.add_argument("--static", action="store_true",
+                    help="export a server-less static site instead of a Docker app")
     ap.add_argument("--console", default="http://127.0.0.1:8080",
                     help="a running live console to take the health snapshot from")
     ap.add_argument("--keep-snapshot", action="store_true",
@@ -155,7 +215,10 @@ def main() -> int:
     args = ap.parse_args()
     if not args.keep_snapshot:
         capture_snapshot(args.console)
-    build(Path(args.out))
+    if args.static:
+        build_static(Path(args.out or ROOT / "build" / "static"))
+    else:
+        build(Path(args.out or ROOT / "build" / "space"))
     return 0
 
 

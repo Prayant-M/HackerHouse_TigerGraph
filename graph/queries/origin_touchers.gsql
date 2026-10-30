@@ -1,0 +1,43 @@
+/* origin_touchers — the forward set (Innovation 2): every card that touched the
+   compromise origin inside the window, its last touch, and whether it already
+   sits on a confirmed-fraud closed case by as_of. Cards that do not are the
+   at-risk cards protected with monitor + step-up only.                       */
+
+USE GRAPH FraudGraph
+
+CREATE OR REPLACE QUERY origin_touchers(STRING entity_type, STRING entity,
+                                        DATETIME since, DATETIME until, DATETIME as_of)
+FOR GRAPH FraudGraph SYNTAX v2 {
+  MapAccum<STRING, MaxAccum<DATETIME>> @@last;
+  MapAccum<STRING, SumAccum<INT>> @@n;
+  MapAccum<STRING, STRING> @@owner;
+  SetAccum<STRING> @@fraud_cards;
+
+  fr = SELECT c FROM ClosedCase:c
+       WHERE c.outcome == "confirmed_fraud" AND c.opened_at <= as_of
+       ACCUM @@fraud_cards += c.card_id;
+
+  sd = {DeviceProfile.*};
+  sd = SELECT d FROM sd:d WHERE entity_type == "device_profile" AND d.device_profile == entity;
+  r1 = SELECT x FROM sd:d -(DEVICE_USED_IN>:e)- Transaction:x
+       WHERE x.ts >= since AND x.ts <= until
+       ACCUM @@last += (x.card_id -> x.ts), @@n += (x.card_id -> 1),
+             @@owner += (x.card_id -> x.customer_id);
+  sm = {EmailDomain.*};
+  sm = SELECT m FROM sm:m WHERE entity_type == "email_p" AND m.domain == entity;
+  r2 = SELECT x FROM sm:m -(EMAIL_USED_BY>:e)- Transaction:x
+       WHERE x.ts >= since AND x.ts <= until
+       ACCUM @@last += (x.card_id -> x.ts), @@n += (x.card_id -> 1),
+             @@owner += (x.card_id -> x.customer_id);
+  IF entity_type == "region" OR entity_type == "merchant_proxy" THEN
+    r3 = SELECT x FROM Transaction:x
+         WHERE x.ts >= since AND x.ts <= until
+           AND ((entity_type == "region" AND x.region == entity)
+             OR (entity_type == "merchant_proxy" AND
+                 x.product_cd + "|$" + to_string(float_to_int(x.amount / 25) * 25) == entity))
+         ACCUM @@last += (x.card_id -> x.ts), @@n += (x.card_id -> 1),
+               @@owner += (x.card_id -> x.customer_id);
+  END;
+  PRINT @@last AS last_touch, @@n AS n_touches, @@owner AS owner,
+        @@fraud_cards AS fraud_cards;
+}

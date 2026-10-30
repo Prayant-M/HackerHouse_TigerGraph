@@ -216,7 +216,7 @@
       "card_id": "C02354-K2",
       "customer_id": "C02354",
       "opened_at": "2016-11-27 14:41:26",
-      "risk_score": NaN
+      "risk_score": null
     },
     "as_of": "2016-11-27 14:41:26",
     "posterior": {

@@ -9,12 +9,20 @@ after cloning.
 
 Endpoints:
     GET  /api/health                  backend, dataset and index status
-    GET  /api/cases                   the twenty answer files, summarised
+    GET  /api/cases                   every answer file (HHF final round, HHG Round 1), summarised
     GET  /api/cases/{case_id}         one full investigation record
     GET  /api/graph/{case_id}         the case subgraph, for the canvas
     GET  /api/investigate/{case_id}   re-run the agent live (SSE reasoning trace)
     GET  /api/approvals               actions waiting on L1/L2 sign-off
-    POST /api/approvals/{case}/{n}    approve or reject one, writing the edge
+    POST /api/approvals/{case}/{n}    approve or reject one (Bearer token -> role, server-side)
+    GET  /api/approvals/verify        verify the signed, hash-chained approval ledger
+    GET  /api/proof/{case_id}         proof-first examiner view (C6)
+    POST /api/proof/{case_id}/flip    remove facts and recompute the decision live
+    GET  /api/replay/{case_id}        recorded tool I/O per step (C6)
+    POST /api/replay/{case}/rerun/{n} re-run one recorded call against the live graph
+    GET  /api/ring/{case_id}          ring replay frames from attested txns (C5)
+    GET  /api/lifecycle/{case_id}     state changes, approvals, handover (C14)
+    POST /api/feedback/{case_id}      accept / reject a finding (C8)
     GET  /api/calibration             the measured likelihood-ratio table
     GET  /api/policy                  the compiled policy rules with clause text
     GET  /api/audit                   eval/audit_answers.py over the answer files
@@ -53,7 +61,7 @@ except Exception:  # pragma: no cover - non-reconfigurable stream
 
 import pandas as pd  # noqa: E402
 import uvicorn  # noqa: E402
-from fastapi import FastAPI, HTTPException  # noqa: E402
+from fastapi import FastAPI, Header, HTTPException  # noqa: E402
 from fastapi.responses import FileResponse, JSONResponse, StreamingResponse  # noqa: E402
 from fastapi.staticfiles import StaticFiles  # noqa: E402
 
@@ -67,19 +75,18 @@ SNAPSHOT = Path(__file__).parent / "snapshot"
 READONLY = os.environ.get("CONSOLE_READONLY", "").strip().lower() in {"1", "true", "yes"}
 app = FastAPI(title="TigerGraph Agentic Fraud Investigation — Analyst Console")
 
-_approvals: dict[str, dict[str, Any]] = {}
 _lock = threading.Lock()
 
 
 def _case_files() -> list[Path]:
-    return sorted(PATHS.cases_out.glob("HHG-*.json"))
+    return sorted(list(PATHS.cases_out.glob("HHF-*.json")) + list(PATHS.cases_out.glob("HHG-*.json")))
 
 
 def _load(case_id: str) -> dict[str, Any]:
     path = PATHS.cases_out / f"{case_id}.json"
     if not path.exists():
         raise HTTPException(404, f"{case_id} has not been investigated yet — "
-                                 f"run `python benchmark/run_20.py`")
+                                 f"run `make case CASE=<id>`")
     return json.loads(path.read_text(encoding="utf-8"))
 
 
@@ -126,6 +133,15 @@ def cases() -> list[dict[str, Any]]:
             "requests": len(d["evidence_requests"]),
             "summary": c["summary"],
             "latency_s": d.get("latency_s"), "tool_calls": d.get("tool_calls"),
+            "round": "final" if d["case_id"].startswith("HHF") else "round1",
+            "margin_k": (rec.get("proof") or {}).get("margin_k"),
+            "minimal_facts": (rec.get("proof") or {}).get("minimal_sufficient_facts", []),
+            "gate_applied": bool((rec.get("gate") or {}).get("applied")),
+            "conformal_set": (rec.get("conformal") or {}).get("set", []),
+            "hostile_text": bool((rec.get("text_facts") or {}).get("hostile_text_detected")),
+            "tainted": bool((rec.get("quality") or {}).get("tainted")),
+            "origin": ((rec.get("containment") or {}).get("origin") or {}).get("entity_type"),
+            "at_risk": len((rec.get("containment") or {}).get("at_risk") or []),
         })
     return out
 
@@ -204,8 +220,7 @@ async def investigate(case_id: str) -> StreamingResponse:
         raise HTTPException(403, "Live re-runs are disabled on this read-only deployment. "
                                  "Clone the repository and run `python ui/server.py` "
                                  "to watch the agent investigate against TigerGraph.")
-    pack = pd.read_csv(PATHS.case_pack_csv)
-    pack["opened_at"] = pd.to_datetime(pack["opened_at"])
+    pack = _pack()
     row = pack[pack["case_id"] == case_id]
     if row.empty:
         raise HTTPException(404, f"{case_id} is not in the case pack")
@@ -258,59 +273,344 @@ async def investigate(case_id: str) -> StreamingResponse:
 
 @app.get("/api/approvals")
 def approvals() -> list[dict[str, Any]]:
-    """Everything the agent recommended but may not execute.
+    """Everything the agent recommended but may not execute, with the decision
+    (if any) read from the signed, append-only approval ledger."""
+    from fraudagent.governance.approvals import read_ledger
 
-    The queue is real: an approval writes an `APPROVED_BY` edge, and a rejection
-    is recorded too — a recommendation an analyst overruled is the most useful
-    training signal the memory layer gets.
-    """
+    decided = {(r["case_id"], r["index"]): r for r in read_ledger()
+               if r.get("kind") == "decision"}
     out: list[dict[str, Any]] = []
     for p in _case_files():
         d = json.loads(p.read_text(encoding="utf-8"))
         for i, a in enumerate(d["next_best_actions"]["final"]):
             if a["route"] == "auto":
                 continue
-            key = f"{d['case_id']}:{i}"
-            with _lock:
-                decided = _approvals.get(key)
             out.append({
-                "key": key, "case_id": d["case_id"], "index": i,
+                "key": f"{d['case_id']}:{i}", "case_id": d["case_id"], "index": i,
                 "action": a["action"], "route": a["route"], "reason": a["reason"],
                 "approver": {"L1": "team lead", "L2": "fraud manager"}[a["route"]],
                 "exposure_usd": d["case"]["exposure_usd"],
                 "fraud_probability": d["case"]["fraud_probability"],
-                "decision": decided,
+                "decision": decided.get((d["case_id"], i)),
             })
     return out
 
 
 @app.post("/api/approvals/{case_id}/{index}")
-def decide(case_id: str, index: int, payload: dict[str, Any]) -> dict[str, Any]:
+def decide(case_id: str, index: int, payload: dict[str, Any],
+           authorization: str | None = Header(default=None)) -> JSONResponse:
+    """Approve or reject one routed action.
+
+    The approver's role comes from the bearer token, looked up server-side
+    against hashed tokens. Anything the body says about role is ignored (and
+    recorded as ignored). Self-approval, wrong-role, replayed and duplicate
+    approvals are refused with 4xx, and every refusal enters the hash chain.
+    There is no endpoint that edits or deletes an approval."""
+    from fraudagent.governance import approvals as gov
+
+    body_role = str(payload.get("role") or payload.get("analyst_role") or "")
+    try:
+        principal = gov.authenticate(authorization)
+    except gov.AuthError as exc:
+        gov.refuse(None, case_id, index, exc.status, exc.message, body_role)
+        return JSONResponse({"error": exc.message, "status": exc.status}, status_code=exc.status)
+    if READONLY:
+        return JSONResponse({"error": "read-only deployment"}, status_code=403)
+    try:
+        answer = _load(case_id)
+    except HTTPException as exc:
+        gov.refuse(principal, case_id, index, 404, "unknown case", body_role)
+        return JSONResponse({"error": exc.detail}, status_code=404)
+    try:
+        rec = gov.decide(principal, answer, index, bool(payload.get("approved")),
+                         note=str(payload.get("note") or ""),
+                         proposed_by=str(payload.get("proposed_by") or "agent"),
+                         body_role=body_role, presented=payload.get("record"))
+    except gov.AuthError as exc:
+        return JSONResponse({"error": exc.message, "status": exc.status}, status_code=exc.status)
+    from fraudagent.governance import lifecycle as lc
+    lc.record_approval(case_id, rec)
+    # Mirror the sealed record into the graph through the console's own write
+    # path (governance_write); the agent's credentials cannot reach it.
+    store = get_store()
+    if getattr(store, "backend", "") == "tigergraph":            # pragma: no cover - network
+        try:
+            store.conn.runInstalledQuery(
+                "governance_write", {"kind": "approval", "record_json": json.dumps(
+                    {**rec, "id": f"APR-{rec['seq']:05d}"}, default=str)}, usePost=True)
+            rec["graph_write"] = "governance_write"
+        except Exception as exc:
+            rec["graph_write_error"] = str(exc)[:200]
+    return JSONResponse(rec)
+
+
+@app.get("/api/approvals/verify")
+def approvals_verify() -> dict[str, Any]:
+    from fraudagent.governance import approvals as gov
+
+    ok, msg = gov.verify()
+    return {"ok": ok, "detail": msg, "public_key": gov.public_key_hex(),
+            "records": len(gov.read_ledger())}
+
+
+@app.get("/api/ledger")
+def approval_ledger() -> list[dict[str, Any]]:
+    from fraudagent.governance.approvals import read_ledger
+
+    return read_ledger()[-200:]
+
+
+@app.post("/api/feedback/{case_id}")
+def feedback(case_id: str, payload: dict[str, Any],
+             authorization: str | None = Header(default=None)) -> JSONResponse:
+    """C8: accept or reject one finding. Any authenticated role may give feedback;
+    the record names who, and later behaviour cites it."""
+    from fraudagent.governance import approvals as gov
+    from fraudagent.governance import feedback as fb
+
+    try:
+        principal = gov.authenticate(authorization)
+    except gov.AuthError as exc:
+        return JSONResponse({"error": exc.message}, status_code=exc.status)
+    answer = _load(case_id)
+    try:
+        rec = fb.record(principal, answer, str(payload.get("finding", "")),
+                        bool(payload.get("accepted")), str(payload.get("note") or ""))
+    except ValueError as exc:
+        return JSONResponse({"error": str(exc)}, status_code=400)
+    return JSONResponse(rec)
+
+
+@app.get("/api/feedback")
+def feedback_list() -> dict[str, Any]:
+    from fraudagent.governance import feedback as fb
+
+    return {"records": fb.read(), "effective": fb.adjustments()}
+
+
+@app.get("/api/detectors")
+def detectors() -> list[dict[str, Any]]:
+    from fraudagent.detectors.typologies import registry
+
+    return registry()
+
+
+@app.post("/api/detectors/{detector_id}")
+def decide_detector(detector_id: str, payload: dict[str, Any],
+                    authorization: str | None = Header(default=None)) -> JSONResponse:
+    """C2/C3: a proposed detector joins the toolkit only when a fraud manager
+    approves it. Same token auth, same signed ledger."""
+    from fraudagent.detectors import typologies as T
+    from fraudagent.governance import approvals as gov
+
+    try:
+        principal = gov.authenticate(authorization)
+    except gov.AuthError as exc:
+        return JSONResponse({"error": exc.message}, status_code=exc.status)
+    reg = T.registry()
+    det = next((d for d in reg if d["id"] == detector_id), None)
+    if det is None:
+        return JSONResponse({"error": "no such detector"}, status_code=404)
+    if principal.role != "fraud_manager":
+        gov.refuse(principal, detector_id, -1, 403, "only a fraud manager approves detectors")
+        return JSONResponse({"error": "only a fraud manager may approve a detector"},
+                            status_code=403)
+    if det.get("status") in {"approved", "rejected"}:
+        return JSONResponse({"error": f"already {det['status']}"}, status_code=409)
     approved = bool(payload.get("approved"))
-    analyst = str(payload.get("analyst") or "ANALYST-01")
-    record = {"approved": approved, "analyst": analyst,
-              "at": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),
-              "note": str(payload.get("note") or "")}
     with _lock:
-        _approvals[f"{case_id}:{index}"] = record
+        rec = gov._append({"kind": "detector_decision", "case_id": detector_id, "index": -1,
+                           "approved": approved, "actor_id": principal.actor_id,
+                           "actor_role": principal.role, "backtest": det.get("backtest_october")
+                           or det.get("backtest"), "at": time.strftime("%Y-%m-%d %H:%M:%S",
+                                                                       time.gmtime())})
+        det["status"] = "approved" if approved else "rejected"
+        det["approved_by"] = principal.actor_id
+        det["approval_seq"] = rec["seq"]
+        T.save_registry(reg)
+    store = get_store()
+    if getattr(store, "backend", "") == "tigergraph":            # pragma: no cover - network
+        try:
+            store.conn.runInstalledQuery("governance_write", {"kind": "detector", "record_json":
+                json.dumps({"id": det["id"], "name": det["name"], "origin": det["origin"],
+                            "spec": json.dumps(det["spec"]), "status": det["status"],
+                            "backtest": json.dumps(det.get("backtest_october") or
+                                                   det.get("backtest") or {}),
+                            "approved_by": principal.actor_id})}, usePost=True)
+        except Exception as exc:
+            rec["graph_write_error"] = str(exc)[:200]
+    return JSONResponse({"detector": det, "ledger": rec})
+
+
+@app.get("/api/proof/{case_id}")
+def proof_view(case_id: str) -> dict[str, Any]:
+    """C6 examiner view, proof first."""
+    d = _load(case_id)
+    rec = d.get("agent_record", {})
+    return {"case_id": case_id, "proof": rec.get("proof", {}), "gate": rec.get("gate", {}),
+            "conformal": rec.get("conformal", {}), "quality": rec.get("quality", {}),
+            "final": d["next_best_actions"]["final"], "verdict": d["case"]["verdict"],
+            "attestations": rec.get("attestations", [])}
+
+
+@app.get("/api/replay/{case_id}")
+def regulator_replay(case_id: str) -> dict[str, Any]:
+    """C6: what the agent saw at each step — the trace joined to the recorded
+    tool I/O, each call with its stored response digest and a preview."""
+    import pickle
+
+    from fraudagent.agent.recorder import RECORDINGS, canonical, load_recording
+
+    d = _load(case_id)
+    rec = load_recording(case_id) or {"calls": []}
+    calls = []
+    for c in rec.get("calls", []):
+        preview = ""
+        blob = RECORDINGS / case_id / f"{c.get('digest', '')}.pkl"
+        if c.get("ok") and blob.exists():
+            try:
+                preview = canonical(pickle.loads(blob.read_bytes()))[:600]
+            except Exception:
+                preview = "(unreadable)"
+        calls.append({**{k: c.get(k) for k in ("seq", "method", "params", "digest",
+                                                  "latency_ms", "ok", "error", "bytes")},
+                      "response_preview": preview})
+    return {"case_id": case_id, "trace": d.get("agent_record", {}).get("trace", []),
+            "decisions": d.get("agent_record", {}).get("decisions", []),
+            "tool_calls": calls, "n_calls": len(calls),
+            "proof": d.get("agent_record", {}).get("proof", {})}
+
+
+@app.post("/api/replay/{case_id}/rerun/{seq}")
+def rerun_call(case_id: str, seq: int) -> dict[str, Any]:
+    """Challenge one step: re-run that recorded tool call against the live
+    store and compare the response digest with what the agent saw."""
+    from fraudagent.agent.recorder import digest, load_recording
 
     if READONLY:
-        record["graph_write"] = "skipped: read-only deployment"
-        return record
+        raise HTTPException(403, "read-only deployment")
+    rec = load_recording(case_id) or {"calls": []}
+    call = next((c for c in rec["calls"] if c.get("seq") == seq), None)
+    if call is None or not call.get("ok") or call["method"] == "write_case":
+        raise HTTPException(404, "no re-runnable call with that sequence number")
+    params = json.loads(call["params"])
+    args = [_revive(a) for a in params["args"]]
+    kwargs = {k: _revive(v) for k, v in params["kwargs"].items()}
     store = get_store()
-    if getattr(store, "backend", "") == "tigergraph":
-        try:                                               # pragma: no cover
-            d = _load(case_id)
-            aid = f"{d['case']['graph_case_id']}-FIN-{index + 1:02d}"
-            store.graph.upsertVertex("Analyst", analyst,
-                                    {"role": d["next_best_actions"]["final"][index]["route"],
-                                     "approval_ceiling": 0.0})
-            store.graph.upsertEdge("RecommendedAction", aid, "APPROVED_BY",
-                                  "Analyst", analyst,
-                                  {"approved": approved, "approved_at": record["at"]})
-        except Exception as exc:
-            record["graph_write_error"] = str(exc)
-    return record
+    result = getattr(store, call["method"])(*args, **kwargs)
+    now = digest(result)
+    return {"seq": seq, "method": call["method"], "recorded_digest": call["digest"],
+            "live_digest": now, "matches": now == call["digest"]}
+
+
+def _revive(v: Any) -> Any:
+    from datetime import datetime
+
+    if isinstance(v, str) and len(v) >= 19 and v[4] == "-" and v[10] == " ":
+        try:
+            return datetime.fromisoformat(v)
+        except ValueError:
+            return v
+    return v
+
+
+@app.post("/api/proof/{case_id}/flip")
+def flip_fact(case_id: str, payload: dict[str, Any]) -> dict[str, Any]:
+    """Flip one fact live: rebuild the decision with the named facts removed.
+    Served from the recording, so it needs no graph and no model."""
+    from fraudagent.agent.graph import Investigator, trigger_from_row
+    from fraudagent.agent.recorder import RecordingStore, load_recording
+    from fraudagent.agent import final_round as FR
+    from fraudagent.core import proof as P
+
+    remove = set(payload.get("remove") or [])
+    rec = load_recording(case_id)
+    if rec is None:
+        raise HTTPException(404, "no recording for this case; run it first")
+    pack = _pack()
+    row = pack[pack["case_id"] == case_id].to_dict("records")[0]
+
+    class _Base:
+        backend = "replay"
+        call_count = 0
+    store = RecordingStore(_Base(), case_id, mode="replay", recording=rec)
+    inv = Investigator(store)
+    inv.run(trigger_from_row(row), case_id)
+    st = inv.last_state
+    facts, fc, _ = FR.fact_context(st, FR_base(st))
+    full = P.decide(set(facts), fc)
+    out = P.decide(set(facts) - remove, fc)
+    return {"removed": sorted(remove), "facts": facts,
+            "before": {"action_class": list(full.action_class), "verdict": full.verdict,
+                       "p_fraud": round(full.p_fraud, 4),
+                       "actions": full.decision.action_names()},
+            "after": {"action_class": list(out.action_class), "verdict": out.verdict,
+                      "p_fraud": round(out.p_fraud, 4), "actions": out.decision.action_names()},
+            "flips": out.action_class != full.action_class}
+
+
+def FR_base(state):  # noqa: N802 - mirrors the agent's helper name
+    from fraudagent.agent.nodes import _case_state
+
+    return _case_state(state, final=True)
+
+
+@app.get("/api/ring/{case_id}")
+def ring_replay(case_id: str) -> dict[str, Any]:
+    """C5: the ring forming, frame by frame, built from attested transactions:
+    which cards joined when, through what, and how the loss accumulated."""
+    d = _load(case_id)
+    plan = d.get("agent_record", {}).get("containment") or {}
+    cards = sorted(set(plan.get("ring_cards") or []) | set(d["case"]["connected_card_ids"])
+                   | {d["agent_record"]["trigger"]["card_id"]})
+    if len(cards) < 2:
+        return {"case_id": case_id, "frames": [], "note": "not a ring case"}
+    from datetime import datetime
+
+    as_of = datetime.fromisoformat(d["agent_record"]["as_of"])
+    store = get_store()
+    shared = set(d["case"]["connected_device_profiles"]) | set(
+        (plan.get("ring_at_asof") or {}).get("devices", []))
+    origin = (plan.get("origin") or {}).get("entity")
+    rows = []
+    for c in cards[:40]:
+        for t in store.card_history(c, as_of, window_days=45):
+            if t.device_profile and (t.device_profile in shared or t.device_profile == origin):
+                rows.append({"txn_id": t.txn_id, "ts": str(t.ts), "card_id": c,
+                             "amount": t.amount, "device": t.device_profile,
+                             "proxy": t.proxy})
+    rows.sort(key=lambda r: r["ts"])
+    joined: dict[str, str] = {}
+    frames, loss = [], 0.0
+    for r in rows:
+        if r["card_id"] not in joined:
+            joined[r["card_id"]] = r["ts"]
+        loss += r["amount"]
+        frames.append({**r, "cards_in_ring": len(joined), "cumulative_usd": round(loss, 2),
+                       "new_card": joined[r["card_id"]] == r["ts"]})
+    return {"case_id": case_id, "origin": origin, "cards": cards, "joined_at": joined,
+            "frames": frames, "attested_txn_ids": [r["txn_id"] for r in rows]}
+
+
+@app.get("/api/lifecycle/{case_id}")
+def lifecycle_view(case_id: str) -> dict[str, Any]:
+    from fraudagent.governance import lifecycle as lc
+    from fraudagent.governance.approvals import decisions_for
+
+    d = _load(case_id)
+    rec = d.get("agent_record", {})
+    return {"case_id": case_id, "state_changes": rec.get("lifecycle", []),
+            "history": lc.history(case_id), "approvals": decisions_for(case_id),
+            "handover": rec.get("handover", {}), "watch_children": rec.get("watch_children", [])}
+
+
+def _pack() -> pd.DataFrame:
+    sys.path.insert(0, str(ROOT / "benchmark"))
+    from run_case import pack_path  # noqa: WPS433
+
+    pack = pd.read_csv(pack_path(), dtype={"flagged_txn_id": str})
+    pack["opened_at"] = pd.to_datetime(pack["opened_at"])
+    return pack
 
 
 @app.get("/api/actions")

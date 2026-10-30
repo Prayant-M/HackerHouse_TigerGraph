@@ -1,0 +1,60 @@
+{
+ "source": "round_2_dataset/grader/grade.py (copied rules; tests assert our policy agrees)",
+ "actions": [
+  "ALLOW_TRANSACTION",
+  "BLOCK_ALL_CARDS",
+  "BLOCK_CARD",
+  "CLOSE_NO_FRAUD",
+  "CREATE_CASE",
+  "DECLINE_TRANSACTION",
+  "ESCALATE_TO_ANALYST",
+  "FILE_REPORT",
+  "GENERATE_REPORT",
+  "MONITOR_CARD",
+  "MONITOR_CONNECTED_CARDS",
+  "STEP_UP_AUTH",
+  "VERIFY_WITH_CUSTOMER",
+  "WARN_CUSTOMER"
+ ],
+ "auto_actions": [
+  "ALLOW_TRANSACTION",
+  "CLOSE_NO_FRAUD",
+  "CREATE_CASE",
+  "ESCALATE_TO_ANALYST",
+  "GENERATE_REPORT",
+  "MONITOR_CARD",
+  "MONITOR_CONNECTED_CARDS",
+  "STEP_UP_AUTH",
+  "VERIFY_WITH_CUSTOMER",
+  "WARN_CUSTOMER"
+ ],
+ "verdicts": [
+  "fraud",
+  "legitimate",
+  "uncertain"
+ ],
+ "harmful_on_legit": [
+  "BLOCK_CARD",
+  "BLOCK_ALL_CARDS",
+  "FILE_REPORT"
+ ],
+ "routes": {
+  "BLOCK_CARD<=2500": "L1",
+  "BLOCK_CARD>2500": "L2",
+  "BLOCK_ALL_CARDS": "L2",
+  "FILE_REPORT": "L2",
+  "DECLINE_TRANSACTION": "L1"
+ },
+ "policy_checks": [
+  "r10_block_all",
+  "r1_block_on_weak_signal",
+  "r3a_no_case",
+  "r3a_report_required",
+  "r3b_no_reason",
+  "r8_no_escalation",
+  "r9_undocumented",
+  "sar_disagrees_with_actions",
+  "tipoff",
+  "wrong_route"
+ ]
+}

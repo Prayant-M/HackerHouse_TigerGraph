@@ -83,12 +83,12 @@ def collect_pins(paths) -> dict[int, str]:
     """txn_id -> card_id, taken from the dataset's own labelled files."""
     pins: dict[int, str] = {}
     cc = pd.read_csv(paths.closed_cases_csv)
-    for txn_ids, card_id in zip(cc["txn_ids"].astype(str), cc["card_id"].astype(str)):
+    for txn_ids, card_id in zip(cc["txn_ids"].fillna("").astype(str), cc["card_id"].astype(str)):
         for piece in txn_ids.split("|"):
             piece = piece.strip()
             if piece.isdigit():
                 pins[int(piece)] = card_id
-    cp = pd.read_csv(paths.case_pack_csv)
+    cp = pd.concat([pd.read_csv(f) for f in paths.case_pack_files()], ignore_index=True)
     for txn_id, card_id in zip(cp["flagged_txn_id"], cp["card_id"].astype(str)):
         pins[int(txn_id)] = card_id
     return pins
@@ -149,8 +149,14 @@ def assign_card_ids(tx: pd.DataFrame, pins: dict[int, str]) -> pd.Series:
 def main() -> None:
     t0 = time.time()
     PATHS.ensure()
-    log(f"reading {PATHS.transactions_csv} ({PATHS.transactions_csv.stat().st_size/1e6:.0f} MB)")
-    tx = pd.read_csv(PATHS.transactions_csv, usecols=CORE_COLS)
+    files = PATHS.transaction_files()
+    log(f"reading {', '.join(f.name for f in files)} "
+        f"({sum(f.stat().st_size for f in files)/1e6:.0f} MB)")
+    # A foreign dataset (ingest/byo.py) may carry an explicit card id; keep it.
+    tx = pd.concat([pd.read_csv(f, usecols=lambda c: c in CORE_COLS or c == "card_id",
+                                low_memory=False) for f in files], ignore_index=True)
+    given_card = tx.pop("card_id") if "card_id" in tx.columns else None
+    tx = tx.drop_duplicates("TransactionID", keep="last")
     log(f"transactions: {tx.shape} in {time.time()-t0:.1f}s")
 
     tx["ts"] = pd.to_datetime(tx["ts"])
@@ -161,6 +167,28 @@ def main() -> None:
     log("recovering card_id from labelled files")
     pins = collect_pins(PATHS)
     tx["card_id"] = assign_card_ids(tx, pins)
+    if given_card is not None and given_card.notna().mean() > 0.95:
+        tx["card_id"] = given_card.astype(str).to_numpy()
+        log("using the dataset's own card ids (explicit card column)")
+    # The case pack is authoritative for its own flagged transaction. When the
+    # history labels that card tuple differently (HHF-011: 21 closed cases say
+    # K2, the final pack says K1), keep the pack's id for that transaction and
+    # record the conflict for the data-quality report (C11).
+    conflicts = []
+    for f in PATHS.case_pack_files():
+        cp = pd.read_csv(f)
+        for r in cp.itertuples():
+            m = tx["TransactionID"] == int(r.flagged_txn_id)
+            if m.any() and tx.loc[m, "card_id"].iloc[0] != r.card_id:
+                conflicts.append({"case_id": r.case_id, "txn_id": str(r.flagged_txn_id),
+                                  "history_card_id": tx.loc[m, "card_id"].iloc[0],
+                                  "pack_card_id": r.card_id})
+                tx.loc[m, "card_id"] = r.card_id
+    if conflicts:
+        import json as _json
+        (PATHS.staged / "card_label_conflicts.json").write_text(
+            _json.dumps(conflicts, indent=2), encoding="utf-8")
+        log(f"card label conflicts (pack wins for its flagged txn): {conflicts}")
 
     # verification against the labels we pinned from
     pinned = tx["TransactionID"].map(pins)
@@ -168,8 +196,9 @@ def main() -> None:
     agree = float((tx.loc[m, "card_id"] == pinned[m]).mean())
     log(f"card_id agreement with labelled rows: {agree:.4f} over {int(m.sum())} rows")
 
-    log(f"reading {PATHS.identity_csv}")
-    idf = pd.read_csv(PATHS.identity_csv, usecols=IDENTITY_KEEP)
+    log(f"reading {', '.join(f.name for f in PATHS.identity_files())}")
+    idf = pd.concat([pd.read_csv(f, usecols=IDENTITY_KEEP) for f in PATHS.identity_files()],
+                    ignore_index=True).drop_duplicates("TransactionID", keep="last")
     idf["TransactionID"] = idf["TransactionID"].astype("int64")
 
     def clean(s: pd.Series) -> pd.Series:
@@ -305,7 +334,7 @@ def main() -> None:
     cc = pd.read_csv(PATHS.closed_cases_csv)
     cc["opened_at"] = pd.to_datetime(cc["opened_at"])
     cc["closed_at"] = pd.to_datetime(cc["closed_at"])
-    cc["txn_id_list"] = cc["txn_ids"].astype(str).apply(
+    cc["txn_id_list"] = cc["txn_ids"].fillna("").astype(str).apply(
         lambda s: [x.strip() for x in s.split("|") if x.strip().isdigit()])
     cc["connected_card_list"] = cc["connected_card_ids"].fillna("").astype(str).apply(
         lambda s: [x.strip() for x in s.split("|") if x.strip()])

@@ -71,13 +71,50 @@ class Paths:
     def identity_csv(self) -> Path:
         return self.raw / "identity.csv"
 
+    # The final-round drop lives in Datasets/round_2_dataset/ (or final/). Its
+    # closed_cases_history.csv REPLACES the Round 1 copy (5,585 rows, the 20 HHG
+    # investigations added with their real outcomes).
+    @property
+    def round2(self) -> Path:
+        for name in ("round_2_dataset", "final"):
+            if (self.raw / name).exists():
+                return self.raw / name
+        return self.raw / "round_2_dataset"
+
     @property
     def closed_cases_csv(self) -> Path:
-        return self.raw / "closed_cases_history.csv"
+        p = self.round2 / "closed_cases_history.csv"
+        return p if p.exists() else self.raw / "closed_cases_history.csv"
 
     @property
     def case_pack_csv(self) -> Path:
-        return self.raw / "case_pack.csv"
+        p = self.round2 / "cases" / "case_pack_final.csv"
+        return p if p.exists() else self.raw / "case_pack.csv"
+
+    @property
+    def grader_py(self) -> Path:
+        return self.round2 / "grader" / "grade.py"
+
+    # Final round: January 2017 arrives as extra files in the same schema. Every
+    # loader reads *all* of these that exist, so dropping the January files into
+    # Datasets/ (or Datasets/final/) is the whole change on the data side.
+    def _all(self, names: tuple[str, ...]) -> list[Path]:
+        out = []
+        for n in names:
+            for base in (self.raw, self.raw / "final", self.raw / "round_2_dataset",
+                         self.raw / "round_2_dataset" / "cases"):
+                if (base / n).exists() and (base / n) not in out:
+                    out.append(base / n)
+        return out
+
+    def transaction_files(self) -> list[Path]:
+        return self._all(("transactions.csv", "transactions_2017q1.csv"))
+
+    def identity_files(self) -> list[Path]:
+        return self._all(("identity.csv", "identity_2017q1.csv"))
+
+    def case_pack_files(self) -> list[Path]:
+        return self._all(("case_pack.csv", "case_pack_final.csv"))
 
     @property
     def dataset_readme(self) -> Path:

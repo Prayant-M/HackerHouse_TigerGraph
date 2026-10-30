@@ -166,7 +166,7 @@
       "card_id": "C11923-K2",
       "customer_id": "C11923",
       "opened_at": "2016-12-29 06:27:44",
-      "risk_score": NaN
+      "risk_score": null
     },
     "as_of": "2016-12-29 06:27:44",
     "posterior": {

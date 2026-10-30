@@ -1,0 +1,258 @@
+{
+  "attacks": [
+    {
+      "id": "ATK-U1-control",
+      "detector": "threshold_structuring",
+      "story": "the mined pattern itself: 4 legs at $480 in 40 minutes (must be caught)",
+      "planted_ids": [
+        "ATK-0",
+        "ATK-1",
+        "ATK-2",
+        "ATK-3"
+      ],
+      "caught_before": true,
+      "caught_after": true
+    },
+    {
+      "id": "ATK-U1-3legs",
+      "detector": "threshold_structuring",
+      "story": "3 legs instead of 4",
+      "planted_ids": [
+        "ATK-0",
+        "ATK-1",
+        "ATK-2"
+      ],
+      "caught_before": true,
+      "caught_after": true
+    },
+    {
+      "id": "ATK-U1-430",
+      "detector": "threshold_structuring",
+      "story": "legs at $430 (86% of the $500 ceiling) instead of $480",
+      "planted_ids": [
+        "ATK-0",
+        "ATK-1",
+        "ATK-2",
+        "ATK-3"
+      ],
+      "caught_before": false,
+      "caught_after": true
+    },
+    {
+      "id": "ATK-U1-90min",
+      "detector": "threshold_structuring",
+      "story": "the same legs spread over 90 minutes instead of 40",
+      "planted_ids": [
+        "ATK-0",
+        "ATK-1",
+        "ATK-2",
+        "ATK-3"
+      ],
+      "caught_before": true,
+      "caught_after": true
+    },
+    {
+      "id": "ATK-U1-dilute",
+      "detector": "threshold_structuring",
+      "story": "two ordinary $25 purchases mixed into the burst (share drops below 0.75)",
+      "planted_ids": [
+        "ATK-0",
+        "ATK-1",
+        "ATK-2",
+        "ATK-3",
+        "ATK-4"
+      ],
+      "caught_before": false,
+      "caught_after": true
+    },
+    {
+      "id": "ATK-R5-6usd",
+      "detector": "card_testing",
+      "story": "probing charges at $6 instead of $1-5",
+      "planted_ids": [
+        "ATK-0",
+        "ATK-1",
+        "ATK-2",
+        "ATK-3"
+      ],
+      "caught_before": false,
+      "caught_after": true
+    },
+    {
+      "id": "ATK-R5-slow",
+      "detector": "card_testing",
+      "story": "the larger purchase 3 hours after the probes instead of within 2",
+      "planted_ids": [
+        "ATK-0",
+        "ATK-1",
+        "ATK-2",
+        "ATK-3"
+      ],
+      "caught_before": true,
+      "caught_after": true
+    }
+  ],
+  "seasoning": {
+    "id": "ATK-R7-seasoned",
+    "detector": "recurring_charge (R7 exemption)",
+    "story": "8 small charges over 90 days on a card with no older history",
+    "before_evades": true,
+    "after_flagged": true,
+    "defence": "seasoning check: a recurrence whose whole history is < 100 days old is reported as `seasoned_recurrence` evidence; R7 still forbids the block, so the defence routes to verify + escalate rather than a block"
+  },
+  "frontier": {
+    "fraud_orig": {
+      "n": 27,
+      "ids": [
+        "CC-1017",
+        "CC-1067",
+        "CC-1113",
+        "CC-1270",
+        "CC-1390",
+        "CC-1452",
+        "CC-1498",
+        "CC-1974",
+        "CC-2369",
+        "CC-2547",
+        "CC-2800",
+        "CC-3221",
+        "CC-3452",
+        "CC-3740",
+        "CC-3748",
+        "CC-3841",
+        "CC-3907",
+        "CC-4086",
+        "CC-4107",
+        "CC-4124"
+      ]
+    },
+    "fraud_hard_only": {
+      "n": 24,
+      "ids": [
+        "CC-0866",
+        "CC-0976",
+        "CC-0989",
+        "CC-1071",
+        "CC-1217",
+        "CC-1312",
+        "CC-1357",
+        "CC-1485",
+        "CC-1572",
+        "CC-1754",
+        "CC-1884",
+        "CC-1949",
+        "CC-2382",
+        "CC-2513",
+        "CC-2699",
+        "CC-3178",
+        "CC-3461",
+        "CC-3471",
+        "CC-3597",
+        "CC-3791"
+      ]
+    },
+    "legit_orig": {
+      "n": 54,
+      "ids": [
+        "NEG-3072130",
+        "NEG-3075671",
+        "NEG-3076567",
+        "NEG-3076485",
+        "NEG-3077279",
+        "NEG-3079800",
+        "CC-0903",
+        "NEG-3081458",
+        "NEG-3082849",
+        "NEG-3083551",
+        "NEG-3085965",
+        "NEG-3089012",
+        "NEG-3088538",
+        "NEG-3089780",
+        "CC-1097",
+        "NEG-3095665",
+        "NEG-3096125",
+        "NEG-3096901",
+        "NEG-3097053",
+        "NEG-3099351"
+      ]
+    },
+    "legit_hard_only": {
+      "n": 28,
+      "ids": [
+        "NEG-3071849",
+        "CC-0840",
+        "NEG-3079018",
+        "NEG-3079358",
+        "NEG-3084201",
+        "NEG-3085696",
+        "CC-1000",
+        "NEG-3088154",
+        "NEG-3088294",
+        "NEG-3093482",
+        "NEG-3094627",
+        "NEG-3101595",
+        "NEG-3105580",
+        "NEG-3105921",
+        "NEG-3115028",
+        "NEG-3116769",
+        "NEG-3125877",
+        "NEG-3128810",
+        "CC-2206",
+        "NEG-3260290"
+      ]
+    },
+    "card_testing_hard_only_legit": {
+      "n": 39,
+      "ids": [
+        "NEG-3076567",
+        "NEG-3079800",
+        "NEG-3081458",
+        "NEG-3086225",
+        "NEG-3087034",
+        "CC-1060",
+        "NEG-3095665",
+        "NEG-3117334",
+        "NEG-3116853",
+        "NEG-3121580",
+        "NEG-3123883",
+        "NEG-3142874",
+        "NEG-3160297",
+        "NEG-3162666",
+        "NEG-3247933",
+        "NEG-3274512",
+        "NEG-3286492",
+        "CC-3873",
+        "NEG-3294825",
+        "NEG-3325655"
+      ]
+    },
+    "card_testing_hard_only_fraud": {
+      "n": 44,
+      "ids": [
+        "CC-0801",
+        "CC-0829",
+        "CC-0928",
+        "CC-1056",
+        "CC-1379",
+        "CC-1454",
+        "CC-1659",
+        "CC-1879",
+        "CC-1984",
+        "CC-2106",
+        "CC-2247",
+        "CC-2390",
+        "CC-2799",
+        "CC-2844",
+        "CC-2888",
+        "CC-2928",
+        "CC-2989",
+        "CC-3039",
+        "CC-3086",
+        "CC-3206"
+      ]
+    }
+  },
+  "evaded_before": 3,
+  "evaded_after": 0,
+  "hardening_legit_cost": 67
+}

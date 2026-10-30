@@ -71,6 +71,19 @@ class CaseState:
     contacts_in_window: int = 0
     evidence_requested: bool = False
     has_pending_authorisation: bool = True
+    # True when the conformal set could not single out fraud (core/conformal.py):
+    # a probability above 0.70 is then not "strongly suspected" for §3a.
+    conformal_abstained: bool = False
+
+    def __post_init__(self) -> None:
+        # Provenance guard: the policy core accepts graph, extractor and
+        # solicited values only. Customer/analyst free text cannot get in.
+        from dataclasses import fields as _fields
+
+        from .provenance import check
+
+        for f in _fields(self):
+            check(getattr(self, f.name), f"CaseState.{f.name}")
 
 
 @dataclass
@@ -106,7 +119,14 @@ def sar_required(s: CaseState) -> tuple[bool, str]:
     """Fraud Policy §3a. A report needs confirmed-or-strongly-suspected fraud
     *and* at least one aggravating condition. Most cases never need one, and
     getting this boundary right is explicitly part of the score."""
-    strongly_suspected = s.fraud_probability >= 0.70 or s.verdict == "fraud"
+    strongly_suspected = s.verdict == "fraud" or (s.fraud_probability >= 0.70
+                                                  and not s.conformal_abstained)
+    if not strongly_suspected and s.conformal_abstained:
+        return False, (
+            f"§3a: assessed probability {s.fraud_probability:.2f}, but the evidence does not "
+            f"exclude legitimate activity (90%-coverage set, or a proof too thin to act on), so "
+            f"fraud is not strongly suspected; no filing is due while the case is escalated "
+            f"to an analyst (R8).")
     if not strongly_suspected:
         return False, (
             f"§3a: fraud is neither confirmed nor strongly suspected "

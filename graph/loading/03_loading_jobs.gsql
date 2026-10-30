@@ -104,7 +104,7 @@ CREATE LOADING JOB load_closed_cases FOR GRAPH FraudGraph {
   LOAD f_cc TO VERTEX ClosedCase VALUES
       ($"case_id", $"customer_id", $"card_id", $"opened_at", $"closed_at",
        $"outcome", $"pattern", $"n_txns", $"exposure_usd", $"actions_taken",
-       $"report_filed", $"analyst_notes")
+       $"report_filed", $"analyst_notes", 0, "false")
       USING header="false", USER_DEFINED_HEADER="h_cc", separator=",", quote="double";
 
   /* The narrative vector. Written as bare "0.1,0.2,..." by the staging step —

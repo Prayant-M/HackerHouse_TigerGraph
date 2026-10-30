@@ -1,0 +1,12 @@
+repos:
+  - repo: https://github.com/gitleaks/gitleaks
+    rev: v8.18.4
+    hooks:
+      - id: gitleaks
+  - repo: local
+    hooks:
+      - id: pytest
+        name: pytest (decision core, harness, guardrails)
+        entry: python -m pytest tests -q --deselect tests/test_backend_parity.py
+        language: system
+        pass_filenames: false

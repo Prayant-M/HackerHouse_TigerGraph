@@ -1,0 +1,106 @@
+/* ===========================================================================
+   FraudGraph — final-round schema additions (additive; safe on a loaded graph)
+
+   ClosedCase.fact_mask     replayed fact vector as a bitmask (ingest/08), so
+                            proof precedent is one installed subset-match query
+                            (precedent_by_facts)
+   COMPROMISE_POINT         FraudCase -> the entity its ring was compromised
+                            through, with the window and the lift. Later cases
+                            read it back through compromise_watch, so memory
+                            carries *where* fraud came from, not just *what*
+   CHILD_CASE               a WATCH child case per at-risk card (C14)
+   CaseStateChange          every lifecycle transition, with the evidence that
+                            caused it and who approved it (C14)
+   ApprovalRecord           server-side, signed, hash-chained approvals (C8/§2)
+   AnalystFeedback          accept/reject on findings (C8)
+   Detector                 proposed and approved detectors (C1, C2, C3)
+   SchemaChange             the drift gate's approved re-mapping (C12)
+
+   Run:  python graph/install.py --step final_round
+   =========================================================================== */
+
+USE GRAPH FraudGraph
+
+CREATE SCHEMA_CHANGE JOB final_round_schema FOR GRAPH FraudGraph {
+  ALTER VERTEX ClosedCase ADD ATTRIBUTE (fact_mask INT DEFAULT 0, fact_replayed BOOL DEFAULT "false");
+  ALTER VERTEX FraudCase ADD ATTRIBUTE (
+      lifecycle_state STRING DEFAULT "",
+      parent_case STRING DEFAULT "",
+      proof_margin INT DEFAULT -1,
+      proof_minimal STRING DEFAULT "",
+      gate_applied BOOL DEFAULT "false",
+      conformal_set STRING DEFAULT "",
+      data_snapshot STRING DEFAULT "",
+      answer_hash STRING DEFAULT "");
+
+  ADD VERTEX CaseStateChange (
+      PRIMARY_ID change_id STRING,
+      case_id STRING,
+      from_state STRING,
+      to_state STRING,
+      at DATETIME,
+      actor STRING,
+      actor_role STRING,
+      reason STRING,
+      evidence_ids STRING
+  ) WITH primary_id_as_attribute="true";
+
+  ADD VERTEX ApprovalRecord (
+      PRIMARY_ID approval_id STRING,
+      case_id STRING,
+      action STRING,
+      approved BOOL,
+      actor_id STRING,
+      actor_role STRING,
+      at DATETIME,
+      prev_hash STRING,
+      hash STRING,
+      signature STRING
+  ) WITH primary_id_as_attribute="true";
+
+  ADD VERTEX AnalystFeedback (
+      PRIMARY_ID feedback_id STRING,
+      case_id STRING,
+      target_finding STRING,
+      accepted BOOL,
+      analyst STRING,
+      at DATETIME,
+      note STRING
+  ) WITH primary_id_as_attribute="true";
+
+  ADD VERTEX Detector (
+      PRIMARY_ID detector_id STRING,
+      name STRING,
+      origin STRING,             /* policy | discovered | typology */
+      spec STRING,
+      status STRING,             /* proposed | approved | rejected */
+      backtest STRING,
+      approved_by STRING
+  ) WITH primary_id_as_attribute="true";
+
+  ADD VERTEX SchemaChange (
+      PRIMARY_ID change_id STRING,
+      created_at DATETIME,
+      summary STRING,
+      mapping STRING,
+      approved_by STRING,
+      approved_at DATETIME,
+      signature STRING
+  ) WITH primary_id_as_attribute="true";
+
+  ADD DIRECTED EDGE COMPROMISE_POINT (
+      FROM FraudCase, TO DeviceProfile | FROM FraudCase, TO BillingRegion |
+      FROM FraudCase, TO EmailDomain,
+      window_start DATETIME, window_end DATETIME, lift DOUBLE, p_value DOUBLE)
+      WITH REVERSE_EDGE="COMPROMISED_IN";
+  ADD DIRECTED EDGE CHILD_CASE (FROM FraudCase, TO FraudCase, reason STRING)
+      WITH REVERSE_EDGE="PARENT_CASE";
+  ADD DIRECTED EDGE CASE_STATE (FROM FraudCase, TO CaseStateChange)
+      WITH REVERSE_EDGE="STATE_OF";
+  ADD DIRECTED EDGE APPROVAL_OF (FROM ApprovalRecord, TO FraudCase)
+      WITH REVERSE_EDGE="HAS_APPROVAL";
+  ADD DIRECTED EDGE FEEDBACK_ON (FROM AnalystFeedback, TO FraudCase)
+      WITH REVERSE_EDGE="HAS_FEEDBACK";
+}
+
+RUN SCHEMA_CHANGE JOB final_round_schema

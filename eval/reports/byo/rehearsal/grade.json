@@ -1,0 +1,24 @@
+{
+ "case_pack": "case_pack.csv",
+ "n_cases": 3,
+ "teams": {
+  "fraudgraph": {
+   "cases_answered": 3,
+   "hard": 0,
+   "policy": 0,
+   "warning": 0,
+   "clean": 3,
+   "cases": {
+    "HHF-009": {
+     "findings": []
+    },
+    "HHF-012": {
+     "findings": []
+    },
+    "HHF-017": {
+     "findings": []
+    }
+   }
+  }
+ }
+}

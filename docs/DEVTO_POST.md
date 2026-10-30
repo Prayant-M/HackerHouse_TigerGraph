@@ -22,6 +22,9 @@ mistakes that silently inverted it.*
 > **All 18 architecture diagrams, interactive:** [FraudGraph Blueprints](https://claude.ai/artifact/VioVT79phoeLTjBKkMWRvb):
 > system, agent loop, MCP path, schema, GraphRAG, policy rules, all twenty
 > benchmark cases, evaluation and failure modes.
+>
+> **Try the analyst console:** [prayant-fraudgraph-console.static.hf.space](https://prayant-fraudgraph-console.static.hf.space), all twenty
+> investigations with their evidence, graph and audit trail.
 
 ## The architecture at a glance
 

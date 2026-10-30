@@ -44,7 +44,11 @@ from fraudagent.config import PATHS, TG  # noqa: E402
 GRAPH_DIR = ROOT / "graph"
 STAGED_CSV = PATHS.staged / "graph_csv"
 
-STEPS = ["schema", "vectors", "load", "queries", "projections", "algorithms", "verify"]
+STEPS = ["schema", "vectors", "load", "queries", "projections", "algorithms", "final_round",
+         "verify"]
+FINAL_QUERIES = ["ring_at_asof", "origin_counts", "origin_touchers", "ring_exposure",
+                 "precedent_by_facts", "compromise_watch", "data_gaps", "case_write",
+                 "governance_write"]
 
 # (job, [(DEFINE FILENAME variable, staged csv), ...]). RESTPP routes each
 # upload to the job's filename variable, so the tag must match the GSQL.
@@ -103,6 +107,13 @@ def run_gsql(conn, path: Path, dry: bool) -> None:
                "does not have the permission", "does not exist", "reserved keyword",
                "encountered \"", "was expecting", "no viable alternative",
                "saved as draft", "type check error")
+    if "already exists" in lowered and not any(
+            m in lowered for m in ("syntax error", "check error", "reserved keyword",
+                                   "was expecting", "saved as draft")):
+        # Re-running an install on a graph that already has these objects is
+        # the normal case after a workspace restore: keep going.
+        log(f"  {path.name}: objects already exist, kept")
+        return
     if any(m in lowered for m in markers):
         log(f"  !! {path.name}:\n{out}")
         raise SystemExit(f"GSQL failed in {path.name}")
@@ -150,7 +161,7 @@ def step_load(conn, dry: bool) -> None:
         log(f"    done in {time.time()-t0:.0f}s")
 
 
-CHUNK_BYTES = 48_000_000
+CHUNK_BYTES = 20_000_000
 
 
 def upload(conn, job: str, tag: str, path: Path) -> None:
@@ -162,8 +173,18 @@ def upload(conn, job: str, tag: str, path: Path) -> None:
     split on line boundaries — only the numeric files are that large, so no
     quoted field spans a chunk boundary."""
     def post(data: str) -> None:
-        res = conn.runLoadingJobWithData(data, tag, job, timeout=3_600_000,
-                                         sizeLimit=2_000_000_000)
+        # Savanna occasionally resets a long upload; loading is an upsert, so a
+        # chunk can be resent safely.
+        for attempt in range(4):
+            try:
+                res = conn.runLoadingJobWithData(data, tag, job, timeout=3_600_000,
+                                                 sizeLimit=2_000_000_000)
+                break
+            except Exception as exc:
+                if attempt == 3:
+                    raise
+                log(f"      {tag}: upload failed ({str(exc)[:80]}); retry {attempt + 1}")
+                time.sleep(15 * (attempt + 1))
         stats = res[0].get("statistics", res[0]) if isinstance(res, list) and res else res
         log(f"      {tag}: {str(stats)[:160]}")
 
@@ -239,6 +260,38 @@ def step_verify(conn, dry: bool) -> None:
         log(f"  card_baseline failed: {exc}")
 
 
+def step_final_round(conn, dry: bool) -> None:
+    """Final-round additions: schema change, the new queries, and the
+    ClosedCase.fact_mask load (loader credentials, never the agent's)."""
+    import json
+
+    import pandas as pd
+
+    log("final-round schema change (additive)")
+    vc = conn.getVertexCount("ClosedCase") if not dry else 0
+    try:
+        has = "fact_mask" in json.dumps(conn.getSchema(force=True)) if not dry else False
+    except Exception:
+        has = False
+    if not has:
+        run_gsql(conn, GRAPH_DIR / "ddl" / "06_final_round.gsql", dry)
+    log("final-round queries")
+    for q in FINAL_QUERIES:
+        run_gsql(conn, GRAPH_DIR / "queries" / f"{q}.gsql", dry)
+    if not dry:
+        print(conn.gsql(f"USE GRAPH {TG.graph}\nINSTALL QUERY {', '.join(FINAL_QUERIES)}")[-400:])
+    facts = PATHS.staged / "closed_case_facts.parquet"
+    if facts.exists() and not dry:
+        df = pd.read_parquet(facts, columns=["case_id", "stratum", "fact_mask"])
+        df = df[df["stratum"] == "closed_case"]
+        rows = [(r.case_id, {"fact_mask": int(r.fact_mask), "fact_replayed": True})
+                for r in df.itertuples()]
+        for i in range(0, len(rows), 500):
+            conn.upsertVertices("ClosedCase", rows[i:i + 500])
+        log(f"fact_mask loaded on {len(rows)} of {vc} ClosedCase vertices")
+    log("agent least-privilege user: see graph/rbac.gsql (run once as superuser)")
+
+
 def main() -> int:
     ap = argparse.ArgumentParser()
     ap.add_argument("--step", default="all", choices=STEPS + ["all"])
@@ -253,7 +306,7 @@ def main() -> int:
         steps = STEPS[STEPS.index(args.from_step):]
     handlers = {"schema": step_schema, "vectors": step_vectors, "load": step_load,
                 "queries": step_queries, "projections": step_projections,
-                "algorithms": step_algorithms,
+                "algorithms": step_algorithms, "final_round": step_final_round,
                 "verify": step_verify}
     for s in steps:
         handlers[s](conn, args.dry_run)

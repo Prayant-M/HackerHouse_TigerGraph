@@ -1,0 +1,21 @@
+/* precedent_by_facts — proof precedent support (Innovation 1).
+
+   Closed cases opened before as_of whose replayed fact vector (ClosedCase.
+   fact_mask, written by ingest/08_fact_vectors.py) contains every fact in the
+   proof's minimal sufficient set. One bitwise subset match per vertex.        */
+
+USE GRAPH FraudGraph
+
+CREATE OR REPLACE QUERY precedent_by_facts(INT fact_mask, DATETIME as_of)
+FOR GRAPH FraudGraph SYNTAX v2 {
+  SumAccum<INT> @@n, @@confirmed, @@cleared;
+  SetAccum<STRING> @@ids;
+
+  hits = SELECT c FROM ClosedCase:c
+         WHERE c.fact_replayed AND c.opened_at < as_of
+           AND (c.fact_mask & fact_mask) == fact_mask
+         ACCUM @@n += 1, @@ids += c.case_id,
+               CASE WHEN c.outcome == "confirmed_fraud" THEN @@confirmed += 1
+                    ELSE @@cleared += 1 END;
+  PRINT @@n AS n, @@confirmed AS confirmed, @@cleared AS cleared, @@ids AS case_ids;
+}

@@ -1,7 +1,7 @@
 """TigerGraph-backed store — the production path.
 
 Every read here calls an installed GSQL query from `graph/queries/`; every
-write goes through upserts plus `case_write_links` to stitch the edges. Both
+write goes through the single installed `case_write` query. Both
 travel through the TigerGraph MCP server (`mcp_client.py`) when it is running,
 and over a direct pyTigerGraph connection when it is not.
 The window matchers are the *same* functions the local mirror uses
@@ -18,6 +18,7 @@ that auto-stopped should not be able to kill a demo.
 from __future__ import annotations
 
 import json
+import os
 from datetime import datetime, timedelta
 from typing import Any, Iterable, Sequence
 
@@ -25,7 +26,7 @@ import numpy as np
 
 from ..config import EMBED, PATHS, TG
 from ..memory.embeddings import Embedder
-from .base import GraphStore, RecalledCase, TxnRow
+from .base import GraphStore, RecalledCase, TxnRow, case_write_doc
 from .matchers import (detect_card_testing, detect_threshold_structuring,
                        recurrence_from_rows)
 
@@ -44,31 +45,45 @@ def _fmt(value: datetime) -> str:
 
 class _Gateway:
     """The agent's route to the graph: the TigerGraph MCP server when it is up,
-    the direct pyTigerGraph connection otherwise, decided per call so a server
-    that dies mid-run degrades to direct access instead of failing the case."""
+    the direct pyTigerGraph connection to the *same graph* otherwise.
+
+    Least privilege: the gateway exposes reads and allow-listed installed
+    queries only. There is no vertex or edge upsert on it; the one write path is
+    the installed `case_write` query. A fallback from MCP to direct marks the
+    run `transport_degraded`, and with MCP_STRICT=1 it stops instead."""
 
     def __init__(self, conn: Any, mcp: Any) -> None:
         self.conn, self.mcp = conn, mcp
         self.fallbacks = 0
         self.last_error = ""
+        self.degraded = False
 
     @property
     def transport(self) -> str:
-        return "mcp" if self.mcp is not None else "direct"
+        if self.mcp is None:
+            return "direct"
+        return "mcp+direct(degraded)" if self.degraded else "mcp"
 
     def _call(self, name: str, *args: Any, **kwargs: Any) -> Any:
         if self.mcp is not None:
             try:
-                return getattr(self.mcp, name)(*args, **kwargs)
+                return getattr(self.mcp, name)(*args, **{k: v for k, v in kwargs.items()
+                                                         if k != "usePost"})
             except Exception as exc:
                 self.fallbacks += 1
+                self.degraded = True
                 self.last_error = f"{name}: {exc}"
+                if os.environ.get("MCP_STRICT", "0").lower() in {"1", "true", "yes"}:
+                    raise
                 if self.fallbacks in (1, 10, 100):
-                    print(f"[graphstore] MCP {name} failed ({exc}); using the direct connection")
+                    print(f"[graphstore] MCP {name} failed ({exc}); transport_degraded: "
+                          "using the direct connection to the same graph")
         return getattr(self.conn, name)(*args, **kwargs)
 
-    def runInstalledQuery(self, *a: Any, **k: Any) -> Any:
-        return self._call("runInstalledQuery", *a, **k)
+    def runInstalledQuery(self, name: str, *a: Any, **k: Any) -> Any:
+        if name not in allowed_queries():
+            raise PermissionError(f"query {name!r} is not on the agent allow-list")
+        return self._call("runInstalledQuery", name, *a, **k)
 
     def getVerticesById(self, *a: Any, **k: Any) -> Any:
         return self._call("getVerticesById", *a, **k)
@@ -76,11 +91,28 @@ class _Gateway:
     def getEdges(self, *a: Any, **k: Any) -> Any:
         return self._call("getEdges", *a, **k)
 
-    def upsertVertex(self, *a: Any, **k: Any) -> Any:
-        return self._call("upsertVertex", *a, **k)
 
-    def upsertEdge(self, *a: Any, **k: Any) -> Any:
-        return self._call("upsertEdge", *a, **k)
+def allowed_queries() -> frozenset[str]:
+    """TG_ALLOWED_QUERIES (comma list), else every query *defined* in
+    graph/queries/*.gsql and graph/algorithms/05 (card_community), minus the
+    console-only governance_write and the retired case_write_links. Projection
+    builders and GDS installers are loader-only and never on the list."""
+    import re
+
+    raw = os.environ.get("TG_ALLOWED_QUERIES", "").strip()
+    if raw:
+        return frozenset(x.strip() for x in raw.split(",") if x.strip())
+    names: set[str] = set()
+    pat = re.compile(r"CREATE\s+OR\s+REPLACE\s+(?:DISTRIBUTED\s+)?QUERY\s+(\w+)", re.I)
+    for f in list((PATHS.repo / "graph" / "queries").glob("*.gsql")) + list(
+            (PATHS.repo / "graph" / "algorithms").glob("05_*.gsql")):
+        names.update(pat.findall(f.read_text(encoding="utf-8")))
+    return frozenset(n for n in names if n not in {"governance_write", "case_write_links"}
+                     and not n.startswith(("build_", "GDBMS_")))
+
+
+def _strict() -> bool:
+    return os.environ.get("GRAPH_STRICT", "1").lower() in {"1", "true", "yes"}
 
 
 class TigerGraphStore(GraphStore):
@@ -186,7 +218,14 @@ class TigerGraphStore(GraphStore):
     # ------------------------------------------------------------ reads ----
     def get_transaction(self, txn_id: str) -> TxnRow | None:
         self.call_count += 1
-        rows = self.graph.getVerticesById("Transaction", str(txn_id))
+        try:
+            rows = self.graph.getVerticesById("Transaction", str(txn_id))
+        except Exception as exc:
+            # TigerGraph answers an unknown id with error 601; that is "no such
+            # transaction", not a failed dependency.
+            if "601" in str(exc) or "not a valid vertex id" in str(exc):
+                return None
+            raise
         if not rows:
             return None
         attr = dict(rows[0].get("attributes", {}))
@@ -198,6 +237,8 @@ class TigerGraphStore(GraphStore):
             if devs:
                 attr["device_profile"] = str(devs[0]["to_id"])
         except Exception:
+            if _strict():
+                raise
             attr.setdefault("device_profile", "")
         for side, edge in (("email_p", "PURCHASER_EMAIL"), ("email_r", "RECIPIENT_EMAIL")):
             try:
@@ -205,6 +246,8 @@ class TigerGraphStore(GraphStore):
                 e = self.graph.getEdges("Transaction", str(txn_id), edge)
                 attr[side] = str(e[0]["to_id"]) if e else ""
             except Exception:
+                if _strict():
+                    raise
                 attr[side] = ""
         return self._row_to_txn(attr)
 
@@ -244,7 +287,7 @@ class TigerGraphStore(GraphStore):
             "home_region_share": round(regions.get(home, 0) / n, 3) if home else 0.0,
             "n_regions": len(regions),
             "product_mix": self._first(res, "product_mix", {}) or {},
-            "known_devices": list(self._first(res, "known_devices", []) or [])[:25],
+            "known_devices": sorted(self._first(res, "known_devices", []) or [])[:25],
             "n_devices": len(self._first(res, "known_devices", []) or []),
         }
 
@@ -254,6 +297,8 @@ class TigerGraphStore(GraphStore):
             edges = self.graph.getEdges("Customer", customer_id, "OWNS")
             return sorted(str(e["to_id"]) for e in edges)
         except Exception:
+            if _strict():
+                raise
             return []
 
     def episode_window(self, card_id: str, as_of: datetime,
@@ -264,14 +309,14 @@ class TigerGraphStore(GraphStore):
             "card_id": card_id, "as_of": str(as_of),
             "baseline_cutoff": str(self._first(res, "baseline_cutoff", "")),
             "window_hours": window_hours,
-            "window_txn_ids": list(self._first(res, "window_txn_ids", []) or []),
+            "window_txn_ids": sorted(self._first(res, "window_txn_ids", []) or []),
             "n_window": int(self._first(res, "n_window", 0) or 0),
             "window_value_usd": round(float(self._first(res, "window_value_usd", 0.0) or 0.0), 2),
             "n_baseline": int(self._first(res, "n_baseline", 0) or 0),
             "window_online": int(self._first(res, "window_online", 0) or 0),
             "window_in_person": int(self._first(res, "window_in_person", 0) or 0),
-            "window_regions": list(self._first(res, "window_regions", []) or []),
-            "window_devices": list(self._first(res, "window_devices", []) or []),
+            "window_regions": sorted(self._first(res, "window_regions", []) or []),
+            "window_devices": sorted(self._first(res, "window_devices", []) or []),
         }
 
     def velocity_burst(self, card_id: str, as_of: datetime,
@@ -304,7 +349,7 @@ class TigerGraphStore(GraphStore):
                 **detect_card_testing(rows, small_amount, window_hours)}
 
     def threshold_structuring_probe(self, card_id: str, as_of: datetime,
-                                    window_minutes: float = 60.0) -> dict[str, Any]:
+                                    window_minutes: float | None = None) -> dict[str, Any]:
         res = self._run("threshold_structuring_probe",
                         {"card_id": card_id, "as_of": _fmt(as_of), "lookback_days": 3})
         rows = self._txn_rows(self._first(res, "online_window", []) or [])
@@ -518,6 +563,8 @@ class TigerGraphStore(GraphStore):
         try:
             res = self._run("card_community", {"card_id": card_id})
         except Exception:
+            if _strict():
+                raise
             return {}
         row = res[0] if res else {}
         if not row or int(row.get("community_size", 0) or 0) <= 1:
@@ -536,7 +583,7 @@ class TigerGraphStore(GraphStore):
         return {"proximity_score": round(float(self._first(res, "proximity_score", 0.0) or 0.0), 4),
                 "n_confirmed_fraud_cases": int(
                     self._first(res, "n_confirmed_fraud_cases", 0) or 0),
-                "evidence_cases": list(self._first(res, "evidence_cases", []) or [])[:25],
+                "evidence_cases": sorted(self._first(res, "evidence_cases", []) or [], key=str)[:25],
                 "max_hops": max_hops}
 
     def hybrid_case_recall(self, query_text: str, entity_ids: Sequence[str],
@@ -592,102 +639,106 @@ class TigerGraphStore(GraphStore):
 
     # ----------------------------------------------------------- writes ----
     def write_case(self, case_doc: dict[str, Any]) -> str:
-        """Upsert the whole case subgraph, then stitch the edges.
+        """One installed query, one JSON document: the agent's only write.
 
         Same input dict as the local mirror, and called from the same code path
         that emits the JSON answer file, so the graph and the file cannot
-        diverge.
-        """
+        diverge. POSTed, because a case document is larger than a URL."""
         self.call_count += 1
         gid = case_doc.get("graph_case_id") or f"CASE-{case_doc['case_id']}"
-        c = case_doc
-        self.graph.upsertVertex("FraudCase", gid, {
-            "source_case_id": c.get("case_id", ""), "status": c.get("status", ""),
-            "verdict": c.get("verdict", ""), "trigger_type": c.get("trigger_type", ""),
-            "opened_at": c.get("opened_at", ""), "as_of": c.get("as_of", ""),
-            "fraud_probability": float(c.get("fraud_probability", 0.0)),
-            "confidence": float(c.get("confidence", 0.0)),
-            "pattern": c.get("pattern", ""),
-            "pattern_description": c.get("pattern_description", ""),
-            "exposure_usd": float(c.get("exposure_usd", 0.0)),
-            "summary": c.get("summary", ""), "narrative": c.get("narrative", ""),
-            "stop_reason": c.get("stop_reason", ""),
-            "ledger_head": c.get("ledger_head", ""),
-            "tool_calls": int(c.get("tool_calls", 0)),
-            "latency_s": float(c.get("latency_s", 0.0)),
-        })
-        if c.get("narrative_emb"):
-            self.graph.upsertVertex("FraudCase", gid, {"narrative_emb": c["narrative_emb"]})
-
-        for i, ev in enumerate(c.get("evidence", []), 1):
-            eid = f"{gid}-E{i:02d}"
-            self.graph.upsertVertex("Evidence", eid, {
-                "kind": ev.get("source", "graph"), "claim": ev.get("claim", ""),
-                "source_tool": ev.get("ref", ""), "collected_at": c.get("as_of", ""),
-                "reliability": float(ev.get("reliability", 1.0)),
-                "delta_fraud_probability": float(ev.get("delta_fraud_probability", 0.0)),
-            })
-            self.graph.upsertEdge("FraudCase", gid, "HAS_EVIDENCE", "Evidence", eid)
-            for tid in ev.get("entity_ids", []):
-                if str(tid).isdigit():
-                    self.graph.upsertEdge("Evidence", eid, "EVIDENCE_ON", "Transaction", str(tid))
-
-        for d in c.get("decisions", []):
-            self.graph.upsertVertex("Decision", d["decision_id"], {
-                "step": int(d.get("step", 0)), "node": d.get("node", ""),
-                "posterior_before": float(d.get("p_fraud_before", 0.0)),
-                "posterior_after": float(d.get("p_fraud_after", 0.0)),
-                "rationale": d.get("rationale", ""),
-                "prev_hash": d.get("prev_hash", ""), "hash": d.get("hash", ""),
-            })
-            self.graph.upsertEdge("FraudCase", gid, "DECIDED", "Decision", d["decision_id"])
-
-        for phase in ("initial", "final"):
-            for i, a in enumerate(c.get("actions", {}).get(phase, []), 1):
-                aid = f"{gid}-{phase[:3].upper()}-{i:02d}"
-                self.graph.upsertVertex("RecommendedAction", aid, {
-                    "action_type": a["action"], "phase": phase, "approval_route": a["route"],
-                    "reason": a.get("reason", ""),
-                    "policy_rule": a.get("reason", "").split(":", 1)[0],
-                    "executed": bool(a.get("executed", False)),
-                })
-                self.graph.upsertEdge("FraudCase", gid, "RECOMMENDS", "RecommendedAction", aid)
-
-        for i, r in enumerate(c.get("evidence_requests", []), 1):
-            rid = f"{gid}-R{i:02d}"
-            self.graph.upsertVertex("EvidenceRequest", rid, {
-                "request_type": r.get("type", ""), "channel": r.get("channel", ""),
-                "question": r.get("question", ""),
-                "expected_info_gain": float(r.get("expected_info_gain", 0.0)),
-                "friction_cost": float(r.get("cost", 0.0)),
-                "asked_after_step": int(r.get("asked_after_step", 0)),
-                "simulated": True, "simulation_seed": int(r.get("simulation_seed", 0)),
-                "response": r.get("assumed_response", ""),
-            })
-            self.graph.upsertEdge("FraudCase", gid, "REQUESTED", "EvidenceRequest", rid)
-
-        sar = c.get("sar") or {}
-        if sar.get("file"):
-            sid = f"{gid}-SAR"
-            self.graph.upsertVertex("SAR", sid, {
-                "filed": True, "reason": sar.get("reason", ""),
-                "narrative": sar.get("narrative", ""),
-                "total_amount_usd": float(sar.get("total_amount_usd", 0.0)),
-                "activity_start": (sar.get("activity_dates") or ["", ""])[0],
-                "activity_end": (sar.get("activity_dates") or ["", ""])[-1],
-            })
-            self.graph.upsertEdge("FraudCase", gid, "FILED", "SAR", sid)
-
-        self._run("case_write_links", {
-            "graph_case_id": gid, "card_id": c.get("card_id", ""),
-            "customer_id": c.get("customer_id", ""),
-            "txn_ids": list(c.get("affected_txn_ids", [])),
-            "connected_card_ids": list(c.get("connected_card_ids", [])),
-            "device_profiles": list(c.get("connected_device_profiles", [])),
-            "prior_case_ids": list(c.get("similar_prior_cases", [])),
-            "policy_doc_ids": [f"POLICY-{r}" for r in c.get("cited_rules", [])],
-        })
+        doc = case_write_doc(gid, case_doc)
+        self.last_write = self.graph.runInstalledQuery(
+            "case_write", {"graph_case_id": gid, "case_json": json.dumps(doc, default=str)},
+            timeout=120_000, usePost=True)
         return gid
+
+    # ------------------------------------------- final-round queries ----
+    def ring_at_asof(self, card_id: str, as_of: datetime, lookback_days: int = 45,
+                     max_cards: int = 60, rare_cards: int = 10) -> dict[str, Any]:
+        res = self._run("ring_at_asof", {"card_id": card_id, "as_of": _fmt(as_of),
+                                         "lookback_days": lookback_days,
+                                         "rare_cards": rare_cards, "max_cards": max_cards})
+        cards = sorted(set(self._first(res, "cards", []) or []) - {card_id})
+        return {"seed": card_id, "cards": cards, "size": len(cards) + 1,
+                "devices": sorted(self._first(res, "devices", []) or [])[:20],
+                "as_of": str(as_of), "lookback_days": lookback_days,
+                "algorithm": "seeded WCC on the as_of-sliced card-device projection "
+                             "(GSQL ring_at_asof)"}
+
+    def origin_counts(self, ring_cards: Sequence[str], since: datetime, until: datetime,
+                      as_of: datetime) -> dict[str, Any]:
+        res = self._run("origin_counts", {"ring_cards": list(ring_cards), "since": _fmt(since),
+                                          "until": _fmt(until), "as_of": _fmt(as_of)})
+        ring_by = self._first(res, "ring_by", {}) or {}
+        pop_n = self._first(res, "pop_n", {}) or {}
+        rows = []
+        for key, cards in ring_by.items():
+            t, e = key.split("\t", 1)
+            if len(cards) >= 2:
+                rows.append({"entity_type": t, "entity": e, "ring_cards": len(cards),
+                             "ring_card_ids": sorted(cards), "pop_cards": int(pop_n.get(key, 0))})
+        return {"entities": rows, "n_control": int(self._first(res, "n_control", 0) or 0),
+                "n_ring": len(ring_cards)}
+
+    def origin_touchers(self, entity_type: str, entity: str, since: datetime,
+                        until: datetime, as_of: datetime) -> list[dict[str, Any]]:
+        res = self._run("origin_touchers", {"entity_type": entity_type, "entity": entity,
+                                            "since": _fmt(since), "until": _fmt(until),
+                                            "as_of": _fmt(as_of)})
+        last = self._first(res, "last_touch", {}) or {}
+        n = self._first(res, "n_touches", {}) or {}
+        owner = self._first(res, "owner", {}) or {}
+        fraud = set(self._first(res, "fraud_cards", []) or [])
+        return [{"card_id": c, "customer_id": owner.get(c, ""), "last_touch": str(last[c]),
+                 "n_touches": int(n.get(c, 0)), "suspect": c in fraud} for c in last]
+
+    def ring_exposure(self, ring_cards: Sequence[str], as_of: datetime,
+                      lookback_days: int = 45, window_hours: float = 72.0) -> list[dict]:
+        res = self._run("ring_exposure", {"ring_cards": list(ring_cards), "as_of": _fmt(as_of),
+                                          "window_hours": int(window_hours)})
+        txns = self._first(res, "txns", {}) or {}
+        amt = self._first(res, "amount", {}) or {}
+        owner = self._first(res, "owner", {}) or {}
+        return [{"card_id": c, "customer_id": owner.get(c, ""),
+                 "exposure_usd": round(float(amt.get(c, 0.0)), 2),
+                 "txn_ids": sorted(map(str, t))} for c, t in txns.items()]
+
+    def precedent_by_facts(self, fact_mask: int, as_of: datetime) -> dict[str, Any]:
+        res = self._run("precedent_by_facts", {"fact_mask": int(fact_mask), "as_of": _fmt(as_of)})
+        return {"n": int(self._first(res, "n", 0) or 0),
+                "confirmed": int(self._first(res, "confirmed", 0) or 0),
+                "cleared": int(self._first(res, "cleared", 0) or 0),
+                "case_ids": sorted(self._first(res, "case_ids", []) or [])}
+
+    def compromise_watch(self, entity_ids: Sequence[str], as_of: datetime) -> list[dict]:
+        res = self._run("compromise_watch", {"entity_ids": [e for e in entity_ids if e],
+                                             "as_of": _fmt(as_of)})
+        out = []
+        for h in self._first(res, "hits", []) or []:
+            case, ent, lift, p = (str(h).split("\t") + ["", "", "", ""])[:4]
+            out.append({"graph_case_id": case, "entity": ent, "lift": float(lift or 0),
+                        "p_value": float(p or 1)})
+        return out
+
+    def behaviour_vector(self, txn_id: str) -> list[float] | None:
+        """The flagged transaction's behaviour vector for the conformal support
+        check. Vectors are computed locally (no egress) and loaded into the
+        graph; the calibration-space lookup reads the same staged table."""
+        self.call_count += 1
+        from ..agent.final_round import _behaviour_table
+
+        tbl = _behaviour_table()
+        if tbl is None:
+            return None
+        i = tbl[0].get(str(txn_id))
+        return None if i is None else [float(x) for x in tbl[1][i]]
+
+    def data_gaps(self, txn_ids: Sequence[str]) -> dict[str, Any]:
+        res = self._run("data_gaps", {"txn_ids": [str(t) for t in txn_ids]})
+        return {"n": int(self._first(res, "n", 0) or 0),
+                "no_identity": sorted(self._first(res, "no_identity", []) or []),
+                "empty_region": sorted(self._first(res, "empty_region", []) or []),
+                "placeholder_email": sorted(self._first(res, "placeholder_email", []) or [])}
 
     def case_chain(self, graph_case_id: str) -> dict[str, Any]:
         res = self._run("case_chain", {"graph_case_id": graph_case_id})

@@ -60,6 +60,10 @@ class LLMClient:
     def __init__(self) -> None:
         self.cfg = LLM
         self.usage = LLMUsage()
+        self.case_id = ""
+        self._case_start = LLMUsage()
+        self.template_fallbacks = 0
+        self.timeout_s = float(os.environ.get("LLM_TIMEOUT_S", "45") or 45)
         self._client: Any = None
         self._provider = LLM.provider
         self.available = LLM.available and os.environ.get("AGENT_USE_LLM", "1") != "0"
@@ -95,15 +99,45 @@ class LLMClient:
             raise RuntimeError(f"unknown LLM_PROVIDER={self._provider!r}")
         return self._client
 
+    # --------------------------------------------------------- per case ----
+    def begin_case(self, case_id: str) -> None:
+        self.case_id = case_id
+        self._case_start = LLMUsage(self.usage.calls, self.usage.input_tokens,
+                                    self.usage.output_tokens, self.usage.cached,
+                                    list(self.usage.errors))
+        self.template_fallbacks = 0
+
+    def case_usage(self) -> dict[str, Any]:
+        s = self._case_start
+        return {"calls": self.usage.calls - s.calls,
+                "input_tokens": self.usage.input_tokens - s.input_tokens,
+                "output_tokens": self.usage.output_tokens - s.output_tokens,
+                "tokens": (self.usage.total_tokens - s.total_tokens),
+                "cached": self.usage.cached - s.cached,
+                "errors": self.usage.errors[len(s.errors):][:5],
+                "template_fallbacks": self.template_fallbacks}
+
+    def _egress(self, purpose: str, system: str, prompt: str, ok: bool, err: str = "") -> None:
+        """Every call that leaves the bank boundary, with what it carried."""
+        from .telemetry import egress
+
+        egress({"dependency": "llm", "provider": self._provider, "model": self.cfg.model,
+                "case_id": self.case_id, "purpose": purpose,
+                "bytes_sent": len(system.encode()) + len(prompt.encode()),
+                "contains": "evidence brief: pseudonymous ids, aggregates, policy text, "
+                            "delimited trigger text", "ok": ok, "error": err[:200]})
+
     # ------------------------------------------------------------- call ----
     def complete(self, system: str, prompt: str, max_tokens: int | None = None) -> str:
-        """Return text, or "" when no model is configured. Never raises."""
+        """Return text, or "" when no model is configured. Never raises.
+        "" means the caller writes template prose; that is counted."""
         if not self.available:
             return ""
         model = self.cfg.model
         key = self._key(system, prompt, model)
         path = self._cache_path(key)
-        if self.cfg.cache_enabled and path.exists():
+        drilling = bool(os.environ.get("LLM_DRILL", "").strip())
+        if self.cfg.cache_enabled and path.exists() and not drilling:
             blob = json.loads(path.read_text(encoding="utf-8"))
             self.usage.calls += 1
             self.usage.cached += 1
@@ -114,7 +148,10 @@ class LLMClient:
         try:
             text, in_tok, out_tok = self._invoke_with_backoff(
                 system, prompt, max_tokens or self.cfg.max_tokens)
+            self._egress("prose", system, prompt, True)
         except Exception as exc:                      # pragma: no cover - network
+            self._egress("prose", system, prompt, False, str(exc))
+            self.template_fallbacks += 1
             self.usage.errors.append(f"{self._provider}: {exc}")
             if self.cfg.fallback_provider and self._provider != self.cfg.fallback_provider:
                 self._provider = self.cfg.fallback_provider
@@ -131,7 +168,7 @@ class LLMClient:
         self.usage.calls += 1
         self.usage.input_tokens += in_tok
         self.usage.output_tokens += out_tok
-        if self.cfg.cache_enabled:
+        if self.cfg.cache_enabled and not drilling:
             path.write_text(json.dumps({"text": text, "input_tokens": in_tok,
                                         "output_tokens": out_tok,
                                         "model": model, "at": time.time()}),
@@ -144,16 +181,47 @@ class LLMClient:
                              max_tokens: int) -> tuple[str, int, int]:
         """Rate limits are the normal case on a small quota, not an outage:
         wait and retry a 429 instead of silently dropping to the template."""
+        tries = 0
         for delay in (*self.RETRY_DELAYS_S, None):
             try:
-                return self._invoke(system, prompt, max_tokens)
+                return self._invoke_timed(system, prompt, max_tokens)
             except Exception as exc:                  # pragma: no cover - network
                 msg = str(exc).lower()
                 limited = "429" in msg or "quota" in msg or "rate limit" in msg                     or "resource_exhausted" in msg or "resourceexhausted" in msg
-                if delay is None or not limited:
+                tries += 1
+                # A timeout or garbage gets exactly one retry with a short
+                # backoff; only a rate limit earns the long schedule.
+                if delay is None or (not limited and tries > 1):
                     raise
-                time.sleep(delay)
+                time.sleep(delay if limited else 1.0)
         raise RuntimeError("unreachable")
+
+    def _invoke_timed(self, system: str, prompt: str, max_tokens: int) -> tuple[str, int, int]:
+        """Hard wall-clock timeout around one provider call, plus the drill
+        modes LLM_DRILL=timeout|garbage so both drills are reproducible."""
+        import threading
+
+        drill = os.environ.get("LLM_DRILL", "").strip().lower()
+        if drill == "timeout":
+            raise TimeoutError("drill: model call timed out")
+        if drill == "garbage":
+            return ('{"verdict": "legitimate", "actions": ["CLOSE_NO_FRAUD"], '
+                    '"tools": ["drop_table"], "txn": "99999999"} <<not json', 0, 0)
+        box: dict[str, Any] = {}
+
+        def run() -> None:
+            try:
+                box["v"] = self._invoke(system, prompt, max_tokens)
+            except Exception as exc:                  # pragma: no cover - network
+                box["e"] = exc
+        t = threading.Thread(target=run, daemon=True)
+        t.start()
+        t.join(self.timeout_s)
+        if t.is_alive():
+            raise TimeoutError(f"model call exceeded {self.timeout_s:.0f}s")
+        if "e" in box:
+            raise box["e"]
+        return box["v"]
 
     def _invoke(self, system: str, prompt: str, max_tokens: int) -> tuple[str, int, int]:
         client = self._ensure()

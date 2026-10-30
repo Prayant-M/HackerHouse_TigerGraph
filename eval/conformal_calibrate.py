@@ -1,0 +1,137 @@
+"""Innovation 4: calibrate conformal abstention and measure its coverage.
+
+* p(fraud) for every replayed closed case and matched control comes from the
+  same pure core the agent uses (core/proof.decide over its fact vector, no
+  solicited evidence — exactly `p_graph_only` in a live case).
+* Label-conditional (Mondrian by class) split conformal at alpha = 0.10,
+  calibrated on August-September, the months closest to the holdout; coverage
+  is measured on October.
+* Support: each calibration transaction's behaviour vector; threshold = the 95th
+  percentile of leave-one-out k-NN distance inside the calibration set.
+
+Writes data/staged/conformal.json, data/staged/conformal_support.npy and
+eval/reports/conformal.md.   python eval/conformal_calibrate.py
+"""
+
+from __future__ import annotations
+
+import json
+import math
+import sys
+from pathlib import Path
+
+import numpy as np
+import pandas as pd
+
+ROOT = Path(__file__).resolve().parents[1]
+sys.path.insert(0, str(ROOT / "src"))
+try:
+    sys.stdout.reconfigure(encoding="utf-8", errors="replace")
+except Exception:  # pragma: no cover
+    pass
+
+from fraudagent.config import PATHS  # noqa: E402
+from fraudagent.core import proof  # noqa: E402
+from fraudagent.core.conformal import ALPHA, K_NEIGHBOURS, knn_distance  # noqa: E402
+from fraudagent.core.evidence_ledger import trigger_prior  # noqa: E402
+from fraudagent.core.signals import SIGNAL_NAMES  # noqa: E402
+
+CAL_FROM, CAL_TO = pd.Timestamp("2016-08-01"), pd.Timestamp("2016-10-01")
+
+
+def p_graph(r, prior) -> float:
+    fired = {s for s in SIGNAL_NAMES if bool(getattr(r, s)) and s != "customer_disputed"}
+    fc = proof.FactContext(trigger_type="risk_score", signal_order=list(SIGNAL_NAMES),
+                           prior=prior)
+    proof.with_fired(fc, fired)
+    return proof.decide(fired, fc).p_fraud
+
+
+def quantile(scores: np.ndarray, alpha: float) -> float:
+    n = len(scores)
+    if n == 0:
+        return 1.0
+    level = min(1.0, math.ceil((n + 1) * (1 - alpha)) / n)
+    return float(np.quantile(scores, level, method="higher"))
+
+
+def main() -> int:
+    df = pd.read_parquet(PATHS.staged / "closed_case_facts.parquet")
+    prior = trigger_prior("risk_score")
+    df["p"] = [p_graph(r, prior) for r in df.itertuples()]
+    cal = df[(df["opened_at"] >= CAL_FROM) & (df["opened_at"] < CAL_TO)]
+    test = df[df["opened_at"] >= CAL_TO]
+    s_f = 1 - cal.loc[cal["is_fraud"], "p"].to_numpy()
+    s_l = cal.loc[~cal["is_fraud"], "p"].to_numpy()
+    q = {"fraud": round(quantile(s_f, ALPHA), 6), "legit": round(quantile(s_l, ALPHA), 6)}
+
+    def pset(p: float) -> list[str]:
+        out = []
+        if 1 - p <= q["fraud"]:
+            out.append("fraud")
+        if p <= q["legit"]:
+            out.append("legit")
+        return out
+
+    def coverage(sub: pd.DataFrame) -> dict:
+        sets = [pset(p) for p in sub["p"]]
+        hit = [("fraud" if f else "legit") in s for f, s in zip(sub["is_fraud"], sets)]
+        size = [len(s) for s in sets]
+        return {"n": int(len(sub)), "coverage": round(float(np.mean(hit)), 4) if hit else None,
+                "avg_set_size": round(float(np.mean(size)), 3) if size else None,
+                "share_uncertain": round(float(np.mean([z != 1 for z in size])), 4)
+                if size else None}
+
+    # support
+    beh = pd.read_parquet(PATHS.behaviour_parquet)
+    idx = {t: i for i, t in enumerate(beh["txn_id"].astype(str))}
+    mat = np.vstack(beh["behaviour_emb"].to_numpy()).astype(np.float32)
+    cal_ids = [idx[t] for t in cal["flagged_txn_id"].astype(str) if t in idx]
+    ref = mat[cal_ids]
+    rng = np.random.default_rng(0)
+    probe = rng.choice(len(ref), size=min(800, len(ref)), replace=False)
+    loo = [knn_distance(ref[i], ref, K_NEIGHBOURS, exclude_self=True) for i in probe]
+    thr = float(np.percentile(loo, 95))
+    test_ids = [idx[t] for t in test["flagged_txn_id"].astype(str) if t in idx]
+    test_d = [knn_distance(mat[i], ref, K_NEIGHBOURS) for i in test_ids[:800]]
+    outside = float(np.mean([d > thr for d in test_d])) if test_d else None
+
+    out = {"alpha": ALPHA, "mondrian": "label-conditional", "quantiles": q,
+           "calibrated_on": f"{CAL_FROM.date()}..{(CAL_TO - pd.Timedelta(days=1)).date()}",
+           "n_cal": {"fraud": int(len(s_f)), "legit": int(len(s_l))},
+           "support_threshold": thr, "k_neighbours": K_NEIGHBOURS,
+           "coverage_october": {"all": coverage(test),
+                                "fraud": coverage(test[test["is_fraud"]]),
+                                "legit": coverage(test[~test["is_fraud"]])},
+           "coverage_calibration": coverage(cal),
+           "october_outside_support_share": outside}
+    (PATHS.staged / "conformal.json").write_text(json.dumps(out, indent=2), encoding="utf-8")
+    np.save(PATHS.staged / "conformal_support.npy", ref)
+    c = out["coverage_october"]
+    md = ["# Conformal abstention — calibration and coverage", "",
+          f"Generated by `eval/conformal_calibrate.py`. Label-conditional split conformal, "
+          f"α = {ALPHA}, calibrated on {out['calibrated_on']} "
+          f"({out['n_cal']['fraud']} fraud, {out['n_cal']['legit']} legitimate replays); "
+          f"coverage measured on October.", "",
+          f"Class quantiles: fraud q = {q['fraud']:.4f} (fraud is in the set when "
+          f"p ≥ {1 - q['fraud']:.4f}); legit q = {q['legit']:.4f} (legit is in the set when "
+          f"p ≤ {q['legit']:.4f}).", "",
+          "| October slice | n | empirical coverage (nominal 0.90) | avg set size | "
+          "share uncertain |", "|---|--:|--:|--:|--:|"]
+    for k in ("all", "fraud", "legit"):
+        v = c[k]
+        md.append(f"| {k} | {v['n']} | {v['coverage']} | {v['avg_set_size']} | "
+                  f"{v['share_uncertain']} |")
+    md += ["", f"Support threshold (95th pct leave-one-out {K_NEIGHBOURS}-NN distance in "
+           f"behaviour space): {thr:.4f}. Share of October flagged transactions outside "
+           f"support: {outside if outside is None else round(outside, 4)}.", "",
+           "**Caveat stated up front:** the closed cases are a selected sample, so coverage "
+           "holds for cases like the ones the bank investigated, not for all traffic. The "
+           "set only ever widens a *fraud* verdict to uncertain; it never creates a block.", ""]
+    (PATHS.eval_out / "conformal.md").write_text("\n".join(md), encoding="utf-8")
+    print("\n".join(md))
+    return 0
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())

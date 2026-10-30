@@ -35,6 +35,9 @@ GSQL queries reached **through the TigerGraph MCP server** · TigerVector GraphR
 GDS WCC + PageRank · 11 legitimate / 9 fraud / 2 SARs / 5 decisions changed after
 evidence · 20 / 20 answers audit-clean · 64 tests.
 
+**Live console (read-only):** [prayant-fraudgraph-console.static.hf.space](https://prayant-fraudgraph-console.static.hf.space), all twenty
+investigations, no install. Live re-runs need the repository and a workspace.
+
 **Diagrams:** eighteen architecture diagrams (system, agent loop, MCP path, schema,
 GraphRAG, decision authority, ring detection, case lifecycle, R7 walkthrough,
 pipeline, temporal wall, trust boundaries, policy rules R1–R10, all twenty
@@ -44,6 +47,114 @@ rendered by GitHub, and as an interactive page:
 [FraudGraph Blueprints](https://claude.ai/artifact/VioVT79phoeLTjBKkMWRvb). PNG exports of all eighteen are in
 [`docs/diagrams/`](docs/diagrams/); a dev.to-ready post is in
 [`docs/DEVTO_POST.md`](docs/DEVTO_POST.md).
+
+---
+
+## Final round — can a bank run it?
+
+Round 1 asked whether the agent can investigate. The final round asks whether a
+bank can run it: faults injected live, hostile text, wrong-role approvals, a
+January the bank's model has never seen, and nine legitimate customers in
+eighteen cases who must not be blocked. Everything below is reproducible from
+this repository and every number in this block is regenerated from the last run
+by `scripts/readme_numbers.py`.
+
+<!-- numbers:start -->
+<!-- numbers:end -->
+
+**The one idea to judge: proof-carrying verdicts** ([`docs/INNOVATION.md`](docs/INNOVATION.md)).
+The decision core is a pure function, so every answer ships a *computed* proof:
+the minimal set of attested facts that forces the action, the smallest set whose
+removal flips it (margin *k*), and how the bank ruled on closed cases with those
+facts (an installed GSQL bitmask query, `precedent_by_facts`). A block or report
+resting on *k* = 1 or contradicted by precedent is downgraded to verify +
+escalate before anyone is wronged. The console's **Proof** tab flips any fact
+live.
+
+| Layer | What it adds | Where |
+|---|---|---|
+| Proof + gate (Innovation 1) | minimal facts, flip set, precedent, one-way gate | `core/proof.py`, `eval/proof_holdout.py` |
+| Predictive containment (Innovation 2, C7, C1) | time-sliced ring, compromise origin by lift vs controls, at-risk cards protected with free actions only, harm-aware block set, `COMPROMISE_POINT` write-back read by later cases | `core/containment.py`, GSQL `ring_at_asof`, `origin_counts`, `origin_touchers`, `ring_exposure`, `compromise_watch` |
+| Label-free evaluation (Innovation 3, C10) | metamorphic relations M1–M7, 40-template hostile-text fuzz, naive-LLM baseline, evasion-frontier attacks | `eval/metamorphic.py`, `eval/attacks.py`, `eval/naive_llm_baseline.py` |
+| Conformal abstention (Innovation 4, C11) | coverage-guaranteed "uncertain", support check, data-quality taint | `core/conformal.py`, `core/quality.py` |
+| Harness | fail-closed with signed FAILED_DEPENDENCY, recorded tool I/O + replay/diff, tip-off by construction, future-dated canaries, signed hash-chained server-side approvals, hostile-text firewall, redaction + egress log, least-privilege single write path | `benchmark/run_case.py`, `agent/recorder.py`, `report/customer_text.py`, `governance/`, `core/text_facts.py`, `graph/queries/case_write.gsql`, `graph/rbac.gsql` |
+
+**TigerGraph is the source of truth.** 34 installed GSQL queries on Savanna 4.2.5
+reached through the TigerGraph MCP server (client-side tool allow-list; no
+`add_node`/`add_edge`), TigerVector hybrid recall fused with traversal in one
+query, GDS WCC/PageRank plus a time-sliced WCC that *does* change output, the
+case written back through one installed query (`case_write`) and read back
+(`case_chain`) before the answer says `written_to_graph: true`, compromise
+points written as edges and read by later investigations, approvals and
+detector/schema approvals written through a separate console-only query, and a
+least-privilege `agent_role` (EXECUTE on the investigation queries and
+`case_write` only). Backend parity: 9 tests agree between the mirror and live
+TigerGraph.
+
+**One command:** `make case CASE=HHF-007` (Windows: `.\make.ps1 case -Case HHF-007`)
+— exit 0 answer written · 1 failed validation (nothing written) · 2
+FAILED_DEPENDENCY (signed record, previous answer untouched) · 3 invalid input.
+Also `make twice`, `make replay`, `make diff`, `make drills`, `make attest-verify`,
+`make canary`. The January files drop into `Datasets/` (or `Datasets/final/`):
+`make drift` gates them behind a fraud-manager approval, the loaders read every
+month present, and `case_pack_final.csv` is picked up automatically.
+
+### Judges: run it on your own dataset (any schema)
+
+```bash
+make byo-map DATA=path/to/your_folder NAME=judge1   # mapping proposal with evidence, nothing applied
+make byo     DATA=path/to/your_folder NAME=judge1   # map -> validate -> transform -> ingest -> run every case -> grade
+# Windows: .\make.ps1 byo -Data path\to\your_folder -Name judge1
+# Approve with a token instead of the operator flag:
+python ingest/byo.py --input path/to/your_folder --name judge1 --token <fraud-manager token> [--graph]
+```
+
+`ingest/byo.py` needs none of our data: it maps against the bundled spec
+`data/schema/canonical.json`. It identifies each file's role (transactions,
+identity, closed cases, case pack) and maps every column with evidence: name
+tokens and synonyms, type shape, and value overlap or quantile match with a scale
+search. It detects amounts in cents, timestamps split into date + time, epoch
+seconds, and numbered families under any prefix (`vesta_007`→`V7`, `cnt_03`→`C3`,
+`ident_31`→`id_31`).
+
+Guardrails:
+- A file that maps onto nothing is **refused**, not guessed.
+- The run stops with the field named if any of these fail: ids unique, amounts
+  numeric and non-negative, timestamps parse, every case-pack transaction present,
+  trigger types valid, and the row limit.
+- The mapping is applied only with a fraud-manager token, or with
+  `--accept-mapping`, which is recorded in the report as an operator decision.
+- Everything runs in isolated folders (`Datasets/byo/<name>`,
+  `data/staged_byo/<name>`, `cases_byo/<name>`, with recordings, lifecycle and
+  logs scoped there too), so a judge's dataset can never overwrite the submission.
+
+Rehearsed on a renamed and reshaped variant of our own data (`eval/make_variant.py`):
+- Every required column was mapped correctly, including the card tuple matched
+  by value quantiles, cents ×0.01, date + time → ts and 377 family columns.
+- Three optional columns were left unmapped and reported: `distanceB` (filled
+  empty), `secondsSinceStart` (re-derived from ts) and `linkedCards` (sparse).
+- 3/3 cases answered, and the organisers' grader is clean (0 hard, 0 policy, 0 warnings).
+- The verdicts are **identical** to the canonical run (`eval/reports/byo/rehearsal/`).
+
+Agent guardrails, each enforced in code:
+- **Free text** enters as `UntrustedText`, and the policy core's `CaseState`
+  refuses to be built from it (`core/provenance.py`). Only allow-listed extractor
+  facts cross; 0 of 720 hostile-text mutations changed a decision.
+- **The model** has no tools, no query access and no write access. Its output is
+  schema-checked, `grounded()` drops ids it invented, and `PolicyDecision.filter`
+  drops actions it added. A hard timeout falls back to template prose.
+- **Actions** come from a fixed catalogue with policy routes (`tests/fixtures/grader_rules.json`
+  mirrors the organisers' grader). Only `auto` actions execute; L1/L2 wait for a
+  server-side token role.
+- **Harmful actions** need a proof margin ≥ 2 (R2 exempt), and an uncertain case
+  escalates (R8).
+- **Bounds**: a round cap, a wall-clock budget and a token budget.
+- **Graph access** is fail-closed with signed `FAILED_DEPENDENCY` records. "Not
+  found" during an outage is never reported as invalid input, and the runner
+  waits a bounded time for a sleeping Savanna workspace.
+
+Challenge write-ups, each listing only what is attested: [`docs/challenges/`](docs/challenges/).
+Resilience statement: [`docs/RESILIENCE.md`](docs/RESILIENCE.md).
 
 ---
 

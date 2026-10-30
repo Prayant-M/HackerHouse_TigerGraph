@@ -1,0 +1,37 @@
+{
+  "generated_at": "2026-10-29T11:56:57Z",
+  "files": {
+    "Datasets/case_pack.csv": {
+      "sha256": "353494638b6ec2f07af67257b90ab85a1f1d537a0f015089abd9b54cfc7596e4",
+      "bytes": 3548
+    },
+    "Datasets/closed_cases_history.csv": {
+      "sha256": "840613948d023fc3ddbfcb3291d5be250ee328e6eba1d2810b010fca5a757854",
+      "bytes": 2706417
+    },
+    "Datasets/identity.csv": {
+      "sha256": "9ebd6740ecb7e2afd392b5082a6f349907e871144659f622f5302ecd4ca39fad",
+      "bytes": 26716154
+    },
+    "Datasets/round_2_dataset/cases/case_pack_final.csv": {
+      "sha256": "d2cd238d99bd69f53f585637787ca123ff910719ca0ec1c9789dee09161f8f11",
+      "bytes": 3735
+    },
+    "Datasets/round_2_dataset/closed_cases_history.csv": {
+      "sha256": "d8cb78464d81881b4fcc780e3dc5af83e5c9f88b3cd5f7984fb2602b16a5f7ee",
+      "bytes": 2714120
+    },
+    "Datasets/round_2_dataset/identity_2017q1.csv": {
+      "sha256": "e174b0b1be53ff1c87b79ecdfdcfa4909b795fc8a3255354b422ef5b0dffce80",
+      "bytes": 2981977
+    },
+    "Datasets/round_2_dataset/transactions_2017q1.csv": {
+      "sha256": "b12ab459edd2179b43f986bfd506c29a93f2240a902e88f01806705bc82be76b",
+      "bytes": 70087600
+    },
+    "Datasets/transactions.csv": {
+      "sha256": "dd084e58d7c33e7fd5a59c7b992ba9d6f62b0bd443fb19d4a5d5212e0246bb2b",
+      "bytes": 707936515
+    }
+  }
+}

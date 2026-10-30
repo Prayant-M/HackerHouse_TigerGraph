@@ -8,7 +8,11 @@ const $$ = (s, r = document) => [...r.querySelectorAll(s)];
 const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
 const money = n => "$" + Number(n || 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 const pct = p => Math.round(Number(p || 0) * 100) + "%";
-const getJSON = async url => { const r = await fetch(url); if (!r.ok) throw new Error(await r.text()); return r.json(); };
+// A static export (deploy/build_space.py --static) sets <html data-static="1"> and
+// ships every read-only API response as a JSON file next to the page.
+const STATIC_SITE = document.documentElement.dataset.static === "1";
+const apiUrl = url => STATIC_SITE ? url.replace(/^\//, "") + ".json" : url;
+const getJSON = async url => { const r = await fetch(apiUrl(url)); if (!r.ok) throw new Error(await r.text()); return r.json(); };
 const humanize = s => String(s || "").replace(/_/g, " ").replace(/\b\w/g, c => c.toUpperCase());
 
 const PATTERN = {
@@ -202,11 +206,22 @@ function renderHome() {
 function renderFeatured() {
   const box = $("#featured");
   if (box.dataset.done || !S.cases.length) return;
+  // Chosen from the data, not hard-coded: the final-round pack when it is
+  // present, one case per shape the demo plan covers.
+  const pool = S.cases.filter(c => c.round === "final").length ? S.cases.filter(c => c.round === "final") : S.cases;
+  const used = new Set();
+  const take = (pred, make) => { const c = pool.find(x => !used.has(x.case_id) && pred(x)); if (!c) return null; used.add(c.case_id); return make(c); };
   const pick = [
-    { id: "HHG-006", title: "A fraud pattern nobody had written down", body: "Four online purchases in 30 minutes, each parked just under $500. Invisible to per-transaction scoring. The agent matched it to cases the bank's own analysts couldn't categorise.", tag: "Undocumented pattern" },
-    { id: "HHG-018", title: "A dispute it refuses to block", body: "The customer says they never made a $39.08 charge. The graph shows the card has paid it 21 times since July. The agent asks first, the charge is recognised, and the case closes with no block.", tag: "Decision changed · R7" },
-    { id: "HHG-014", title: "A device ring only a graph can see", body: "One phone, behind an anonymising proxy, across 19 unrelated cardholders in a month. No single account looks wrong; it only shows up as a hub.", tag: "Shared-device ring" },
-  ];
+    take(c => c.origin || c.n_connected > 1, c => ({ id: c.case_id, tag: "Ring · predictive containment",
+      title: c.origin ? `Compromise origin found: ${humanize(c.origin)}` : `${c.n_connected} connected cards`,
+      body: `${c.at_risk} cards that passed through the same point are protected before they are hit, with step-up and monitoring only. ${c.summary || ""}`.slice(0, 260) })),
+    take(c => c.gate_applied || c.verdict === "uncertain", c => ({ id: c.case_id, tag: c.gate_applied ? "Proof gate · harm avoided" : "Uncertain · escalated",
+      title: c.gate_applied ? `A block that rested on margin ${c.margin_k}` : `Set {${(c.conformal_set || []).join(", ")}} — hand it to a person`,
+      body: `The decision rests on ${(c.minimal_facts || []).map(humanize).join(", ") || "its facts"}. ${c.summary || ""}`.slice(0, 260) })),
+    take(c => c.hostile_text, c => ({ id: c.case_id, tag: "Hostile text · treated as data",
+      title: "Free text that tried to instruct the agent",
+      body: `The trigger text carried instructions aimed at the model. They were flagged and ignored, never obeyed and never inverted. ${c.summary || ""}`.slice(0, 260) })),
+  ].filter(Boolean);
   box.innerHTML = pick.map((f, i) => {
     const c = S.cases.find(x => x.case_id === f.id) || {};
     return `<a class="fcase reveal" style="transition-delay:${i * .08}s" href="#/cases/${f.id}">
@@ -260,6 +275,11 @@ function renderList() {
         ${c.exposure_usd ? `<span class="pill neutral">${money(c.exposure_usd)}</span>` : ""}
         ${c.changed ? `<span class="pill brand">Decision changed</span>` : ""}
         ${c.sar ? `<span class="pill fraud">SAR</span>` : ""}
+        ${c.margin_k != null ? `<span class="pill neutral" title="facts that must be false to change the action">k=${c.margin_k}</span>` : ""}
+        ${c.gate_applied ? `<span class="pill warn">Gate</span>` : ""}
+        ${c.hostile_text ? `<span class="pill warn">Hostile text</span>` : ""}
+        ${c.tainted ? `<span class="pill neutral">Tainted data</span>` : ""}
+        ${c.origin ? `<span class="pill brand">Origin</span>` : ""}
       </div></li>`;
   }).join("") || `<li class="empty-state" style="padding:30px 16px"><p>No cases match these filters.</p></li>`;
   $$("#case-list .citem").forEach(li => {
@@ -287,7 +307,9 @@ async function openCase(id, tab = null) {
 
 /* ─────────────────────────────────────────────────────── case detail ── */
 const TABS = [
-  ["overview", "Overview"], ["evidence", "Evidence"], ["graph", "Graph"], ["memory", "Similar cases"], ["audit", "Audit trail"],
+  ["overview", "Overview"], ["proof", "Proof"], ["evidence", "Evidence"], ["graph", "Graph"],
+  ["containment", "Containment & ring"], ["memory", "Similar cases"], ["replay", "Regulator replay"],
+  ["lifecycle", "Case life"], ["audit", "Audit trail"],
 ];
 
 function renderDetail(d) {
@@ -345,7 +367,9 @@ function setTab(tab, d) {
 function renderTab(d) {
   const pane = $("#tabpane");
   pane.className = "tabpane"; void pane.offsetWidth; pane.className = "tabpane";
-  ({ overview: tabOverview, evidence: tabEvidence, graph: tabGraph, memory: tabMemory, audit: tabAudit }[S.tab] || tabOverview)(d, pane);
+  ({ overview: tabOverview, proof: tabProof, evidence: tabEvidence, graph: tabGraph,
+     containment: tabContainment, memory: tabMemory, replay: tabReplay, lifecycle: tabLifecycle,
+     audit: tabAudit }[S.tab] || tabOverview)(d, pane);
 }
 
 /* overview */
@@ -746,6 +770,7 @@ function rerun(id) {
 async function refreshApprovalBadge() {
   try {
     S.approvals = await getJSON("/api/approvals");
+    if (STATIC_SITE) S.approvals.forEach(a => { if (S.localDecisions?.[a.key]) a.decision = S.localDecisions[a.key]; });
     const open = S.approvals.filter(a => !a.decision).length;
     const b = $("#approval-count"); b.textContent = open; b.hidden = !open;
   } catch { }
@@ -773,7 +798,7 @@ function renderApprovals() {
           <span>Fraud likelihood: <b style="color:${tone(a.fraud_probability)}">${pct(a.fraud_probability)}</b></span></div>
       </div>
       <div class="btns">${a.decision
-        ? `<span class="decided ${a.decision.approved ? "t-legit" : "t-fraud"}">${a.decision.approved ? "✓ Approved" : "✕ Rejected"} · ${esc(a.decision.analyst)}</span>`
+        ? `<span class="decided ${a.decision.approved ? "t-legit" : "t-fraud"}">${a.decision.approved ? "✓ Approved" : "✕ Rejected"} · ${esc(a.decision.actor_id || a.decision.analyst)} (${esc(a.decision.actor_role || "")})</span>`
         : `<button class="btn btn-no" data-a="0">Reject</button><button class="btn btn-ok" data-a="1">Approve</button>`}</div>
     </div>`).join("") || `<div class="empty-state"><div class="empty-ico">✅</div><h3>All clear</h3><p>${S.approvalFilter === "pending" ? "Nothing is waiting for approval." : "No decisions recorded yet."}</p></div>`;
 
@@ -781,14 +806,18 @@ function renderApprovals() {
     const [cid, idx] = el.dataset.key.split(":"), ok = b.dataset.a === "1";
     el.style.opacity = .5;
     try {
-      const res = await fetch(`/api/approvals/${encodeURIComponent(cid)}/${idx}`, {
-        method: "POST", headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ approved: ok, analyst: "ANALYST-01" }),
-      }).then(r => r.json());
+      const res = STATIC_SITE
+        ? (S.localDecisions = S.localDecisions || {})[el.dataset.key] =
+          { approved: ok, analyst: "ANALYST-01", at: new Date().toISOString().slice(0, 19) + "Z", graph_write: "skipped" }
+        : await fetch(`/api/approvals/${encodeURIComponent(cid)}/${idx}`, {
+          method: "POST", headers: { "Content-Type": "application/json",
+                                     "Authorization": `Bearer ${approvalToken()}` },
+          body: JSON.stringify({ approved: ok }),
+        }).then(async r => { const j = await r.json(); if (!r.ok) { if (r.status === 401) { try { sessionStorage.removeItem("approval_token"); } catch { /* */ } } throw new Error(`${r.status}: ${j.error}`); } return j; });
       toast(res.graph_write_error ? `Recorded, but the graph write failed: ${res.graph_write_error}` :
         res.graph_write ? `${ok ? "Approved" : "Rejected"} · recorded for this session (read-only copy, no graph write)` :
-        `${ok ? "Approved" : "Rejected"} · APPROVED_BY edge written for ${cid}`);
-    } catch { toast("Couldn't record that decision"); }
+        `${ok ? "Approved" : "Rejected"} by ${res.actor_id} (${res.actor_role}) · signed ledger #${res.seq}`);
+    } catch (e) { toast(`Refused — ${e.message || "couldn't record that decision"}`); }
     loadApprovals();
   }));
 }
@@ -1003,3 +1032,138 @@ async function loadPolicy() {
 }
 
 boot();
+
+/* ═════════════════════════════════════════════ FINAL-ROUND TABS ══ */
+const FACT = s => humanize(String(s || "").replace(/^precedent_recall$/, "similar closed cases"));
+const chip = (t, cls = "") => `<span class="pill ${cls}">${esc(t)}</span>`;
+
+function tabProof(d, pane) {
+  const r = d.agent_record || {}, pr = r.proof || {}, g = r.gate || {}, cf = r.conformal || {}, q = r.quality || {};
+  const prec = pr.precedent || {};
+  if (!pr.facts) { pane.innerHTML = `<div class="empty-state"><h3>No proof on this answer</h3><p>Re-run the case to compute one.</p></div>`; return; }
+  const minimal = new Set(pr.minimal_sufficient_facts || []), flips = new Set(pr.flip_set || []);
+  pane.innerHTML = `
+    <div class="callout"><span class="ci">🧾</span><div>
+      <b>${esc((pr.action_class || []).map(humanize).join(" + "))}</b> rests on
+      <b>${(pr.minimal_sufficient_facts || []).length}</b> fact${(pr.minimal_sufficient_facts || []).length === 1 ? "" : "s"}
+      (${(pr.minimal_sufficient_facts || []).map(FACT).map(esc).join(", ") || "none"}).
+      Margin <b>k = ${pr.margin_k ?? "≥4"}</b>: ${pr.flip_set && pr.flip_set.length ? `removing ${pr.flip_set.map(FACT).map(esc).join(" and ")} changes the action to <b>${esc((pr.flips_to?.action_class || []).map(humanize).join(" + "))}</b>` : "no set of up to three facts flips it"}.
+      ${prec.n ? `<b>${prec.n}</b> closed cases share these facts: <b>${prec.confirmed}</b> confirmed, <b>${prec.cleared}</b> cleared.` : "No closed case shares exactly these facts."}
+      ${pr.reproduces_live ? "" : `<br><span class="t-warn">The fact-replay class differs from the live decision; the live decision stands.</span>`}
+    </div></div>
+    <div class="callout ${g.applied ? "" : "soft"}"><span class="ci">🛡️</span><div><b>Proof gate:</b> ${esc(g.reason || "—")}
+      ${g.applied ? `<br>Removed ${esc((g.removed || []).join(", "))}; added ${esc((g.added || []).join(", "))}.` : ""}</div></div>
+    <h3>Facts — flip one live</h3>
+    <div class="table-wrap"><table><thead><tr><th>fact</th><th>role</th><th>if removed</th><th></th></tr></thead><tbody>
+      ${(pr.single_fact_flips || []).map(f => `<tr>
+        <td>${esc(FACT(f.fact))}</td>
+        <td>${minimal.has(f.fact) ? chip("minimal", "warn") : ""} ${flips.has(f.fact) ? chip("flip set", "fraud") : ""}</td>
+        <td>${f.flips ? `<b class="t-fraud">${esc(f.action_class.map(humanize).join(" + "))}</b>` : esc(f.action_class.map(humanize).join(" + "))} · p=${f.p_fraud}</td>
+        <td><button class="btn btn-sm" data-flip="${esc(f.fact)}">Recompute</button></td></tr>`).join("")}
+    </tbody></table></div>
+    <div id="flip-out"></div>
+    <h3>Uncertainty set (conformal, 90%)</h3>
+    <p>${cf.available ? `Set ${chip("{" + (cf.set || []).join(", ") + "}", (cf.set || []).length === 1 ? "" : "warn")}
+       from graph-only p = ${cf.p_fraud_graph_only}; ${cf.outside_support ? `<b>outside calibration support</b> (distance ${cf.support_distance} &gt; ${cf.support_threshold})` : `within support${cf.support_distance != null ? ` (distance ${cf.support_distance} ≤ ${cf.support_threshold})` : ""}`}.
+       ${cf.reason ? `<br>Verdict widened: ${esc(cf.reason)}.` : ""}` : esc(cf.note || "not calibrated")}</p>
+    <h3>Data quality</h3>
+    <p>${q.tainted ? chip("tainted", "fraud") : chip(q.severity || "clean")} ${(q.issues || []).map(i => `${esc(i.kind)}: ${esc(i.detail)} <code>${esc((i.record_ids || []).join(", "))}</code>`).join("<br>") || "No gap touches this decision."}</p>
+    <h3>Precedent ids</h3><p>${(prec.case_ids || []).map(c => `<code>${esc(c)}</code>`).join(" ") || "—"} <span class="muted">via ${esc(prec.source || "")}</span></p>`;
+  $$("#tabpane [data-flip]").forEach(b => b.onclick = async () => {
+    b.disabled = true;
+    try {
+      const res = await fetch(apiUrl(`/api/proof/${encodeURIComponent(d.case_id)}/flip`), {
+        method: "POST", headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ remove: [b.dataset.flip] }) }).then(x => x.json());
+      $("#flip-out").innerHTML = `<div class="callout ${res.flips ? "" : "soft"}"><span class="ci">🔁</span><div>
+        Without <b>${esc(FACT(b.dataset.flip))}</b>: ${esc((res.after?.actions || []).map(humanize).join(", "))}
+        (p ${res.before?.p_fraud} → ${res.after?.p_fraud}) — the action class ${res.flips ? "<b>changes</b>" : "does not change"}.</div></div>`;
+    } catch { toast("Recompute needs the live console (not the read-only copy)"); }
+    b.disabled = false;
+  });
+}
+
+async function tabContainment(d, pane) {
+  const r = d.agent_record || {}, c = r.containment;
+  if (!c) { pane.innerHTML = `<div class="empty-state"><div class="empty-ico">🧩</div><h3>Not a ring case</h3><p>Containment runs when the case connects to other cards.</p></div>`; return; }
+  const o = c.origin, b = c.blocks || {};
+  pane.innerHTML = `
+    <div class="callout"><span class="ci">🎯</span><div>${o ? `Compromise origin: <b>${esc(humanize(o.entity_type))}</b> <code>${esc(o.entity)}</code> —
+      ${o.ring_cards_touching} of ${o.n_ring} ring cards touched it vs ${o.control_cards_touching} of ${o.n_control} control cards
+      (lift <b>${o.lift}</b>, p = ${o.p_value}).` : esc(c.note || "No origin passed the lift test.")}</div></div>
+    <div class="kpis">${[["Ring cards", (c.ring_cards || []).length], ["Time-sliced component", c.ring_at_asof?.size ?? "—"],
+      ["At-risk cards protected", (c.at_risk || []).length], ["Blocks proposed", b.n_blocks ?? 0],
+      ["Exposure cut by blocks", money(b.exposure_cut_usd || 0)], ["Blocks on innocents", 0]]
+      .map(([k, v]) => `<div class="kpi"><div class="k">${k}</div><div class="v">${v}</div></div>`).join("")}</div>
+    <h3>Block set — who it touches</h3>
+    <div class="table-wrap"><table><thead><tr><th>card</th><th>customer</th><th>action</th><th>route</th><th>exposure</th><th>why</th></tr></thead><tbody>
+      ${(b.plan || []).map(p => `<tr><td><code>${esc(p.card_id)}</code></td><td>${esc(p.customer_id)}</td><td>${esc(humanize(p.action))}</td><td>${esc(p.route)}</td><td>${money(p.exposure_cut_usd)}</td><td>${esc(p.why)}</td></tr>`).join("") || `<tr><td colspan="6">nothing to block</td></tr>`}
+    </tbody></table></div>
+    <h3>Forward protection (monitor + step-up only)</h3>
+    <p>${(c.at_risk || []).slice(0, 30).map(a => `<code title="last touch ${esc(a.last_touch)}">${esc(a.card_id)}</code>`).join(" ") || "No untouched card passed through the origin."}</p>
+    <h3>Ring replay</h3><div id="ring-replay"><div class="skel" style="height:120px"></div></div>`;
+  try {
+    const rr = await getJSON(`/api/ring/${encodeURIComponent(d.case_id)}`);
+    const f = rr.frames || [];
+    if (!f.length) { $("#ring-replay").innerHTML = `<p class="muted">${esc(rr.note || "No shared-device transactions to replay.")}</p>`; return; }
+    $("#ring-replay").innerHTML = `<input type="range" id="rr" min="0" max="${f.length - 1}" value="${f.length - 1}" style="width:100%">
+      <div id="rr-out"></div>`;
+    const show = i => { const x = f[i];
+      $("#rr-out").innerHTML = `<p><b>${esc(x.ts)}</b> · card <code>${esc(x.card_id)}</code>${x.new_card ? " <b>joins</b>" : ""} · ${money(x.amount)} via <code>${esc((x.device || "").slice(0, 48))}</code>
+        <br>Cards in ring: <b>${x.cards_in_ring}</b> · cumulative loss: <b>${money(x.cumulative_usd)}</b> · txn <code>${esc(x.txn_id)}</code> (attested)</p>`; };
+    $("#rr").oninput = e => show(+e.target.value); show(f.length - 1);
+  } catch { $("#ring-replay").innerHTML = `<p class="muted">Ring replay needs the live console.</p>`; }
+}
+
+async function tabReplay(d, pane) {
+  pane.innerHTML = `<div class="skel" style="height:200px"></div>`;
+  let rp;
+  try { rp = await getJSON(`/api/replay/${encodeURIComponent(d.case_id)}`); }
+  catch { pane.innerHTML = `<div class="empty-state"><h3>No recorded tool I/O</h3><p>Run the case with <code>make case CASE=${esc(d.case_id)}</code>.</p></div>`; return; }
+  pane.innerHTML = `
+    <div class="callout soft"><span class="ci">🔍</span><div>What the agent saw at each step: every tool call, its parameters and the SHA-256 of the response it got back.
+      <b>Re-run</b> repeats that call against the live graph and says whether the answer still matches.</div></div>
+    <div class="table-wrap"><table><thead><tr><th>#</th><th>tool</th><th>ms</th><th>response digest</th><th>preview</th><th></th></tr></thead><tbody>
+      ${(rp.tool_calls || []).map(c => `<tr><td>${c.seq}</td><td><code>${esc(c.method)}</code></td><td>${c.latency_ms ?? ""}</td>
+        <td><code>${esc((c.digest || c.error || "").slice(0, 12))}</code></td>
+        <td><details><summary>show</summary><pre style="white-space:pre-wrap;max-width:520px">${esc(c.response_preview || c.params || "")}</pre></details></td>
+        <td>${c.ok && c.method !== "write_case" ? `<button class="btn btn-sm" data-seq="${c.seq}">Re-run</button>` : ""}</td></tr>`).join("")}
+    </tbody></table></div>`;
+  $$("#tabpane [data-seq]").forEach(b => b.onclick = async () => {
+    b.disabled = true;
+    try {
+      const res = await fetch(apiUrl(`/api/replay/${encodeURIComponent(d.case_id)}/rerun/${b.dataset.seq}`), { method: "POST" }).then(x => x.json());
+      b.textContent = res.matches ? "✓ matches" : "✕ differs";
+    } catch { b.textContent = "unavailable"; }
+  });
+}
+
+async function tabLifecycle(d, pane) {
+  let lc = { state_changes: (d.agent_record || {}).lifecycle || [], handover: (d.agent_record || {}).handover || {}, approvals: [], history: [] };
+  try { lc = await getJSON(`/api/lifecycle/${encodeURIComponent(d.case_id)}`); } catch { /* read-only copy */ }
+  const h = lc.handover || {};
+  pane.innerHTML = `
+    <div class="callout"><span class="ci">🗂️</span><div><b>Handover.</b> State: <b>${esc(h.state || "—")}</b>.
+      Waiting on: ${(h.waiting_on || []).map(esc).join("; ") || "nothing"}.
+      Decided by the agent: ${(h.decided_by_agent || []).map(humanize).map(esc).join(", ") || "—"}.
+      What changed: ${esc(h.what_changed || "—")}</div></div>
+    <h3>State changes</h3>
+    <ol>${(lc.state_changes || []).map(s => `<li><b>${esc(s.from || "∅")} → ${esc(s.to)}</b> · ${esc(s.actor)} (${esc(s.role)}) · ${esc(s.reason)}
+      <code>${esc((s.evidence_ids || []).join(", "))}</code></li>`).join("")}</ol>
+    <h3>Approvals (signed, append-only)</h3>
+    <ul>${(lc.approvals || []).map(a => `<li>#${a.seq} ${esc(a.kind)} · ${esc(a.action || a.reason || "")} · ${esc(a.actor_id)} (${esc(a.actor_role)}) ·
+      ${a.kind === "decision" ? (a.approved ? "approved" : "rejected") : `refused ${a.status}`} · <code>${esc((a.hash || "").slice(0, 12))}</code></li>`).join("") || "<li>none yet</li>"}</ul>
+    <h3>Runs across sittings</h3>
+    <ul>${(lc.history || []).map(x => `<li>v${x.version} · ${esc(x.kind)} · ${esc(x.logged_at)} ${x.changed_since_last_run ? "· <b>decision changed</b>" : ""}</li>`).join("") || "<li>—</li>"}</ul>
+    ${(lc.watch_children || []).length ? `<h3>WATCH child cases</h3><p>${lc.watch_children.map(w => `<code title="${esc(w.reason)}">${esc(w.id)}</code>`).join(" ")}</p>` : ""}`;
+}
+
+function approvalToken() {
+  let t = "";
+  try { t = sessionStorage.getItem("approval_token") || ""; } catch { /* storage blocked */ }
+  if (!t) {
+    t = prompt("Approval token (team lead or fraud manager). The server derives your role from it; nothing you type about your role is trusted.") || "";
+    try { if (t) sessionStorage.setItem("approval_token", t); } catch { /* storage blocked */ }
+  }
+  return t;
+}

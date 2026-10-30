@@ -26,6 +26,8 @@ answer files.
 
 from __future__ import annotations
 
+import math
+
 import time
 from datetime import datetime
 from typing import Any, Callable
@@ -111,6 +113,8 @@ class Investigator:
 
     def run(self, trigger: Trigger, case_id: str) -> dict[str, Any]:
         start_calls = getattr(self.store, "call_count", 0)
+        if getattr(self.llm, "case_id", None) != case_id and hasattr(self.llm, "begin_case"):
+            self.llm.begin_case(case_id)
         state: InvestigationState = {
             "case_id": case_id, "trigger": trigger, "started_at": time.time(),
             "trace": [], "requests": [], "round": 0,
@@ -122,6 +126,7 @@ class Investigator:
                         "recursion_limit": 60})
         else:
             final = self._run_sequential(state)
+        self.last_state = final
         result = final["result"]
         # per-case tool count, not the shared cumulative counter
         result["tool_calls"] = int(getattr(self.store, "call_count", 0) - start_calls)
@@ -148,10 +153,15 @@ def trigger_from_row(row: dict[str, Any]) -> Trigger:
         rs = float(rs) if rs not in (None, "", "nan") else None
     except (TypeError, ValueError):
         rs = None
+    if rs is not None and math.isnan(rs):      # pandas hands over NaN, not "nan"
+        rs = None
     opened = row["opened_at"]
     if not isinstance(opened, datetime):
         opened = datetime.fromisoformat(str(opened))
+    from ..core.provenance import UntrustedText
+
     return Trigger(
-        type=str(row["trigger_type"]), text=str(row.get("trigger_text", "")),
+        type=str(row["trigger_type"]),
+        text=UntrustedText(row.get("trigger_text", "") or ""),
         flagged_txn_id=str(row["flagged_txn_id"]), card_id=str(row["card_id"]),
         customer_id=str(row["customer_id"]), opened_at=opened, risk_score=rs)

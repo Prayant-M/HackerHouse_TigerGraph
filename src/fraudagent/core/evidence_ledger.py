@@ -235,7 +235,7 @@ class EvidenceLedger:
         self.entries.append(entry)
         return entry
 
-    def add_signal(self, sig: Signal) -> LedgerEntry | None:
+    def add_signal(self, sig: Signal, scale: float = 1.0) -> LedgerEntry | None:
         """Fold one extracted signal in. Structural overrides win over the
         measured table where they exist, because they encode a typology
         signature the history is too thin to teach."""
@@ -248,7 +248,7 @@ class EvidenceLedger:
             # 1.00 that no evidence set in this dataset earns.
             lrs = {h: (1.0 + (v - 1.0) * max(sig.strength, 0.35)) ** self.damping
                    for h, v in structural.items()}
-            return self.add(sig.name, "structural", lrs, RELIABILITY["structural"],
+            return self.add(sig.name, "structural", lrs, RELIABILITY["structural"] * scale,
                             sig.claim, sig.ref, sig.entity_ids)
         if not sig.fired and sig.name in FIRED_ONLY:
             return None
@@ -260,7 +260,7 @@ class EvidenceLedger:
             return None                      # carries no information; do not clutter the ledger
         rel = RELIABILITY["behavioural"] if sig.name.startswith("behavioural") \
             else RELIABILITY["graph"]
-        return self.add(sig.name, "measured", lrs, rel,
+        return self.add(sig.name, "measured", lrs, rel * scale,
                         sig.claim if sig.fired else f"NOT observed: {sig.name}",
                         sig.ref, sig.entity_ids if sig.fired else [])
 

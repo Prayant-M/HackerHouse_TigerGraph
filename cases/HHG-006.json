@@ -9,7 +9,7 @@
       "executed": true,
       "simulated": true,
       "reference": "SIM-782EBA7D1C",
-      "executed_at": "2026-09-24T21:52:17Z",
+      "executed_at": "2026-10-29T11:24:14Z",
       "effect": "Fraud case opened and written to the graph.",
       "customer_impact": "none"
     },
@@ -22,7 +22,7 @@
       "executed": true,
       "simulated": true,
       "reference": "SIM-6AB8186B6E",
-      "executed_at": "2026-09-24T21:52:17Z",
+      "executed_at": "2026-10-29T11:24:14Z",
       "effect": "Case handed to the analyst queue with the full evidence chain.",
       "customer_impact": "none"
     }
@@ -45,7 +45,7 @@
     "verdict": "fraud",
     "fraud_probability": 0.97,
     "pattern": "undocumented",
-    "pattern_description": "4 online purchases were made on this card inside 30.0 minutes, each amount parked just beneath the $500 authorisation ceiling (mean headroom 4.7%), totalling $1,906.07. The shape defeats per-transaction review because every individual leg looks ordinary; only the burst as a whole is anomalous. It was found by scanning the card's recent online activity for clusters concentrated immediately below round authorisation thresholds, and matches five confirmed-fraud closed cases (CC-3748, CC-3841, CC-3907, CC-4086, CC-4124) that the bank's own analysts could not fit to a documented typology.",
+    "pattern_description": "Sub-threshold authorisation structuring was uncovered through seed cases CC-3748, CC-3841, CC-3907, CC-4086, and CC-4124 as a pattern where a burst of online purchases is executed inside roughly forty minutes, each kept just below a round $500.0 authorisation ceiling to bypass per-transaction review while accumulating to several thousand dollars. Affecting single cardholders rather than rings, the pattern was confirmed for card_id C07297-K1 across 4 transactions (IDs 3476602, 3476633, 3476665, and 3476682) totaling $1906.07 within a 30.0-minute window. The individual transaction amounts of $478.95, $456.96, $488.04, and $482.12 maintained a 4.7 percent headroom beneath the $500.0 threshold, rendering the legs ordinary to per-transaction scoring while the aggregate activity evaded detection.",
     "affected_txn_ids": [
       "3476602",
       "3476633",
@@ -147,16 +147,16 @@
         "source": "graph",
         "ref": "query:fraud_proximity(entity_ids=..., max_hops=2)",
         "entity_ids": [
-          "CC-3258",
-          "CC-4520",
-          "CC-2978",
+          "CC-1496",
           "CC-0423",
+          "CC-3047",
+          "CC-4330",
           "CC-2303",
+          "CC-3501",
+          "CC-2287",
           "CC-3441",
-          "CC-1893",
-          "CC-4012",
-          "CC-1670",
-          "CC-3378"
+          "CC-2549",
+          "CC-5257"
         ]
       },
       {
@@ -179,7 +179,7 @@
       "CC-5111",
       "CC-1960"
     ],
-    "summary": "Cardholder C07297 disputed transaction 3476682 ($482.12, online, billing region 264.0). The investigation found: 4 online purchases inside 30.0 minutes, each parked just under the $500 authorisation ceiling (mean headroom 4.7%), totalling $1,906.07; flagged amount $482.12 is an extreme outlier for this card (z=2.8, 8.2x median); 4 online transactions inside 48 hours, the burst shape the bank's card-not-present typology describes. The activity is assessed as an undocumented typology at probability 0.97, covering 4 transaction(s) worth $1,906.07. Closed case CC-3624 (confirmed fraud, card not present new device) is the closest prior investigation.",
+    "summary": "Following a customer report on 2016-11-22 02:30:00, card C07297-K1 was flagged for four online purchases totaling $1,906.07 within 30.0 minutes on 2016-11-21, including transaction 3476682 for $482.12. The evidence rests on transaction structuring placed just under the $500 authorisation ceiling, transaction amounts reaching 8.2x the median spend of $58.97, the use of a new device profile 'Trident/7.0 | Windows 7 | ie 11.0 for desktop | 1920x1080', and match overlap with five confirmed-fraud cases including CC-3624. The investigation resulted in a verdict of fraud with a fraud probability of 0.97. What remains uncertain is the exact typology, which is designated as an undocumented pattern matching no known typology, although card_not_present_new_device leads undocumented by 0.04.",
     "written_to_graph": true,
     "graph_case_id": "CASE-HHG-006"
   },
@@ -234,7 +234,7 @@
   "sar": {
     "file": true,
     "reason": "§3a: exposure $1,906.07 exceeds the $1,000 threshold; the pattern is coordinated or undocumented (R9).",
-    "narrative": "Customer C07297, holder of card C07297-K1, is the subject of this report. Between 2016-11-21 and 2016-11-21, 4 transaction(s) totalling $1,906.07 were identified as unauthorised on that card, the earliest being transaction 3476602 and the transaction that triggered review being 3476682 for $482.12. The activity was conducted through the online channel in billing region 264.0. The transactions originated from device profile 'Trident/7.0 | Windows 7 | ie 11.0 for desktop | 1920x1080', which the issuer's identity record marks 'New' for this account. The activity matches no documented typology in the issuer's manual and is described in the accompanying case record. Closed investigation CC-3624 recorded confirmed fraud on comparable activity. The issuer assesses the probability of fraud at 0.97 on the evidence set out above. Total suspicious amount: $1,906.07.",
+    "narrative": "Customer C07297 conducted activity on card C07297-K1 using a new device profile identified as Trident/7.0 | Windows 7 | ie 11.0 for desktop | 1920x1080. The activity consists of four unauthorized online card purchases involving product code C across transaction IDs 3476602, 3476633, 3476665, and 3476682. The transaction activity occurred on 2016-11-21, with flagged transaction 3476682 recorded at 2016-11-21 20:30:00, leading to a customer report trigger as of 2016-11-22 02:30:00. All transactions were processed through the online channel under billing region 264.0. The activity was executed in a rapid sequence of four purchases inside a 30.0-minute window, with each transaction structured to sit just under the $500 authorization ceiling at a mean headroom of 4.7%. The behavior is suspicious because it demonstrates threshold structuring and rapid velocity from an unrecognized device, yielding a 0.97 fraud probability under an undocumented typology pattern. Additionally, flagged transaction 3476682 for $482.12 sits 2.8 standard deviations above the card's running mean and represents an 8.2x surge over the median spend of $58.97, deviating from a baseline of 96 prior transactions and a historic online share of 0.021. The total financial exposure resulting from this suspicious activity is $1,906.07.",
     "subjects": [
       "C07297",
       "C07297-K1",
@@ -247,9 +247,9 @@
     ]
   },
   "stop_reason": "Fraud probability 0.97 is at or above the 0.85 ceiling in policy §6, supported by 6 independent pieces of evidence, with card_not_present_new_device leading undocumented by 0.04.",
-  "tool_calls": 36,
-  "tokens": 0,
-  "latency_s": 2.52,
+  "tool_calls": 37,
+  "tokens": 8578,
+  "latency_s": 56.3,
   "agent_record": {
     "trigger": {
       "type": "customer_report",
@@ -258,7 +258,7 @@
       "card_id": "C07297-K1",
       "customer_id": "C07297",
       "opened_at": "2016-11-22 02:30:00",
-      "risk_score": NaN
+      "risk_score": null
     },
     "as_of": "2016-11-22 02:30:00",
     "posterior": {
@@ -313,7 +313,8 @@
         ],
         "delta_fraud_probability": 0.1887,
         "reliability": 1.0,
-        "claim_type": "derived_inference"
+        "claim_type": "derived_inference",
+        "attestation_id": "HHG-006-A001"
       },
       {
         "claim": "Flagged amount $482.12 is an extreme outlier for this card (z=2.8, 8.2x median)",
@@ -324,7 +325,8 @@
         ],
         "delta_fraud_probability": -0.1011,
         "reliability": 1.0,
-        "claim_type": "derived_inference"
+        "claim_type": "derived_inference",
+        "attestation_id": "HHG-006-A002"
       },
       {
         "claim": "4 online transactions inside 48 hours, the burst shape the bank's card-not-present typology describes",
@@ -341,7 +343,8 @@
         ],
         "delta_fraud_probability": 0.0852,
         "reliability": 1.0,
-        "claim_type": "derived_inference"
+        "claim_type": "derived_inference",
+        "attestation_id": "HHG-006-A003"
       },
       {
         "claim": "5 closely matching closed investigations were retrieved by fusing narrative similarity with shared-entity overlap; 5 of them were confirmed fraud, most often card_not_present_new_device",
@@ -356,7 +359,8 @@
         ],
         "delta_fraud_probability": 0.0777,
         "reliability": 0.8,
-        "claim_type": "observed_fact"
+        "claim_type": "observed_fact",
+        "attestation_id": "HHG-006-A004"
       },
       {
         "claim": "Flagged amount $482.12 sits 2.8 standard deviations above this card's running mean and 8.2x its median spend of $58.97 (95th percentile $244.56, 96 prior transactions)",
@@ -368,7 +372,8 @@
         ],
         "delta_fraud_probability": -0.0252,
         "reliability": 1.0,
-        "claim_type": "derived_inference"
+        "claim_type": "derived_inference",
+        "attestation_id": "HHG-006-A005"
       },
       {
         "claim": "Transaction came from device profile 'Trident/7.0 | Windows 7 | ie 11.0 for desktop | 1920x1080' which the identity record marks 'New' for this account",
@@ -380,7 +385,8 @@
         ],
         "delta_fraud_probability": -0.0157,
         "reliability": 1.0,
-        "claim_type": "derived_inference"
+        "claim_type": "derived_inference",
+        "attestation_id": "HHG-006-A006"
       },
       {
         "claim": "7 transactions worth $2,477.10 in the 48 hours before the alert against a baseline of 1.38 — a 5.07x burst",
@@ -397,7 +403,8 @@
         ],
         "delta_fraud_probability": 0.0085,
         "reliability": 1.0,
-        "claim_type": "derived_inference"
+        "claim_type": "derived_inference",
+        "attestation_id": "HHG-006-A007"
       },
       {
         "claim": "Activity in the 72 hours before the alert mixes 4 online and 3 card-present transactions, shifting the online share by 0.55 against this card's own baseline",
@@ -408,41 +415,45 @@
         ],
         "delta_fraud_probability": 0.002,
         "reliability": 1.0,
-        "claim_type": "derived_inference"
+        "claim_type": "derived_inference",
+        "attestation_id": "HHG-006-A008"
       },
       {
         "claim": "68 confirmed-fraud closed cases sit within two hops of this card, device or customer (distance-decayed proximity 18.5)",
         "source": "graph",
         "ref": "query:fraud_proximity(entity_ids=..., max_hops=2)",
         "entity_ids": [
-          "CC-3258",
-          "CC-4520",
-          "CC-2978",
+          "CC-1496",
           "CC-0423",
+          "CC-3047",
+          "CC-4330",
           "CC-2303",
+          "CC-3501",
+          "CC-2287",
           "CC-3441",
-          "CC-1893",
-          "CC-4012",
-          "CC-1670",
-          "CC-3378"
+          "CC-2549",
+          "CC-5257"
         ],
         "delta_fraud_probability": 0.0015,
         "reliability": 1.0,
-        "claim_type": "derived_inference"
+        "claim_type": "derived_inference",
+        "attestation_id": "HHG-006-A009"
       },
       {
         "claim": "Out-of-region use governs this case: Out-of-region use. Card-present purchases in a billing region the cardholder has no history in, while their normal activity continues at home. Several days of purchases in one new region is a trip, not a clone. Policy R2, R3.",
         "source": "document",
         "ref": "policy:PATTERN-out_of_region_use",
         "entity_ids": [],
-        "claim_type": "policy_text"
+        "claim_type": "policy_text",
+        "attestation_id": "HHG-006-A010"
       },
       {
         "claim": "Card-not-present fraud governs this case: Card-not-present fraud. The number is used online without the card. Amounts and products that don't fit the cardholder's history, often in a burst of two to four within 48 hours. On its own, one unusual online purchase is ambiguous: verify.",
         "source": "document",
         "ref": "policy:PATTERN-card_not_present_fraud",
         "entity_ids": [],
-        "claim_type": "policy_text"
+        "claim_type": "policy_text",
+        "attestation_id": "HHG-006-A011"
       }
     ],
     "evidence_requests_detail": [],
@@ -716,7 +727,7 @@
         "executed": true,
         "simulated": true,
         "reference": "SIM-782EBA7D1C",
-        "executed_at": "2026-09-24T21:52:17Z",
+        "executed_at": "2026-10-29T11:24:14Z",
         "effect": "Fraud case opened and written to the graph.",
         "customer_impact": "none"
       },
@@ -729,7 +740,7 @@
         "executed": true,
         "simulated": true,
         "reference": "SIM-6AB8186B6E",
-        "executed_at": "2026-09-24T21:52:17Z",
+        "executed_at": "2026-10-29T11:24:14Z",
         "effect": "Case handed to the analyst queue with the full evidence chain.",
         "customer_impact": "none"
       }
@@ -754,54 +765,252 @@
     "graph_transport": "mcp",
     "backend": "tigergraph",
     "llm": {
-      "available": false,
+      "available": true,
       "provider": "google",
-      "model": "deterministic-templates",
-      "calls": 0,
-      "cached": 0
+      "model": "gemini-3.6-flash",
+      "calls": 4,
+      "input_tokens": 7620,
+      "output_tokens": 958,
+      "tokens": 8578,
+      "cached": 0,
+      "errors": [],
+      "template_fallbacks": 0
     },
+    "prose_source": "llm",
+    "transport_degraded": false,
+    "january_regime": false,
+    "text_facts": {
+      "facts": {
+        "text_denies_charge": true,
+        "text_recognises_charge": false,
+        "text_analyst_asks_ring": false
+      },
+      "hostile_text_detected": false,
+      "hostile_spans": [],
+      "normalised_chars_changed": 0,
+      "provenance": "extractor",
+      "allowed_text_facts": [
+        "text_analyst_asks_ring",
+        "text_denies_charge",
+        "text_recognises_charge"
+      ]
+    },
+    "quality": {
+      "tainted": false,
+      "severity": "none",
+      "confidence_cap": null,
+      "issues": []
+    },
+    "conformal": {
+      "available": false,
+      "note": "conformal calibration not built (eval/conformal_calibrate.py)",
+      "verdict_before": "fraud",
+      "verdict_after": "fraud",
+      "reason": ""
+    },
+    "proof": {
+      "facts": [
+        "amount_anomalous",
+        "amount_extreme",
+        "device_new_on_account",
+        "velocity_burst",
+        "online_burst_2_to_4",
+        "threshold_structuring",
+        "mixed_channel_shift",
+        "fraud_proximity",
+        "memory_recall"
+      ],
+      "action_class": [
+        "BLOCK_CARD",
+        "FILE_REPORT"
+      ],
+      "live_action_class": [
+        "BLOCK_CARD",
+        "FILE_REPORT"
+      ],
+      "reproduces_live": true,
+      "minimal_sufficient_facts": [],
+      "flip_set": [
+        "threshold_structuring",
+        "memory_recall"
+      ],
+      "margin_k": 2,
+      "margin_note": "",
+      "flips_to": {
+        "action_class": [
+          "ESCALATE_TO_ANALYST"
+        ],
+        "actions": [
+          "CREATE_CASE",
+          "ESCALATE_TO_ANALYST"
+        ],
+        "p_fraud": 0.6823,
+        "verdict": "uncertain"
+      },
+      "single_fact_flips": [
+        {
+          "fact": "amount_anomalous",
+          "flips": false,
+          "action_class": [
+            "BLOCK_CARD",
+            "FILE_REPORT"
+          ],
+          "p_fraud": 0.97,
+          "verdict": "fraud"
+        },
+        {
+          "fact": "amount_extreme",
+          "flips": false,
+          "action_class": [
+            "BLOCK_CARD",
+            "FILE_REPORT"
+          ],
+          "p_fraud": 0.97,
+          "verdict": "fraud"
+        },
+        {
+          "fact": "device_new_on_account",
+          "flips": false,
+          "action_class": [
+            "BLOCK_CARD",
+            "FILE_REPORT"
+          ],
+          "p_fraud": 0.97,
+          "verdict": "fraud"
+        },
+        {
+          "fact": "velocity_burst",
+          "flips": false,
+          "action_class": [
+            "BLOCK_CARD",
+            "FILE_REPORT"
+          ],
+          "p_fraud": 0.97,
+          "verdict": "fraud"
+        },
+        {
+          "fact": "online_burst_2_to_4",
+          "flips": false,
+          "action_class": [
+            "BLOCK_CARD",
+            "FILE_REPORT"
+          ],
+          "p_fraud": 0.97,
+          "verdict": "fraud"
+        },
+        {
+          "fact": "threshold_structuring",
+          "flips": false,
+          "action_class": [
+            "BLOCK_CARD",
+            "FILE_REPORT"
+          ],
+          "p_fraud": 0.8286,
+          "verdict": "fraud"
+        },
+        {
+          "fact": "mixed_channel_shift",
+          "flips": false,
+          "action_class": [
+            "BLOCK_CARD",
+            "FILE_REPORT"
+          ],
+          "p_fraud": 0.97,
+          "verdict": "fraud"
+        },
+        {
+          "fact": "fraud_proximity",
+          "flips": false,
+          "action_class": [
+            "BLOCK_CARD",
+            "FILE_REPORT"
+          ],
+          "p_fraud": 0.97,
+          "verdict": "fraud"
+        },
+        {
+          "fact": "memory_recall",
+          "flips": false,
+          "action_class": [
+            "BLOCK_CARD",
+            "FILE_REPORT"
+          ],
+          "p_fraud": 0.97,
+          "verdict": "fraud"
+        }
+      ],
+      "precedent": {
+        "available": true,
+        "n": 0,
+        "confirmed": 0,
+        "cleared": 0,
+        "matched_facts": [],
+        "unmatched_facts": [],
+        "query": "precedent_by_facts",
+        "params": {
+          "fact_mask": 0,
+          "as_of": "2016-11-22 02:30:00"
+        },
+        "note": "minimal set has no graph facts to match on",
+        "source": "local:closed_case_facts"
+      },
+      "core_calls": 61
+    },
+    "gate": {
+      "applied": false,
+      "harmful_actions": [
+        "BLOCK_CARD",
+        "FILE_REPORT"
+      ],
+      "margin_k": 2,
+      "precedent_contradicts": false,
+      "thin_margin": false,
+      "exempt": "",
+      "config": {
+        "min_margin": 2,
+        "min_precedents": 10,
+        "max_cleared_share": 0.7
+      },
+      "removed": [],
+      "added": [],
+      "reason": "kept: margin k=2 meets the floor of 2 and precedent does not contradict"
+    },
+    "containment": null,
+    "compromise_watch": [],
+    "feedback_applied": [],
+    "customer_messages": [],
     "trace": [
       {
         "node": "trigger_intake",
-        "at": 0.001,
+        "at": 0.002,
         "trigger_type": "customer_report",
         "flagged_txn_id": "3476682",
-        "as_of": "2016-11-22 02:30:00"
+        "as_of": "2016-11-22 02:30:00",
+        "hostile_text_detected": false,
+        "hostile_spans": [],
+        "january_regime": false
       },
       {
         "node": "case_opener",
-        "at": 0.002,
+        "at": 0.003,
         "graph_case_id": "CASE-HHG-006",
         "prior_fraud": 0.8
       },
       {
         "node": "evidence_planner",
-        "at": 0.002,
+        "at": 5.518,
         "planned_tools": [
           "card_baseline",
           "episode_window",
-          "velocity_burst",
           "device_first_use",
-          "device_fanout",
-          "region_profile",
-          "out_of_region_probe",
-          "card_testing_probe",
-          "threshold_structuring_probe",
-          "mixed_channel_probe",
-          "recurring_charge_probe",
-          "email_mismatch_profile",
-          "shared_entity_ring",
-          "fraud_proximity",
-          "behavioural_neighbours",
-          "hybrid_case_recall",
-          "policy_retrieve"
+          "shared_entity_ring"
         ],
-        "rationale": "",
-        "llm_used": false
+        "rationale": "Gather card spending baselines, inspect the contextual window around the disputed transaction, check for novel device usage, and identify shared connected entities.",
+        "llm_used": true
       },
       {
         "node": "graph_retrieval",
-        "at": 2.342,
+        "at": 8.479,
         "signals_fired": [
           "amount_anomalous",
           "amount_extreme",
@@ -818,7 +1027,7 @@
       },
       {
         "node": "memory_recall",
-        "at": 2.451,
+        "at": 8.688,
         "recalled": [
           "CC-3624",
           "CC-0781",
@@ -832,7 +1041,7 @@
       },
       {
         "node": "policy_grounding",
-        "at": 2.492,
+        "at": 8.76,
         "retrieved": [
           "PATTERN-out_of_region_use",
           "PATTERN-card_not_present_fraud",
@@ -844,7 +1053,7 @@
       },
       {
         "node": "ledger_update",
-        "at": 2.493,
+        "at": 8.763,
         "folded": 25,
         "p_fraud": 0.97,
         "posterior": {
@@ -882,7 +1091,7 @@
       },
       {
         "node": "uncertainty_assessor",
-        "at": 2.495,
+        "at": 8.765,
         "p_fraud": 0.97,
         "margin": 0.0381,
         "entropy": 1.1192,
@@ -942,7 +1151,7 @@
       },
       {
         "node": "action_recommender",
-        "at": 2.518,
+        "at": 8.883,
         "verdict": "fraud",
         "pattern": "undocumented",
         "exposure": 1906.07,
@@ -972,11 +1181,17 @@
           "R9",
           "3a",
           "R2"
-        ]
+        ],
+        "conformal_set": null,
+        "conformal_widened": null,
+        "proof_margin": 2,
+        "minimal_facts": [],
+        "gate": "kept: margin k=2 meets the floor of 2 and precedent does not contradict",
+        "containment_origin": null
       },
       {
         "node": "permission_gate",
-        "at": 2.519,
+        "at": 8.887,
         "executed": [
           "CREATE_CASE",
           "ESCALATE_TO_ANALYST"
@@ -996,24 +1211,931 @@
       },
       {
         "node": "explainer",
-        "at": 2.521,
-        "summary_chars": 653,
-        "llm_used": false
+        "at": 37.67,
+        "summary_chars": 790,
+        "llm_used": true
       },
       {
         "node": "case_writer",
-        "at": 4.194,
+        "at": 56.973,
         "graph_case_id": "CASE-HHG-006",
         "affected_txns": 4,
         "sar_filed": true
       },
       {
         "node": "memory_consolidator",
-        "at": 4.195,
+        "at": 56.975,
         "audit_chain_intact": true,
         "decisions": 3
       }
     ],
+    "lifecycle": [
+      {
+        "from": "",
+        "to": "OPENED",
+        "at": "2016-11-22 02:30:00",
+        "actor": "agent",
+        "role": "agent",
+        "reason": "opened from a customer_report trigger",
+        "evidence_ids": [
+          "3476682"
+        ]
+      },
+      {
+        "from": "OPENED",
+        "to": "ESCALATED",
+        "at": "2016-11-22 02:30:00",
+        "actor": "agent",
+        "role": "agent",
+        "reason": "Fraud probability 0.97 is at or above the 0.85 ceiling in policy §6, supported by 6 independent pieces of evidence, with card_not_present_new_device leading undocumented by 0.04.",
+        "evidence_ids": [
+          "3476602",
+          "3476682",
+          "3476682",
+          "CC-3624",
+          "3476682",
+          "3476682",
+          "3476682",
+          "C07297-K1"
+        ]
+      }
+    ],
+    "attestations": [
+      {
+        "id": "HHG-006-A001",
+        "what": "4 online purchases inside 30.0 minutes, each parked just under the $500 authorisation ceiling (mean headroom 4.7%), totalling $1,906.07",
+        "evidence_ids": [
+          "3476602",
+          "3476633",
+          "3476665",
+          "3476682"
+        ],
+        "query": "threshold_structuring_probe",
+        "params": {
+          "card_id": "C07297-K1"
+        },
+        "tool_calls": [
+          {
+            "seq": 1,
+            "method": "get_transaction",
+            "key": "2b4d9d1c3678f204b18c59db",
+            "digest": "24d8dde0ebece297fe4c520969780f3f44ad0cd8e9ed292f5c44bdd505b5de26"
+          },
+          {
+            "seq": 13,
+            "method": "email_mismatch_profile",
+            "key": "7557eb6d481ec71f617aefbd",
+            "digest": "aeb7da1ca12223df1f1aa53dfa516313d33a344f44a85dc80835fd2e87d4159f"
+          },
+          {
+            "seq": 16,
+            "method": "fraud_proximity",
+            "key": "adf357c766fd82b5d37f4250",
+            "digest": "4309d64ba61a657281707cf1a02debccb95e5cc51cd98e0d32ba2b63214d3624"
+          },
+          {
+            "seq": 17,
+            "method": "behavioural_neighbours",
+            "key": "f9222c9d321f5c5a76eb1caa",
+            "digest": "6635053f3a0fc97f9fece2e1166ad008be058a84e2c71b823882fad915460fdb"
+          },
+          {
+            "seq": 19,
+            "method": "hybrid_case_recall",
+            "key": "e61e07a197ca34e727a9f8d2",
+            "digest": "cb7d24156e31ab684dfab41b07b2be14975b32fcf96201253213d9e4de865cd7"
+          },
+          {
+            "seq": 22,
+            "method": "behaviour_vector",
+            "key": "e62b776ce630c53bbf391aa4",
+            "digest": "b9831580f4a69c1dc3bf4e58fb28e304e6dad65fe06912de2ebbd3a2d3a467f4"
+          }
+        ],
+        "ran_at": "2026-10-29T11:25:02Z",
+        "data_snapshot": "597035c02ee4cdcb7c3cf7fd7a13f809",
+        "kind": "derived_inference"
+      },
+      {
+        "id": "HHG-006-A002",
+        "what": "Flagged amount $482.12 is an extreme outlier for this card (z=2.8, 8.2x median)",
+        "evidence_ids": [
+          "3476682"
+        ],
+        "query": "card_baseline",
+        "params": {
+          "card_id": "C07297-K1"
+        },
+        "tool_calls": [
+          {
+            "seq": 1,
+            "method": "get_transaction",
+            "key": "2b4d9d1c3678f204b18c59db",
+            "digest": "24d8dde0ebece297fe4c520969780f3f44ad0cd8e9ed292f5c44bdd505b5de26"
+          },
+          {
+            "seq": 13,
+            "method": "email_mismatch_profile",
+            "key": "7557eb6d481ec71f617aefbd",
+            "digest": "aeb7da1ca12223df1f1aa53dfa516313d33a344f44a85dc80835fd2e87d4159f"
+          },
+          {
+            "seq": 16,
+            "method": "fraud_proximity",
+            "key": "adf357c766fd82b5d37f4250",
+            "digest": "4309d64ba61a657281707cf1a02debccb95e5cc51cd98e0d32ba2b63214d3624"
+          },
+          {
+            "seq": 17,
+            "method": "behavioural_neighbours",
+            "key": "f9222c9d321f5c5a76eb1caa",
+            "digest": "6635053f3a0fc97f9fece2e1166ad008be058a84e2c71b823882fad915460fdb"
+          },
+          {
+            "seq": 19,
+            "method": "hybrid_case_recall",
+            "key": "e61e07a197ca34e727a9f8d2",
+            "digest": "cb7d24156e31ab684dfab41b07b2be14975b32fcf96201253213d9e4de865cd7"
+          },
+          {
+            "seq": 22,
+            "method": "behaviour_vector",
+            "key": "e62b776ce630c53bbf391aa4",
+            "digest": "b9831580f4a69c1dc3bf4e58fb28e304e6dad65fe06912de2ebbd3a2d3a467f4"
+          }
+        ],
+        "ran_at": "2026-10-29T11:25:02Z",
+        "data_snapshot": "597035c02ee4cdcb7c3cf7fd7a13f809",
+        "kind": "derived_inference"
+      },
+      {
+        "id": "HHG-006-A003",
+        "what": "4 online transactions inside 48 hours, the burst shape the bank's card-not-present typology describes",
+        "evidence_ids": [
+          "3476682",
+          "3474057",
+          "3476633",
+          "3476665",
+          "3476602",
+          "3473012",
+          "3477578"
+        ],
+        "query": "velocity_burst",
+        "params": {
+          "card_id": "C07297-K1",
+          "window_hours": "48"
+        },
+        "tool_calls": [
+          {
+            "seq": 1,
+            "method": "get_transaction",
+            "key": "2b4d9d1c3678f204b18c59db",
+            "digest": "24d8dde0ebece297fe4c520969780f3f44ad0cd8e9ed292f5c44bdd505b5de26"
+          },
+          {
+            "seq": 13,
+            "method": "email_mismatch_profile",
+            "key": "7557eb6d481ec71f617aefbd",
+            "digest": "aeb7da1ca12223df1f1aa53dfa516313d33a344f44a85dc80835fd2e87d4159f"
+          },
+          {
+            "seq": 16,
+            "method": "fraud_proximity",
+            "key": "adf357c766fd82b5d37f4250",
+            "digest": "4309d64ba61a657281707cf1a02debccb95e5cc51cd98e0d32ba2b63214d3624"
+          },
+          {
+            "seq": 17,
+            "method": "behavioural_neighbours",
+            "key": "f9222c9d321f5c5a76eb1caa",
+            "digest": "6635053f3a0fc97f9fece2e1166ad008be058a84e2c71b823882fad915460fdb"
+          },
+          {
+            "seq": 19,
+            "method": "hybrid_case_recall",
+            "key": "e61e07a197ca34e727a9f8d2",
+            "digest": "cb7d24156e31ab684dfab41b07b2be14975b32fcf96201253213d9e4de865cd7"
+          },
+          {
+            "seq": 22,
+            "method": "behaviour_vector",
+            "key": "e62b776ce630c53bbf391aa4",
+            "digest": "b9831580f4a69c1dc3bf4e58fb28e304e6dad65fe06912de2ebbd3a2d3a467f4"
+          }
+        ],
+        "ran_at": "2026-10-29T11:25:02Z",
+        "data_snapshot": "597035c02ee4cdcb7c3cf7fd7a13f809",
+        "kind": "derived_inference"
+      },
+      {
+        "id": "HHG-006-A004",
+        "what": "5 closely matching closed investigations were retrieved by fusing narrative similarity with shared-entity overlap; 5 of them were confirmed fraud, most often card_not_present_new_device",
+        "evidence_ids": [
+          "CC-3624",
+          "CC-0781",
+          "CC-3368",
+          "CC-5111",
+          "CC-1960"
+        ],
+        "query": "hybrid_case_recall",
+        "params": {
+          "k": "5",
+          "as_of": "2016-11-22 02:30:00"
+        },
+        "tool_calls": [],
+        "ran_at": "2026-10-29T11:25:02Z",
+        "data_snapshot": "597035c02ee4cdcb7c3cf7fd7a13f809",
+        "kind": "observed_fact"
+      },
+      {
+        "id": "HHG-006-A005",
+        "what": "Flagged amount $482.12 sits 2.8 standard deviations above this card's running mean and 8.2x its median spend of $58.97 (95th percentile $244.56, 96 prior transactions)",
+        "evidence_ids": [
+          "3476682",
+          "C07297-K1"
+        ],
+        "query": "card_baseline",
+        "params": {
+          "card_id": "C07297-K1",
+          "as_of": "2016-11-22 02:30:00"
+        },
+        "tool_calls": [
+          {
+            "seq": 1,
+            "method": "get_transaction",
+            "key": "2b4d9d1c3678f204b18c59db",
+            "digest": "24d8dde0ebece297fe4c520969780f3f44ad0cd8e9ed292f5c44bdd505b5de26"
+          },
+          {
+            "seq": 2,
+            "method": "episode_window",
+            "key": "64e57fc264f655e8f9c3ae74",
+            "digest": "683eebeecbc392e65f80396523f7f50d339283db29e09e07f885d4ce77f7bbcc"
+          },
+          {
+            "seq": 3,
+            "method": "card_baseline",
+            "key": "2759588360576d1b88b7a158",
+            "digest": "18600a64a425e95ce0a41e1a428716e3970035e1d27333ebdd874c57586cf3e6"
+          },
+          {
+            "seq": 4,
+            "method": "device_first_use",
+            "key": "2120fcf9f3b4c5e822689192",
+            "digest": "17ac6cecc81f82d32202e5c9f14eb76af5f7465e85d8f02af5b11d3c6a53cc53"
+          },
+          {
+            "seq": 6,
+            "method": "peer_purchases",
+            "key": "8827ebed8d86e5fa7d15a0fc",
+            "digest": "37639f5caafc802533741fe8a78636af4bb794c425553325078c4a3a067934df"
+          },
+          {
+            "seq": 7,
+            "method": "region_profile",
+            "key": "778013813516d7e50b6b682f",
+            "digest": "87bd51a23d8f9f05d54bc872437f13f2296ed824c3d0152c6bfe3fa6813e2b7e"
+          }
+        ],
+        "ran_at": "2026-10-29T11:25:02Z",
+        "data_snapshot": "597035c02ee4cdcb7c3cf7fd7a13f809",
+        "kind": "derived_inference"
+      },
+      {
+        "id": "HHG-006-A006",
+        "what": "Transaction came from device profile 'Trident/7.0 | Windows 7 | ie 11.0 for desktop | 1920x1080' which the identity record marks 'New' for this account",
+        "evidence_ids": [
+          "3476682",
+          "Trident/7.0 | Windows 7 | ie 11.0 for desktop | 1920x1080"
+        ],
+        "query": "device_first_use",
+        "params": {
+          "card_id": "C07297-K1",
+          "device_profile": "..."
+        },
+        "tool_calls": [
+          {
+            "seq": 1,
+            "method": "get_transaction",
+            "key": "2b4d9d1c3678f204b18c59db",
+            "digest": "24d8dde0ebece297fe4c520969780f3f44ad0cd8e9ed292f5c44bdd505b5de26"
+          },
+          {
+            "seq": 4,
+            "method": "device_first_use",
+            "key": "2120fcf9f3b4c5e822689192",
+            "digest": "17ac6cecc81f82d32202e5c9f14eb76af5f7465e85d8f02af5b11d3c6a53cc53"
+          },
+          {
+            "seq": 5,
+            "method": "device_fanout",
+            "key": "df5961f5db36a39e388819ba",
+            "digest": "7dc0e555179ab67f3d6f2580e72ca98702a081fd5944dc0f54ed7cab97547de0"
+          },
+          {
+            "seq": 6,
+            "method": "peer_purchases",
+            "key": "8827ebed8d86e5fa7d15a0fc",
+            "digest": "37639f5caafc802533741fe8a78636af4bb794c425553325078c4a3a067934df"
+          },
+          {
+            "seq": 13,
+            "method": "email_mismatch_profile",
+            "key": "7557eb6d481ec71f617aefbd",
+            "digest": "aeb7da1ca12223df1f1aa53dfa516313d33a344f44a85dc80835fd2e87d4159f"
+          },
+          {
+            "seq": 16,
+            "method": "fraud_proximity",
+            "key": "adf357c766fd82b5d37f4250",
+            "digest": "4309d64ba61a657281707cf1a02debccb95e5cc51cd98e0d32ba2b63214d3624"
+          }
+        ],
+        "ran_at": "2026-10-29T11:25:02Z",
+        "data_snapshot": "597035c02ee4cdcb7c3cf7fd7a13f809",
+        "kind": "derived_inference"
+      },
+      {
+        "id": "HHG-006-A007",
+        "what": "7 transactions worth $2,477.10 in the 48 hours before the alert against a baseline of 1.38 — a 5.07x burst",
+        "evidence_ids": [
+          "3476682",
+          "3474057",
+          "3476633",
+          "3476665",
+          "3476602",
+          "3473012",
+          "3477578"
+        ],
+        "query": "velocity_burst",
+        "params": {
+          "card_id": "C07297-K1",
+          "window_hours": "48"
+        },
+        "tool_calls": [
+          {
+            "seq": 1,
+            "method": "get_transaction",
+            "key": "2b4d9d1c3678f204b18c59db",
+            "digest": "24d8dde0ebece297fe4c520969780f3f44ad0cd8e9ed292f5c44bdd505b5de26"
+          },
+          {
+            "seq": 13,
+            "method": "email_mismatch_profile",
+            "key": "7557eb6d481ec71f617aefbd",
+            "digest": "aeb7da1ca12223df1f1aa53dfa516313d33a344f44a85dc80835fd2e87d4159f"
+          },
+          {
+            "seq": 16,
+            "method": "fraud_proximity",
+            "key": "adf357c766fd82b5d37f4250",
+            "digest": "4309d64ba61a657281707cf1a02debccb95e5cc51cd98e0d32ba2b63214d3624"
+          },
+          {
+            "seq": 17,
+            "method": "behavioural_neighbours",
+            "key": "f9222c9d321f5c5a76eb1caa",
+            "digest": "6635053f3a0fc97f9fece2e1166ad008be058a84e2c71b823882fad915460fdb"
+          },
+          {
+            "seq": 19,
+            "method": "hybrid_case_recall",
+            "key": "e61e07a197ca34e727a9f8d2",
+            "digest": "cb7d24156e31ab684dfab41b07b2be14975b32fcf96201253213d9e4de865cd7"
+          },
+          {
+            "seq": 22,
+            "method": "behaviour_vector",
+            "key": "e62b776ce630c53bbf391aa4",
+            "digest": "b9831580f4a69c1dc3bf4e58fb28e304e6dad65fe06912de2ebbd3a2d3a467f4"
+          }
+        ],
+        "ran_at": "2026-10-29T11:25:02Z",
+        "data_snapshot": "597035c02ee4cdcb7c3cf7fd7a13f809",
+        "kind": "derived_inference"
+      },
+      {
+        "id": "HHG-006-A008",
+        "what": "Activity in the 72 hours before the alert mixes 4 online and 3 card-present transactions, shifting the online share by 0.55 against this card's own baseline",
+        "evidence_ids": [
+          "C07297-K1"
+        ],
+        "query": "mixed_channel_probe",
+        "params": {
+          "card_id": "C07297-K1",
+          "window_hours": "72"
+        },
+        "tool_calls": [
+          {
+            "seq": 2,
+            "method": "episode_window",
+            "key": "64e57fc264f655e8f9c3ae74",
+            "digest": "683eebeecbc392e65f80396523f7f50d339283db29e09e07f885d4ce77f7bbcc"
+          },
+          {
+            "seq": 3,
+            "method": "card_baseline",
+            "key": "2759588360576d1b88b7a158",
+            "digest": "18600a64a425e95ce0a41e1a428716e3970035e1d27333ebdd874c57586cf3e6"
+          },
+          {
+            "seq": 4,
+            "method": "device_first_use",
+            "key": "2120fcf9f3b4c5e822689192",
+            "digest": "17ac6cecc81f82d32202e5c9f14eb76af5f7465e85d8f02af5b11d3c6a53cc53"
+          },
+          {
+            "seq": 6,
+            "method": "peer_purchases",
+            "key": "8827ebed8d86e5fa7d15a0fc",
+            "digest": "37639f5caafc802533741fe8a78636af4bb794c425553325078c4a3a067934df"
+          },
+          {
+            "seq": 7,
+            "method": "region_profile",
+            "key": "778013813516d7e50b6b682f",
+            "digest": "87bd51a23d8f9f05d54bc872437f13f2296ed824c3d0152c6bfe3fa6813e2b7e"
+          },
+          {
+            "seq": 8,
+            "method": "out_of_region_probe",
+            "key": "c4aa55cfb739cd0bbdbab768",
+            "digest": "6c0a855665155abf4975cec86378407c47ab2585424ca77e15b874ea7f940e8b"
+          }
+        ],
+        "ran_at": "2026-10-29T11:25:02Z",
+        "data_snapshot": "597035c02ee4cdcb7c3cf7fd7a13f809",
+        "kind": "derived_inference"
+      },
+      {
+        "id": "HHG-006-A009",
+        "what": "68 confirmed-fraud closed cases sit within two hops of this card, device or customer (distance-decayed proximity 18.5)",
+        "evidence_ids": [
+          "CC-1496",
+          "CC-0423",
+          "CC-3047",
+          "CC-4330",
+          "CC-2303",
+          "CC-3501",
+          "CC-2287",
+          "CC-3441",
+          "CC-2549",
+          "CC-5257"
+        ],
+        "query": "fraud_proximity",
+        "params": {
+          "entity_ids": "...",
+          "max_hops": "2"
+        },
+        "tool_calls": [],
+        "ran_at": "2026-10-29T11:25:02Z",
+        "data_snapshot": "597035c02ee4cdcb7c3cf7fd7a13f809",
+        "kind": "derived_inference"
+      },
+      {
+        "id": "HHG-006-A010",
+        "what": "Out-of-region use governs this case: Out-of-region use. Card-present purchases in a billing region the cardholder has no history in, while their normal activity continues at home. Several days of purchases in one new region is a trip, not a clone. Policy R2, R3.",
+        "evidence_ids": [],
+        "query": "policy:PATTERN-out_of_region_use",
+        "params": {},
+        "tool_calls": [],
+        "ran_at": "2026-10-29T11:25:02Z",
+        "data_snapshot": "597035c02ee4cdcb7c3cf7fd7a13f809",
+        "kind": "policy_text"
+      },
+      {
+        "id": "HHG-006-A011",
+        "what": "Card-not-present fraud governs this case: Card-not-present fraud. The number is used online without the card. Amounts and products that don't fit the cardholder's history, often in a burst of two to four within 48 hours. On its own, one unusual online purchase is ambiguous: verify.",
+        "evidence_ids": [],
+        "query": "policy:PATTERN-card_not_present_fraud",
+        "params": {},
+        "tool_calls": [],
+        "ran_at": "2026-10-29T11:25:02Z",
+        "data_snapshot": "597035c02ee4cdcb7c3cf7fd7a13f809",
+        "kind": "policy_text"
+      },
+      {
+        "id": "HHG-006-A012",
+        "what": "Exposure $1,906.07 is the sum of the 4 affected transactions; the first is 3476602",
+        "evidence_ids": [
+          "3476602",
+          "3476633",
+          "3476665",
+          "3476682"
+        ],
+        "query": "episode_window",
+        "params": {
+          "card_id": "C07297-K1",
+          "as_of": "2016-11-22 02:30:00"
+        },
+        "tool_calls": [
+          {
+            "seq": 1,
+            "method": "get_transaction",
+            "key": "2b4d9d1c3678f204b18c59db",
+            "digest": "24d8dde0ebece297fe4c520969780f3f44ad0cd8e9ed292f5c44bdd505b5de26"
+          },
+          {
+            "seq": 13,
+            "method": "email_mismatch_profile",
+            "key": "7557eb6d481ec71f617aefbd",
+            "digest": "aeb7da1ca12223df1f1aa53dfa516313d33a344f44a85dc80835fd2e87d4159f"
+          },
+          {
+            "seq": 16,
+            "method": "fraud_proximity",
+            "key": "adf357c766fd82b5d37f4250",
+            "digest": "4309d64ba61a657281707cf1a02debccb95e5cc51cd98e0d32ba2b63214d3624"
+          },
+          {
+            "seq": 17,
+            "method": "behavioural_neighbours",
+            "key": "f9222c9d321f5c5a76eb1caa",
+            "digest": "6635053f3a0fc97f9fece2e1166ad008be058a84e2c71b823882fad915460fdb"
+          },
+          {
+            "seq": 19,
+            "method": "hybrid_case_recall",
+            "key": "e61e07a197ca34e727a9f8d2",
+            "digest": "cb7d24156e31ab684dfab41b07b2be14975b32fcf96201253213d9e4de865cd7"
+          },
+          {
+            "seq": 22,
+            "method": "behaviour_vector",
+            "key": "e62b776ce630c53bbf391aa4",
+            "digest": "b9831580f4a69c1dc3bf4e58fb28e304e6dad65fe06912de2ebbd3a2d3a467f4"
+          },
+          {
+            "seq": 2,
+            "method": "episode_window",
+            "key": "64e57fc264f655e8f9c3ae74",
+            "digest": "683eebeecbc392e65f80396523f7f50d339283db29e09e07f885d4ce77f7bbcc"
+          }
+        ],
+        "ran_at": "2026-10-29T11:25:02Z",
+        "data_snapshot": "597035c02ee4cdcb7c3cf7fd7a13f809",
+        "kind": "exposure"
+      },
+      {
+        "id": "HHG-006-A013",
+        "what": "Minimal sufficient facts [] force action class ['BLOCK_CARD', 'FILE_REPORT']; margin k=2",
+        "evidence_ids": [
+          "3476682"
+        ],
+        "query": "proof",
+        "params": {
+          "facts": [
+            "amount_anomalous",
+            "amount_extreme",
+            "device_new_on_account",
+            "velocity_burst",
+            "online_burst_2_to_4",
+            "threshold_structuring",
+            "mixed_channel_shift",
+            "fraud_proximity",
+            "memory_recall"
+          ]
+        },
+        "tool_calls": [
+          {
+            "seq": 1,
+            "method": "get_transaction",
+            "key": "2b4d9d1c3678f204b18c59db",
+            "digest": "24d8dde0ebece297fe4c520969780f3f44ad0cd8e9ed292f5c44bdd505b5de26"
+          },
+          {
+            "seq": 13,
+            "method": "email_mismatch_profile",
+            "key": "7557eb6d481ec71f617aefbd",
+            "digest": "aeb7da1ca12223df1f1aa53dfa516313d33a344f44a85dc80835fd2e87d4159f"
+          },
+          {
+            "seq": 16,
+            "method": "fraud_proximity",
+            "key": "adf357c766fd82b5d37f4250",
+            "digest": "4309d64ba61a657281707cf1a02debccb95e5cc51cd98e0d32ba2b63214d3624"
+          },
+          {
+            "seq": 17,
+            "method": "behavioural_neighbours",
+            "key": "f9222c9d321f5c5a76eb1caa",
+            "digest": "6635053f3a0fc97f9fece2e1166ad008be058a84e2c71b823882fad915460fdb"
+          },
+          {
+            "seq": 19,
+            "method": "hybrid_case_recall",
+            "key": "e61e07a197ca34e727a9f8d2",
+            "digest": "cb7d24156e31ab684dfab41b07b2be14975b32fcf96201253213d9e4de865cd7"
+          },
+          {
+            "seq": 22,
+            "method": "behaviour_vector",
+            "key": "e62b776ce630c53bbf391aa4",
+            "digest": "b9831580f4a69c1dc3bf4e58fb28e304e6dad65fe06912de2ebbd3a2d3a467f4"
+          }
+        ],
+        "ran_at": "2026-10-29T11:25:02Z",
+        "data_snapshot": "597035c02ee4cdcb7c3cf7fd7a13f809",
+        "kind": "proof"
+      },
+      {
+        "id": "HHG-006-A014",
+        "what": "Customer C07297 conducted activity on card C07297-K1 using a new device profile identified as Trident/7.0 | Windows 7 | ie 11.0 for desktop | 1920x1080.",
+        "evidence_ids": [
+          "C07297",
+          "C07297-K1"
+        ],
+        "query": "sar_sentence",
+        "params": {},
+        "tool_calls": [
+          {
+            "seq": 2,
+            "method": "episode_window",
+            "key": "64e57fc264f655e8f9c3ae74",
+            "digest": "683eebeecbc392e65f80396523f7f50d339283db29e09e07f885d4ce77f7bbcc"
+          },
+          {
+            "seq": 3,
+            "method": "card_baseline",
+            "key": "2759588360576d1b88b7a158",
+            "digest": "18600a64a425e95ce0a41e1a428716e3970035e1d27333ebdd874c57586cf3e6"
+          },
+          {
+            "seq": 4,
+            "method": "device_first_use",
+            "key": "2120fcf9f3b4c5e822689192",
+            "digest": "17ac6cecc81f82d32202e5c9f14eb76af5f7465e85d8f02af5b11d3c6a53cc53"
+          },
+          {
+            "seq": 6,
+            "method": "peer_purchases",
+            "key": "8827ebed8d86e5fa7d15a0fc",
+            "digest": "37639f5caafc802533741fe8a78636af4bb794c425553325078c4a3a067934df"
+          },
+          {
+            "seq": 7,
+            "method": "region_profile",
+            "key": "778013813516d7e50b6b682f",
+            "digest": "87bd51a23d8f9f05d54bc872437f13f2296ed824c3d0152c6bfe3fa6813e2b7e"
+          },
+          {
+            "seq": 8,
+            "method": "out_of_region_probe",
+            "key": "c4aa55cfb739cd0bbdbab768",
+            "digest": "6c0a855665155abf4975cec86378407c47ab2585424ca77e15b874ea7f940e8b"
+          }
+        ],
+        "ran_at": "2026-10-29T11:25:02Z",
+        "data_snapshot": "597035c02ee4cdcb7c3cf7fd7a13f809",
+        "kind": "sar_sentence"
+      },
+      {
+        "id": "HHG-006-A015",
+        "what": "The activity consists of four unauthorized online card purchases involving product code C across transaction IDs 3476602, 3476633, 3476665, and 3476682.",
+        "evidence_ids": [
+          "3476602",
+          "3476633",
+          "3476665",
+          "3476682"
+        ],
+        "query": "sar_sentence",
+        "params": {},
+        "tool_calls": [
+          {
+            "seq": 1,
+            "method": "get_transaction",
+            "key": "2b4d9d1c3678f204b18c59db",
+            "digest": "24d8dde0ebece297fe4c520969780f3f44ad0cd8e9ed292f5c44bdd505b5de26"
+          },
+          {
+            "seq": 13,
+            "method": "email_mismatch_profile",
+            "key": "7557eb6d481ec71f617aefbd",
+            "digest": "aeb7da1ca12223df1f1aa53dfa516313d33a344f44a85dc80835fd2e87d4159f"
+          },
+          {
+            "seq": 16,
+            "method": "fraud_proximity",
+            "key": "adf357c766fd82b5d37f4250",
+            "digest": "4309d64ba61a657281707cf1a02debccb95e5cc51cd98e0d32ba2b63214d3624"
+          },
+          {
+            "seq": 17,
+            "method": "behavioural_neighbours",
+            "key": "f9222c9d321f5c5a76eb1caa",
+            "digest": "6635053f3a0fc97f9fece2e1166ad008be058a84e2c71b823882fad915460fdb"
+          },
+          {
+            "seq": 19,
+            "method": "hybrid_case_recall",
+            "key": "e61e07a197ca34e727a9f8d2",
+            "digest": "cb7d24156e31ab684dfab41b07b2be14975b32fcf96201253213d9e4de865cd7"
+          },
+          {
+            "seq": 22,
+            "method": "behaviour_vector",
+            "key": "e62b776ce630c53bbf391aa4",
+            "digest": "b9831580f4a69c1dc3bf4e58fb28e304e6dad65fe06912de2ebbd3a2d3a467f4"
+          }
+        ],
+        "ran_at": "2026-10-29T11:25:02Z",
+        "data_snapshot": "597035c02ee4cdcb7c3cf7fd7a13f809",
+        "kind": "sar_sentence"
+      },
+      {
+        "id": "HHG-006-A016",
+        "what": "The transaction activity occurred on 2016-11-21, with flagged transaction 3476682 recorded at 2016-11-21 20:30:00, leading to a customer report trigger as of 2016-11-22 02:30:00.",
+        "evidence_ids": [
+          "3476682"
+        ],
+        "query": "sar_sentence",
+        "params": {},
+        "tool_calls": [
+          {
+            "seq": 1,
+            "method": "get_transaction",
+            "key": "2b4d9d1c3678f204b18c59db",
+            "digest": "24d8dde0ebece297fe4c520969780f3f44ad0cd8e9ed292f5c44bdd505b5de26"
+          },
+          {
+            "seq": 13,
+            "method": "email_mismatch_profile",
+            "key": "7557eb6d481ec71f617aefbd",
+            "digest": "aeb7da1ca12223df1f1aa53dfa516313d33a344f44a85dc80835fd2e87d4159f"
+          },
+          {
+            "seq": 16,
+            "method": "fraud_proximity",
+            "key": "adf357c766fd82b5d37f4250",
+            "digest": "4309d64ba61a657281707cf1a02debccb95e5cc51cd98e0d32ba2b63214d3624"
+          },
+          {
+            "seq": 17,
+            "method": "behavioural_neighbours",
+            "key": "f9222c9d321f5c5a76eb1caa",
+            "digest": "6635053f3a0fc97f9fece2e1166ad008be058a84e2c71b823882fad915460fdb"
+          },
+          {
+            "seq": 19,
+            "method": "hybrid_case_recall",
+            "key": "e61e07a197ca34e727a9f8d2",
+            "digest": "cb7d24156e31ab684dfab41b07b2be14975b32fcf96201253213d9e4de865cd7"
+          },
+          {
+            "seq": 22,
+            "method": "behaviour_vector",
+            "key": "e62b776ce630c53bbf391aa4",
+            "digest": "b9831580f4a69c1dc3bf4e58fb28e304e6dad65fe06912de2ebbd3a2d3a467f4"
+          }
+        ],
+        "ran_at": "2026-10-29T11:25:02Z",
+        "data_snapshot": "597035c02ee4cdcb7c3cf7fd7a13f809",
+        "kind": "sar_sentence"
+      },
+      {
+        "id": "HHG-006-A017",
+        "what": "Additionally, flagged transaction 3476682 for $482.12 sits 2.8 standard deviations above the card's running mean and represents an 8.2x surge over the median spend of $58.97, deviating from a baseline of 96 prior transactions and a historic online share of 0.021.",
+        "evidence_ids": [
+          "3476682"
+        ],
+        "query": "sar_sentence",
+        "params": {},
+        "tool_calls": [
+          {
+            "seq": 1,
+            "method": "get_transaction",
+            "key": "2b4d9d1c3678f204b18c59db",
+            "digest": "24d8dde0ebece297fe4c520969780f3f44ad0cd8e9ed292f5c44bdd505b5de26"
+          },
+          {
+            "seq": 13,
+            "method": "email_mismatch_profile",
+            "key": "7557eb6d481ec71f617aefbd",
+            "digest": "aeb7da1ca12223df1f1aa53dfa516313d33a344f44a85dc80835fd2e87d4159f"
+          },
+          {
+            "seq": 16,
+            "method": "fraud_proximity",
+            "key": "adf357c766fd82b5d37f4250",
+            "digest": "4309d64ba61a657281707cf1a02debccb95e5cc51cd98e0d32ba2b63214d3624"
+          },
+          {
+            "seq": 17,
+            "method": "behavioural_neighbours",
+            "key": "f9222c9d321f5c5a76eb1caa",
+            "digest": "6635053f3a0fc97f9fece2e1166ad008be058a84e2c71b823882fad915460fdb"
+          },
+          {
+            "seq": 19,
+            "method": "hybrid_case_recall",
+            "key": "e61e07a197ca34e727a9f8d2",
+            "digest": "cb7d24156e31ab684dfab41b07b2be14975b32fcf96201253213d9e4de865cd7"
+          },
+          {
+            "seq": 22,
+            "method": "behaviour_vector",
+            "key": "e62b776ce630c53bbf391aa4",
+            "digest": "b9831580f4a69c1dc3bf4e58fb28e304e6dad65fe06912de2ebbd3a2d3a467f4"
+          }
+        ],
+        "ran_at": "2026-10-29T11:25:02Z",
+        "data_snapshot": "597035c02ee4cdcb7c3cf7fd7a13f809",
+        "kind": "sar_sentence"
+      }
+    ],
+    "sar_citations": [
+      {
+        "sentence": "Customer C07297 conducted activity on card C07297-K1 using a new device profile identified as Trident/7.0 | Windows 7 | ie 11.0 for desktop | 1920x1080.",
+        "attestations": [
+          "HHG-006-A014"
+        ],
+        "ids": [
+          "C07297",
+          "C07297-K1"
+        ]
+      },
+      {
+        "sentence": "The activity consists of four unauthorized online card purchases involving product code C across transaction IDs 3476602, 3476633, 3476665, and 3476682.",
+        "attestations": [
+          "HHG-006-A015"
+        ],
+        "ids": [
+          "3476602",
+          "3476633",
+          "3476665",
+          "3476682"
+        ]
+      },
+      {
+        "sentence": "The transaction activity occurred on 2016-11-21, with flagged transaction 3476682 recorded at 2016-11-21 20:30:00, leading to a customer report trigger as of 2016-11-22 02:30:00.",
+        "attestations": [
+          "HHG-006-A016"
+        ],
+        "ids": [
+          "3476682"
+        ]
+      },
+      {
+        "sentence": "All transactions were processed through the online channel under billing region 264.0.",
+        "attestations": [
+          "HHG-006-A012"
+        ],
+        "ids": []
+      },
+      {
+        "sentence": "The activity was executed in a rapid sequence of four purchases inside a 30.0-minute window, with each transaction structured to sit just under the $500 authorization ceiling at a mean headroom of 4.7%.",
+        "attestations": [
+          "HHG-006-A012"
+        ],
+        "ids": []
+      },
+      {
+        "sentence": "The behavior is suspicious because it demonstrates threshold structuring and rapid velocity from an unrecognized device, yielding a 0.97 fraud probability under an undocumented typology pattern.",
+        "attestations": [
+          "HHG-006-A012"
+        ],
+        "ids": []
+      },
+      {
+        "sentence": "Additionally, flagged transaction 3476682 for $482.12 sits 2.8 standard deviations above the card's running mean and represents an 8.2x surge over the median spend of $58.97, deviating from a baseline of 96 prior transactions and a historic online share of 0.021.",
+        "attestations": [
+          "HHG-006-A017"
+        ],
+        "ids": [
+          "3476682"
+        ]
+      },
+      {
+        "sentence": "The total financial exposure resulting from this suspicious activity is $1,906.07.",
+        "attestations": [
+          "HHG-006-A012"
+        ],
+        "ids": []
+      }
+    ],
+    "unattested": [],
+    "data_snapshot": "597035c02ee4cdcb7c3cf7fd7a13f809",
+    "n_attestations": 17,
+    "handover": {
+      "state": "escalated",
+      "waiting_on": [
+        "BLOCK_CARD needs team lead approval (L1)",
+        "FILE_REPORT needs fraud manager approval (L2)"
+      ],
+      "decided_by_agent": [
+        "CREATE_CASE",
+        "ESCALATE_TO_ANALYST"
+      ],
+      "open_questions": [
+        "Evidence conflicts: 4 items raised the fraud likelihood and 3 lowered it.",
+        "The dataset has no merchant field, so the R7 recurring-charge check uses amount, product code and cadence only."
+      ],
+      "what_changed": "nothing",
+      "proof_margin": 2,
+      "gate": "kept: margin k=2 meets the floor of 2 and precedent does not contradict"
+    },
+    "answer_hash": "d88c4a41fbe5a0dcaf65b381d56b7d77a49032ddb13bb02366d4108bf102059c",
+    "watch_children": [],
     "write_verification": {
       "read_back": true,
       "checks": {
@@ -1034,7 +2156,18 @@
         "policy_cited": 2
       }
     },
-    "framework": "langgraph"
+    "framework": "langgraph",
+    "telemetry": {
+      "wall_s": 56.98,
+      "graph_calls": 25,
+      "graph_errors": 0,
+      "llm_calls": 4,
+      "tokens": 8578,
+      "llm_cost_usd": 0.03723,
+      "template_fallbacks": 0,
+      "backend": "tigergraph",
+      "unattested_claims": 0
+    }
   },
   "audit_chain": {
     "intact": true,

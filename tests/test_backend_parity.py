@@ -130,3 +130,48 @@ def test_full_investigation_reaches_the_same_verdict(stores, sample_cases):
         assert a["case"]["pattern"] == b["case"]["pattern"], row["case_id"]
         assert abs(a["case"]["fraud_probability"]
                    - b["case"]["fraud_probability"]) < 0.10, row["case_id"]
+
+
+# --------------------------------------------------- final-round queries ----
+def _ring_case():
+    import json
+
+    d = json.loads((ROOT / "cases" / "HHG-014.json").read_text(encoding="utf-8"))
+    from datetime import datetime
+
+    return (d["agent_record"]["trigger"]["card_id"], datetime.fromisoformat(d["agent_record"]["as_of"]),
+            d["case"]["connected_card_ids"])
+
+
+def test_time_sliced_ring_agrees(stores):
+    local, tg = stores
+    card, as_of, _ = _ring_case()
+    a, b = local.ring_at_asof(card, as_of), tg.ring_at_asof(card, as_of)
+    # same hop semantics; allow a small tolerance for proxy-string normalisation
+    overlap = len(set(a["cards"]) & set(b["cards"])) / max(1, len(set(a["cards"]) | set(b["cards"])))
+    assert overlap >= 0.9, (a["size"], b["size"])
+
+
+def test_compromise_origin_agrees(stores):
+    from datetime import timedelta
+
+    from fraudagent.core import containment as C
+
+    local, tg = stores
+    card, as_of, ring = _ring_case()
+    ring = sorted({card, *ring})
+    t0, t1 = as_of - timedelta(days=45), as_of - timedelta(days=3)
+    picks = []
+    for s in (local, tg):
+        c = s.origin_counts(ring, t0, t1, as_of)
+        o = C.pick_origin(C.score_origins(c["entities"], len(ring), c["n_control"]))
+        picks.append(o.entity if o else None)
+    assert picks[0] == picks[1]
+
+
+def test_data_gaps_agree(stores):
+    local, tg = stores
+    ids = [str(t) for t in pd.read_parquet(PATHS.tx_parquet, columns=["txn_id"])["txn_id"].head(40)]
+    a, b = local.data_gaps(ids), tg.data_gaps(ids)
+    assert sorted(a["no_identity"]) == sorted(b["no_identity"])
+    assert sorted(a["empty_region"]) == sorted(b["empty_region"])

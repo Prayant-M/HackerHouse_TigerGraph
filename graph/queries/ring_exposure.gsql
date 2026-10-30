@@ -1,0 +1,26 @@
+/* ring_exposure — attested exposure per ring card for the block set (C7):
+   each ring card's transactions in the suspect window that came from a device
+   it shares with another ring card.                                         */
+
+USE GRAPH FraudGraph
+
+CREATE OR REPLACE QUERY ring_exposure(SET<STRING> ring_cards, DATETIME as_of,
+                                      INT window_hours = 72)
+FOR GRAPH FraudGraph SYNTAX v2 {
+  DATETIME since = epoch_to_datetime(datetime_to_epoch(as_of) - window_hours * 3600);
+  SetAccum<STRING> @cards;
+  MapAccum<STRING, SetAccum<STRING>> @@txns;
+  MapAccum<STRING, SumAccum<DOUBLE>> @@amount;
+  MapAccum<STRING, STRING> @@owner;
+
+  win = SELECT t FROM Transaction:t
+        WHERE t.ts >= since AND t.ts <= as_of AND ring_cards.contains(t.card_id);
+  devs = SELECT d FROM win:t -(FROM_DEVICE>:e)- DeviceProfile:d
+         ACCUM d.@cards += t.card_id;
+  shared = SELECT d FROM devs:d WHERE d.@cards.size() >= 2;
+  hit = SELECT t FROM shared:d -(DEVICE_USED_IN>:e)- Transaction:t
+        WHERE t.ts >= since AND t.ts <= as_of AND ring_cards.contains(t.card_id)
+        ACCUM @@txns += (t.card_id -> t.txn_id), @@amount += (t.card_id -> t.amount),
+              @@owner += (t.card_id -> t.customer_id);
+  PRINT @@txns AS txns, @@amount AS amount, @@owner AS owner;
+}

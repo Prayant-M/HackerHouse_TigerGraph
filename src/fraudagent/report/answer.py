@@ -137,7 +137,7 @@ def build_answer(state, store: GraphStore) -> tuple[dict[str, Any], dict[str, An
         "sar": sar,
         "stop_reason": state["stop"].reason,
         "tool_calls": int(getattr(store, "call_count", 0)),
-        "tokens": int(llm.usage.total_tokens),
+        "tokens": int(llm.case_usage()["tokens"]),
         "latency_s": elapsed,
     }
 
@@ -174,12 +174,48 @@ def build_answer(state, store: GraphStore) -> tuple[dict[str, Any], dict[str, An
         "backend": getattr(store, "backend", "unknown"),
         "llm": {"available": llm.available, "provider": llm.cfg.provider,
                 "model": llm.cfg.model if llm.available else "deterministic-templates",
-                "calls": llm.usage.calls, "cached": llm.usage.cached},
+                **llm.case_usage()},
+        "prose_source": ("template" if not llm.available or llm.case_usage()[
+            "template_fallbacks"] else "llm"),
+        "transport_degraded": "degraded" in _transport(store),
+        "january_regime": state["as_of"].year >= 2017,
+        "text_facts": state.get("text_facts", {}),
+        "quality": state.get("quality", {}),
+        "conformal": state.get("conformal", {}),
+        "proof": state.get("proof", {}),
+        "gate": state.get("gate", {}),
+        "containment": state.get("containment"),
+        "compromise_watch": state.get("compromise_watch", []),
+        "feedback_applied": state.get("feedback_applied", []),
+        "typology_detections": state.get("typology_detections", []),
+        "customer_messages": _customer_messages(state),
         "trace": state.get("trace", []),
     }
 
+    from ..agent import final_round as FR
+    from ..core.attest import answer_hash
+    from .attestation import attest_answer
+
+    rec = answer["agent_record"]
+    rec["lifecycle"] = FR.lifecycle(state, answer)
+    rec.update(attest_answer(state, answer))
+    rec["handover"] = FR.handover(state, answer)
+    rec["answer_hash"] = answer_hash(answer)
+    plan = state.get("containment") or {}
+    children = FR.watch_children(plan, state["graph_case_id"])
+    rec["watch_children"] = children
+
     graph_payload = {
         "case_id": state["case_id"],
+        "lifecycle_state": rec["lifecycle"][-1]["to"],
+        "state_changes": rec["lifecycle"],
+        "watch_children": children,
+        "origin": plan.get("write_back"),
+        "proof": state.get("proof", {}),
+        "gate": state.get("gate", {}),
+        "conformal": state.get("conformal", {}),
+        "data_snapshot": rec["data_snapshot"],
+        "answer_hash": rec["answer_hash"],
         "graph_case_id": state["graph_case_id"],
         "card_id": state["trigger"].card_id,
         "customer_id": state["trigger"].customer_id,
@@ -217,6 +253,23 @@ def build_answer(state, store: GraphStore) -> tuple[dict[str, Any], dict[str, An
         "entity_ids": ctx.entity_ids() + ep.affected_txn_ids + ep.connected_card_ids,
     }
     return answer, graph_payload
+
+
+def _customer_messages(state) -> list[dict[str, Any]]:
+    """Every string a customer would see, built from a CustomerView that has no
+    case-internal field (report/customer_text.py)."""
+    from .customer_text import render, view_from
+
+    out = []
+    flagged = state["ctx"].flagged
+    for r in state.get("requests", []):
+        if r.type in {"customer_validation", "step_up_auth"}:
+            out.append({"request_type": r.type, "channel": r.channel,
+                        "text": render(view_from(r.type, r.channel, flagged))})
+    if any(a.action == "WARN_CUSTOMER" for a in state["final_decision"].actions):
+        out.append({"request_type": "warn", "channel": "app message",
+                    "text": render(view_from("warn", "app message", flagged))})
+    return out
 
 
 def _subjects(ctx: InvestigationContext, ep) -> list[str]:

@@ -1,0 +1,4851 @@
+{
+  "id": "DRIFT-f529d6d85136",
+  "created_at": "2026-10-29T18:32:18Z",
+  "summary": "transactions_2017q1.csv: +0 -0 cols, 257 changed, 0 key overlaps; identity_2017q1.csv: +0 -0 cols, 7 changed, 0 key overlaps; closed_cases_history.csv: +0 -0 cols, 2 changed, 5565 key overlaps; case_pack_final.csv: +0 -0 cols, 6 changed, 0 key overlaps",
+  "mapping": {
+    "transactions_2017q1.csv": [],
+    "identity_2017q1.csv": [],
+    "closed_cases_history.csv": [],
+    "case_pack_final.csv": []
+  },
+  "reports": [
+    {
+      "old": "transactions.csv",
+      "new": "transactions_2017q1.csv",
+      "rows_sampled": [
+        200000,
+        60196
+      ],
+      "added": [],
+      "removed": [],
+      "renames_proposed": [],
+      "changes": [
+        {
+          "column": "C13",
+          "changes": [
+            "median 2.000 -> 3.000"
+          ],
+          "breaks": "no known downstream consumer"
+        },
+        {
+          "column": "D10",
+          "changes": [
+            "null rate 0.24 -> 0.17",
+            "median 12.000 -> 26.000"
+          ],
+          "breaks": "no known downstream consumer"
+        },
+        {
+          "column": "D11",
+          "changes": [
+            "median 22.000 -> 50.000"
+          ],
+          "breaks": "no known downstream consumer"
+        },
+        {
+          "column": "D15",
+          "changes": [
+            "null rate 0.25 -> 0.31",
+            "median 42.000 -> 82.000"
+          ],
+          "breaks": "no known downstream consumer"
+        },
+        {
+          "column": "D2",
+          "changes": [
+            "null rate 0.54 -> 0.48"
+          ],
+          "breaks": "no known downstream consumer"
+        },
+        {
+          "column": "D3",
+          "changes": [
+            "null rate 0.52 -> 0.46"
+          ],
+          "breaks": "no known downstream consumer"
+        },
+        {
+          "column": "D4",
+          "changes": [
+            "null rate 0.39 -> 0.45",
+            "median 19.000 -> 42.000"
+          ],
+          "breaks": "no known downstream consumer"
+        },
+        {
+          "column": "M1",
+          "changes": [
+            "null rate 0.65 -> 0.59"
+          ],
+          "breaks": "no known downstream consumer"
+        },
+        {
+          "column": "M2",
+          "changes": [
+            "null rate 0.65 -> 0.59"
+          ],
+          "breaks": "no known downstream consumer"
+        },
+        {
+          "column": "M3",
+          "changes": [
+            "null rate 0.65 -> 0.59"
+          ],
+          "breaks": "no known downstream consumer"
+        },
+        {
+          "column": "M6",
+          "changes": [
+            "null rate 0.39 -> 0.31"
+          ],
+          "breaks": "no known downstream consumer"
+        },
+        {
+          "column": "R_emaildomain",
+          "changes": [
+            "null rate 0.68 -> 0.79"
+          ],
+          "breaks": "recipient fan-in detector"
+        },
+        {
+          "column": "TransactionDT",
+          "changes": [
+            "range [141.00, 4555139.00] -> [15811220.00, 18489547.00]",
+            "median 2032612.500 -> 17153875.000"
+          ],
+          "breaks": "no known downstream consumer"
+        },
+        {
+          "column": "V12",
+          "changes": [
+            "null rate 0.24 -> 0.17",
+            "median 1.000 -> 0.000"
+          ],
+          "breaks": "no known downstream consumer"
+        },
+        {
+          "column": "V13",
+          "changes": [
+            "null rate 0.24 -> 0.17"
+          ],
+          "breaks": "no known downstream consumer"
+        },
+        {
+          "column": "V138",
+          "changes": [
+            "null rate 0.75 -> 0.82"
+          ],
+          "breaks": "no known downstream consumer"
+        },
+        {
+          "column": "V139",
+          "changes": [
+            "null rate 0.75 -> 0.82"
+          ],
+          "breaks": "no known downstream consumer"
+        },
+        {
+          "column": "V14",
+          "changes": [
+            "null rate 0.24 -> 0.17"
+          ],
+          "breaks": "no known downstream consumer"
+        },
+        {
+          "column": "V140",
+          "changes": [
+            "null rate 0.75 -> 0.82"
+          ],
+          "breaks": "no known downstream consumer"
+        },
+        {
+          "column": "V141",
+          "changes": [
+            "null rate 0.75 -> 0.82"
+          ],
+          "breaks": "no known downstream consumer"
+        },
+        {
+          "column": "V142",
+          "changes": [
+            "null rate 0.75 -> 0.82"
+          ],
+          "breaks": "no known downstream consumer"
+        },
+        {
+          "column": "V143",
+          "changes": [
+            "null rate 0.75 -> 0.82"
+          ],
+          "breaks": "no known downstream consumer"
+        },
+        {
+          "column": "V144",
+          "changes": [
+            "null rate 0.75 -> 0.82"
+          ],
+          "breaks": "no known downstream consumer"
+        },
+        {
+          "column": "V145",
+          "changes": [
+            "null rate 0.75 -> 0.82"
+          ],
+          "breaks": "no known downstream consumer"
+        },
+        {
+          "column": "V146",
+          "changes": [
+            "null rate 0.75 -> 0.82"
+          ],
+          "breaks": "no known downstream consumer"
+        },
+        {
+          "column": "V147",
+          "changes": [
+            "null rate 0.75 -> 0.82"
+          ],
+          "breaks": "no known downstream consumer"
+        },
+        {
+          "column": "V148",
+          "changes": [
+            "null rate 0.75 -> 0.82"
+          ],
+          "breaks": "no known downstream consumer"
+        },
+        {
+          "column": "V149",
+          "changes": [
+            "null rate 0.75 -> 0.82"
+          ],
+          "breaks": "no known downstream consumer"
+        },
+        {
+          "column": "V15",
+          "changes": [
+            "null rate 0.24 -> 0.17"
+          ],
+          "breaks": "no known downstream consumer"
+        },
+        {
+          "column": "V150",
+          "changes": [
+            "null rate 0.75 -> 0.82"
+          ],
+          "breaks": "no known downstream consumer"
+        },
+        {
+          "column": "V151",
+          "changes": [
+            "null rate 0.75 -> 0.82"
+          ],
+          "breaks": "no known downstream consumer"
+        },
+        {
+          "column": "V152",
+          "changes": [
+            "null rate 0.75 -> 0.82"
+          ],
+          "breaks": "no known downstream consumer"
+        },
+        {
+          "column": "V153",
+          "changes": [
+            "null rate 0.75 -> 0.82"
+          ],
+          "breaks": "no known downstream consumer"
+        },
+        {
+          "column": "V154",
+          "changes": [
+            "null rate 0.75 -> 0.82"
+          ],
+          "breaks": "no known downstream consumer"
+        },
+        {
+          "column": "V155",
+          "changes": [
+            "null rate 0.75 -> 0.82"
+          ],
+          "breaks": "no known downstream consumer"
+        },
+        {
+          "column": "V156",
+          "changes": [
+            "null rate 0.75 -> 0.82"
+          ],
+          "breaks": "no known downstream consumer"
+        },
+        {
+          "column": "V157",
+          "changes": [
+            "null rate 0.75 -> 0.82"
+          ],
+          "breaks": "no known downstream consumer"
+        },
+        {
+          "column": "V158",
+          "changes": [
+            "null rate 0.75 -> 0.82"
+          ],
+          "breaks": "no known downstream consumer"
+        },
+        {
+          "column": "V159",
+          "changes": [
+            "null rate 0.75 -> 0.82"
+          ],
+          "breaks": "no known downstream consumer"
+        },
+        {
+          "column": "V16",
+          "changes": [
+            "null rate 0.24 -> 0.17"
+          ],
+          "breaks": "no known downstream consumer"
+        },
+        {
+          "column": "V160",
+          "changes": [
+            "null rate 0.75 -> 0.82"
+          ],
+          "breaks": "no known downstream consumer"
+        },
+        {
+          "column": "V161",
+          "changes": [
+            "null rate 0.75 -> 0.82"
+          ],
+          "breaks": "no known downstream consumer"
+        },
+        {
+          "column": "V162",
+          "changes": [
+            "null rate 0.75 -> 0.82"
+          ],
+          "breaks": "no known downstream consumer"
+        },
+        {
+          "column": "V163",
+          "changes": [
+            "null rate 0.75 -> 0.82"
+          ],
+          "breaks": "no known downstream consumer"
+        },
+        {
+          "column": "V164",
+          "changes": [
+            "null rate 0.75 -> 0.82"
+          ],
+          "breaks": "no known downstream consumer"
+        },
+        {
+          "column": "V165",
+          "changes": [
+            "null rate 0.75 -> 0.82"
+          ],
+          "breaks": "no known downstream consumer"
+        },
+        {
+          "column": "V166",
+          "changes": [
+            "null rate 0.75 -> 0.82"
+          ],
+          "breaks": "no known downstream consumer"
+        },
+        {
+          "column": "V167",
+          "changes": [
+            "null rate 0.66 -> 0.77"
+          ],
+          "breaks": "no known downstream consumer"
+        },
+        {
+          "column": "V168",
+          "changes": [
+            "null rate 0.66 -> 0.77"
+          ],
+          "breaks": "no known downstream consumer"
+        },
+        {
+          "column": "V169",
+          "changes": [
+            "null rate 0.66 -> 0.77"
+          ],
+          "breaks": "no known downstream consumer"
+        },
+        {
+          "column": "V17",
+          "changes": [
+            "null rate 0.24 -> 0.17"
+          ],
+          "breaks": "no known downstream consumer"
+        },
+        {
+          "column": "V170",
+          "changes": [
+            "null rate 0.66 -> 0.77"
+          ],
+          "breaks": "no known downstream consumer"
+        },
+        {
+          "column": "V171",
+          "changes": [
+            "null rate 0.66 -> 0.77"
+          ],
+          "breaks": "no known downstream consumer"
+        },
+        {
+          "column": "V172",
+          "changes": [
+            "null rate 0.66 -> 0.77"
+          ],
+          "breaks": "no known downstream consumer"
+        },
+        {
+          "column": "V173",
+          "changes": [
+            "null rate 0.66 -> 0.77"
+          ],
+          "breaks": "no known downstream consumer"
+        },
+        {
+          "column": "V174",
+          "changes": [
+            "null rate 0.66 -> 0.77"
+          ],
+          "breaks": "no known downstream consumer"
+        },
+        {
+          "column": "V175",
+          "changes": [
+            "null rate 0.66 -> 0.77"
+          ],
+          "breaks": "no known downstream consumer"
+        },
+        {
+          "column": "V176",
+          "changes": [
+            "null rate 0.66 -> 0.77"
+          ],
+          "breaks": "no known downstream consumer"
+        },
+        {
+          "column": "V177",
+          "changes": [
+            "null rate 0.66 -> 0.77"
+          ],
+          "breaks": "no known downstream consumer"
+        },
+        {
+          "column": "V178",
+          "changes": [
+            "null rate 0.66 -> 0.77"
+          ],
+          "breaks": "no known downstream consumer"
+        },
+        {
+          "column": "V179",
+          "changes": [
+            "null rate 0.66 -> 0.77"
+          ],
+          "breaks": "no known downstream consumer"
+        },
+        {
+          "column": "V18",
+          "changes": [
+            "null rate 0.24 -> 0.17"
+          ],
+          "breaks": "no known downstream consumer"
+        },
+        {
+          "column": "V180",
+          "changes": [
+            "null rate 0.66 -> 0.77"
+          ],
+          "breaks": "no known downstream consumer"
+        },
+        {
+          "column": "V181",
+          "changes": [
+            "null rate 0.66 -> 0.77"
+          ],
+          "breaks": "no known downstream consumer"
+        },
+        {
+          "column": "V182",
+          "changes": [
+            "null rate 0.66 -> 0.77"
+          ],
+          "breaks": "no known downstream consumer"
+        },
+        {
+          "column": "V183",
+          "changes": [
+            "null rate 0.66 -> 0.77"
+          ],
+          "breaks": "no known downstream consumer"
+        },
+        {
+          "column": "V184",
+          "changes": [
+            "null rate 0.66 -> 0.77"
+          ],
+          "breaks": "no known downstream consumer"
+        },
+        {
+          "column": "V185",
+          "changes": [
+            "null rate 0.66 -> 0.77"
+          ],
+          "breaks": "no known downstream consumer"
+        },
+        {
+          "column": "V186",
+          "changes": [
+            "null rate 0.66 -> 0.77"
+          ],
+          "breaks": "no known downstream consumer"
+        },
+        {
+          "column": "V187",
+          "changes": [
+            "null rate 0.66 -> 0.77"
+          ],
+          "breaks": "no known downstream consumer"
+        },
+        {
+          "column": "V188",
+          "changes": [
+            "null rate 0.66 -> 0.77"
+          ],
+          "breaks": "no known downstream consumer"
+        },
+        {
+          "column": "V189",
+          "changes": [
+            "null rate 0.66 -> 0.77"
+          ],
+          "breaks": "no known downstream consumer"
+        },
+        {
+          "column": "V19",
+          "changes": [
+            "null rate 0.24 -> 0.17"
+          ],
+          "breaks": "no known downstream consumer"
+        },
+        {
+          "column": "V190",
+          "changes": [
+            "null rate 0.66 -> 0.77"
+          ],
+          "breaks": "no known downstream consumer"
+        },
+        {
+          "column": "V191",
+          "changes": [
+            "null rate 0.66 -> 0.77"
+          ],
+          "breaks": "no known downstream consumer"
+        },
+        {
+          "column": "V192",
+          "changes": [
+            "null rate 0.66 -> 0.77"
+          ],
+          "breaks": "no known downstream consumer"
+        },
+        {
+          "column": "V193",
+          "changes": [
+            "null rate 0.66 -> 0.77"
+          ],
+          "breaks": "no known downstream consumer"
+        },
+        {
+          "column": "V194",
+          "changes": [
+            "null rate 0.66 -> 0.77"
+          ],
+          "breaks": "no known downstream consumer"
+        },
+        {
+          "column": "V195",
+          "changes": [
+            "null rate 0.66 -> 0.77"
+          ],
+          "breaks": "no known downstream consumer"
+        },
+        {
+          "column": "V196",
+          "changes": [
+            "null rate 0.66 -> 0.77"
+          ],
+          "breaks": "no known downstream consumer"
+        },
+        {
+          "column": "V197",
+          "changes": [
+            "null rate 0.66 -> 0.77"
+          ],
+          "breaks": "no known downstream consumer"
+        },
+        {
+          "column": "V198",
+          "changes": [
+            "null rate 0.66 -> 0.77"
+          ],
+          "breaks": "no known downstream consumer"
+        },
+        {
+          "column": "V199",
+          "changes": [
+            "null rate 0.66 -> 0.77"
+          ],
+          "breaks": "no known downstream consumer"
+        },
+        {
+          "column": "V20",
+          "changes": [
+            "null rate 0.24 -> 0.17"
+          ],
+          "breaks": "no known downstream consumer"
+        },
+        {
+          "column": "V200",
+          "changes": [
+            "null rate 0.66 -> 0.77"
+          ],
+          "breaks": "no known downstream consumer"
+        },
+        {
+          "column": "V201",
+          "changes": [
+            "null rate 0.66 -> 0.77"
+          ],
+          "breaks": "no known downstream consumer"
+        },
+        {
+          "column": "V202",
+          "changes": [
+            "null rate 0.66 -> 0.77"
+          ],
+          "breaks": "no known downstream consumer"
+        },
+        {
+          "column": "V203",
+          "changes": [
+            "null rate 0.66 -> 0.77"
+          ],
+          "breaks": "no known downstream consumer"
+        },
+        {
+          "column": "V204",
+          "changes": [
+            "null rate 0.66 -> 0.77"
+          ],
+          "breaks": "no known downstream consumer"
+        },
+        {
+          "column": "V205",
+          "changes": [
+            "null rate 0.66 -> 0.77"
+          ],
+          "breaks": "no known downstream consumer"
+        },
+        {
+          "column": "V206",
+          "changes": [
+            "null rate 0.66 -> 0.77"
+          ],
+          "breaks": "no known downstream consumer"
+        },
+        {
+          "column": "V207",
+          "changes": [
+            "null rate 0.66 -> 0.77"
+          ],
+          "breaks": "no known downstream consumer"
+        },
+        {
+          "column": "V208",
+          "changes": [
+            "null rate 0.66 -> 0.77"
+          ],
+          "breaks": "no known downstream consumer"
+        },
+        {
+          "column": "V209",
+          "changes": [
+            "null rate 0.66 -> 0.77"
+          ],
+          "breaks": "no known downstream consumer"
+        },
+        {
+          "column": "V21",
+          "changes": [
+            "null rate 0.24 -> 0.17"
+          ],
+          "breaks": "no known downstream consumer"
+        },
+        {
+          "column": "V210",
+          "changes": [
+            "null rate 0.66 -> 0.77"
+          ],
+          "breaks": "no known downstream consumer"
+        },
+        {
+          "column": "V211",
+          "changes": [
+            "null rate 0.66 -> 0.77"
+          ],
+          "breaks": "no known downstream consumer"
+        },
+        {
+          "column": "V212",
+          "changes": [
+            "null rate 0.66 -> 0.77"
+          ],
+          "breaks": "no known downstream consumer"
+        },
+        {
+          "column": "V213",
+          "changes": [
+            "null rate 0.66 -> 0.77"
+          ],
+          "breaks": "no known downstream consumer"
+        },
+        {
+          "column": "V214",
+          "changes": [
+            "null rate 0.66 -> 0.77"
+          ],
+          "breaks": "no known downstream consumer"
+        },
+        {
+          "column": "V215",
+          "changes": [
+            "null rate 0.66 -> 0.77"
+          ],
+          "breaks": "no known downstream consumer"
+        },
+        {
+          "column": "V216",
+          "changes": [
+            "null rate 0.66 -> 0.77"
+          ],
+          "breaks": "no known downstream consumer"
+        },
+        {
+          "column": "V217",
+          "changes": [
+            "null rate 0.68 -> 0.77"
+          ],
+          "breaks": "no known downstream consumer"
+        },
+        {
+          "column": "V218",
+          "changes": [
+            "null rate 0.68 -> 0.77"
+          ],
+          "breaks": "no known downstream consumer"
+        },
+        {
+          "column": "V219",
+          "changes": [
+            "null rate 0.68 -> 0.77"
+          ],
+          "breaks": "no known downstream consumer"
+        },
+        {
+          "column": "V22",
+          "changes": [
+            "null rate 0.24 -> 0.17"
+          ],
+          "breaks": "no known downstream consumer"
+        },
+        {
+          "column": "V220",
+          "changes": [
+            "null rate 0.66 -> 0.77"
+          ],
+          "breaks": "no known downstream consumer"
+        },
+        {
+          "column": "V221",
+          "changes": [
+            "null rate 0.66 -> 0.77"
+          ],
+          "breaks": "no known downstream consumer"
+        },
+        {
+          "column": "V222",
+          "changes": [
+            "null rate 0.66 -> 0.77"
+          ],
+          "breaks": "no known downstream consumer"
+        },
+        {
+          "column": "V223",
+          "changes": [
+            "null rate 0.68 -> 0.77"
+          ],
+          "breaks": "no known downstream consumer"
+        },
+        {
+          "column": "V224",
+          "changes": [
+            "null rate 0.68 -> 0.77"
+          ],
+          "breaks": "no known downstream consumer"
+        },
+        {
+          "column": "V225",
+          "changes": [
+            "null rate 0.68 -> 0.77"
+          ],
+          "breaks": "no known downstream consumer"
+        },
+        {
+          "column": "V226",
+          "changes": [
+            "null rate 0.68 -> 0.77"
+          ],
+          "breaks": "no known downstream consumer"
+        },
+        {
+          "column": "V227",
+          "changes": [
+            "null rate 0.66 -> 0.77"
+          ],
+          "breaks": "no known downstream consumer"
+        },
+        {
+          "column": "V228",
+          "changes": [
+            "null rate 0.68 -> 0.77"
+          ],
+          "breaks": "no known downstream consumer"
+        },
+        {
+          "column": "V229",
+          "changes": [
+            "null rate 0.68 -> 0.77"
+          ],
+          "breaks": "no known downstream consumer"
+        },
+        {
+          "column": "V23",
+          "changes": [
+            "null rate 0.24 -> 0.17"
+          ],
+          "breaks": "no known downstream consumer"
+        },
+        {
+          "column": "V230",
+          "changes": [
+            "null rate 0.68 -> 0.77"
+          ],
+          "breaks": "no known downstream consumer"
+        },
+        {
+          "column": "V231",
+          "changes": [
+            "null rate 0.68 -> 0.77"
+          ],
+          "breaks": "no known downstream consumer"
+        },
+        {
+          "column": "V232",
+          "changes": [
+            "null rate 0.68 -> 0.77"
+          ],
+          "breaks": "no known downstream consumer"
+        },
+        {
+          "column": "V233",
+          "changes": [
+            "null rate 0.68 -> 0.77"
+          ],
+          "breaks": "no known downstream consumer"
+        },
+        {
+          "column": "V234",
+          "changes": [
+            "null rate 0.66 -> 0.77"
+          ],
+          "breaks": "no known downstream consumer"
+        },
+        {
+          "column": "V235",
+          "changes": [
+            "null rate 0.68 -> 0.77"
+          ],
+          "breaks": "no known downstream consumer"
+        },
+        {
+          "column": "V236",
+          "changes": [
+            "null rate 0.68 -> 0.77"
+          ],
+          "breaks": "no known downstream consumer"
+        },
+        {
+          "column": "V237",
+          "changes": [
+            "null rate 0.68 -> 0.77"
+          ],
+          "breaks": "no known downstream consumer"
+        },
+        {
+          "column": "V238",
+          "changes": [
+            "null rate 0.66 -> 0.77"
+          ],
+          "breaks": "no known downstream consumer"
+        },
+        {
+          "column": "V239",
+          "changes": [
+            "null rate 0.66 -> 0.77"
+          ],
+          "breaks": "no known downstream consumer"
+        },
+        {
+          "column": "V24",
+          "changes": [
+            "null rate 0.24 -> 0.17"
+          ],
+          "breaks": "no known downstream consumer"
+        },
+        {
+          "column": "V240",
+          "changes": [
+            "null rate 0.68 -> 0.77"
+          ],
+          "breaks": "no known downstream consumer"
+        },
+        {
+          "column": "V241",
+          "changes": [
+            "null rate 0.68 -> 0.77"
+          ],
+          "breaks": "no known downstream consumer"
+        },
+        {
+          "column": "V242",
+          "changes": [
+            "null rate 0.68 -> 0.77"
+          ],
+          "breaks": "no known downstream consumer"
+        },
+        {
+          "column": "V243",
+          "changes": [
+            "null rate 0.68 -> 0.77"
+          ],
+          "breaks": "no known downstream consumer"
+        },
+        {
+          "column": "V244",
+          "changes": [
+            "null rate 0.68 -> 0.77"
+          ],
+          "breaks": "no known downstream consumer"
+        },
+        {
+          "column": "V245",
+          "changes": [
+            "null rate 0.66 -> 0.77"
+          ],
+          "breaks": "no known downstream consumer"
+        },
+        {
+          "column": "V246",
+          "changes": [
+            "null rate 0.68 -> 0.77"
+          ],
+          "breaks": "no known downstream consumer"
+        },
+        {
+          "column": "V247",
+          "changes": [
+            "null rate 0.68 -> 0.77"
+          ],
+          "breaks": "no known downstream consumer"
+        },
+        {
+          "column": "V248",
+          "changes": [
+            "null rate 0.68 -> 0.77"
+          ],
+          "breaks": "no known downstream consumer"
+        },
+        {
+          "column": "V249",
+          "changes": [
+            "null rate 0.68 -> 0.77"
+          ],
+          "breaks": "no known downstream consumer"
+        },
+        {
+          "column": "V25",
+          "changes": [
+            "null rate 0.24 -> 0.17"
+          ],
+          "breaks": "no known downstream consumer"
+        },
+        {
+          "column": "V250",
+          "changes": [
+            "null rate 0.66 -> 0.77"
+          ],
+          "breaks": "no known downstream consumer"
+        },
+        {
+          "column": "V251",
+          "changes": [
+            "null rate 0.66 -> 0.77"
+          ],
+          "breaks": "no known downstream consumer"
+        },
+        {
+          "column": "V252",
+          "changes": [
+            "null rate 0.68 -> 0.77"
+          ],
+          "breaks": "no known downstream consumer"
+        },
+        {
+          "column": "V253",
+          "changes": [
+            "null rate 0.68 -> 0.77"
+          ],
+          "breaks": "no known downstream consumer"
+        },
+        {
+          "column": "V254",
+          "changes": [
+            "null rate 0.68 -> 0.77"
+          ],
+          "breaks": "no known downstream consumer"
+        },
+        {
+          "column": "V255",
+          "changes": [
+            "null rate 0.66 -> 0.77"
+          ],
+          "breaks": "no known downstream consumer"
+        },
+        {
+          "column": "V256",
+          "changes": [
+            "null rate 0.66 -> 0.77"
+          ],
+          "breaks": "no known downstream consumer"
+        },
+        {
+          "column": "V257",
+          "changes": [
+            "null rate 0.68 -> 0.77"
+          ],
+          "breaks": "no known downstream consumer"
+        },
+        {
+          "column": "V258",
+          "changes": [
+            "null rate 0.68 -> 0.77"
+          ],
+          "breaks": "no known downstream consumer"
+        },
+        {
+          "column": "V259",
+          "changes": [
+            "null rate 0.66 -> 0.77"
+          ],
+          "breaks": "no known downstream consumer"
+        },
+        {
+          "column": "V26",
+          "changes": [
+            "null rate 0.24 -> 0.17"
+          ],
+          "breaks": "no known downstream consumer"
+        },
+        {
+          "column": "V260",
+          "changes": [
+            "null rate 0.68 -> 0.77"
+          ],
+          "breaks": "no known downstream consumer"
+        },
+        {
+          "column": "V261",
+          "changes": [
+            "null rate 0.68 -> 0.77"
+          ],
+          "breaks": "no known downstream consumer"
+        },
+        {
+          "column": "V262",
+          "changes": [
+            "null rate 0.68 -> 0.77"
+          ],
+          "breaks": "no known downstream consumer"
+        },
+        {
+          "column": "V263",
+          "changes": [
+            "null rate 0.68 -> 0.77"
+          ],
+          "breaks": "no known downstream consumer"
+        },
+        {
+          "column": "V264",
+          "changes": [
+            "null rate 0.68 -> 0.77"
+          ],
+          "breaks": "no known downstream consumer"
+        },
+        {
+          "column": "V265",
+          "changes": [
+            "null rate 0.68 -> 0.77"
+          ],
+          "breaks": "no known downstream consumer"
+        },
+        {
+          "column": "V266",
+          "changes": [
+            "null rate 0.68 -> 0.77"
+          ],
+          "breaks": "no known downstream consumer"
+        },
+        {
+          "column": "V267",
+          "changes": [
+            "null rate 0.68 -> 0.77"
+          ],
+          "breaks": "no known downstream consumer"
+        },
+        {
+          "column": "V268",
+          "changes": [
+            "null rate 0.68 -> 0.77"
+          ],
+          "breaks": "no known downstream consumer"
+        },
+        {
+          "column": "V269",
+          "changes": [
+            "null rate 0.68 -> 0.77"
+          ],
+          "breaks": "no known downstream consumer"
+        },
+        {
+          "column": "V27",
+          "changes": [
+            "null rate 0.24 -> 0.17"
+          ],
+          "breaks": "no known downstream consumer"
+        },
+        {
+          "column": "V270",
+          "changes": [
+            "null rate 0.66 -> 0.77"
+          ],
+          "breaks": "no known downstream consumer"
+        },
+        {
+          "column": "V271",
+          "changes": [
+            "null rate 0.66 -> 0.77"
+          ],
+          "breaks": "no known downstream consumer"
+        },
+        {
+          "column": "V272",
+          "changes": [
+            "null rate 0.66 -> 0.77"
+          ],
+          "breaks": "no known downstream consumer"
+        },
+        {
+          "column": "V273",
+          "changes": [
+            "null rate 0.68 -> 0.77"
+          ],
+          "breaks": "no known downstream consumer"
+        },
+        {
+          "column": "V274",
+          "changes": [
+            "null rate 0.68 -> 0.77"
+          ],
+          "breaks": "no known downstream consumer"
+        },
+        {
+          "column": "V275",
+          "changes": [
+            "null rate 0.68 -> 0.77"
+          ],
+          "breaks": "no known downstream consumer"
+        },
+        {
+          "column": "V276",
+          "changes": [
+            "null rate 0.68 -> 0.77"
+          ],
+          "breaks": "no known downstream consumer"
+        },
+        {
+          "column": "V277",
+          "changes": [
+            "null rate 0.68 -> 0.77"
+          ],
+          "breaks": "no known downstream consumer"
+        },
+        {
+          "column": "V278",
+          "changes": [
+            "null rate 0.68 -> 0.77"
+          ],
+          "breaks": "no known downstream consumer"
+        },
+        {
+          "column": "V28",
+          "changes": [
+            "null rate 0.24 -> 0.17"
+          ],
+          "breaks": "no known downstream consumer"
+        },
+        {
+          "column": "V29",
+          "changes": [
+            "null rate 0.24 -> 0.17"
+          ],
+          "breaks": "no known downstream consumer"
+        },
+        {
+          "column": "V30",
+          "changes": [
+            "null rate 0.24 -> 0.17"
+          ],
+          "breaks": "no known downstream consumer"
+        },
+        {
+          "column": "V31",
+          "changes": [
+            "null rate 0.24 -> 0.17"
+          ],
+          "breaks": "no known downstream consumer"
+        },
+        {
+          "column": "V32",
+          "changes": [
+            "null rate 0.24 -> 0.17"
+          ],
+          "breaks": "no known downstream consumer"
+        },
+        {
+          "column": "V322",
+          "changes": [
+            "null rate 0.75 -> 0.82"
+          ],
+          "breaks": "no known downstream consumer"
+        },
+        {
+          "column": "V323",
+          "changes": [
+            "null rate 0.75 -> 0.82"
+          ],
+          "breaks": "no known downstream consumer"
+        },
+        {
+          "column": "V324",
+          "changes": [
+            "null rate 0.75 -> 0.82"
+          ],
+          "breaks": "no known downstream consumer"
+        },
+        {
+          "column": "V325",
+          "changes": [
+            "null rate 0.75 -> 0.82"
+          ],
+          "breaks": "no known downstream consumer"
+        },
+        {
+          "column": "V326",
+          "changes": [
+            "null rate 0.75 -> 0.82"
+          ],
+          "breaks": "no known downstream consumer"
+        },
+        {
+          "column": "V327",
+          "changes": [
+            "null rate 0.75 -> 0.82"
+          ],
+          "breaks": "no known downstream consumer"
+        },
+        {
+          "column": "V328",
+          "changes": [
+            "null rate 0.75 -> 0.82"
+          ],
+          "breaks": "no known downstream consumer"
+        },
+        {
+          "column": "V329",
+          "changes": [
+            "null rate 0.75 -> 0.82"
+          ],
+          "breaks": "no known downstream consumer"
+        },
+        {
+          "column": "V33",
+          "changes": [
+            "null rate 0.24 -> 0.17"
+          ],
+          "breaks": "no known downstream consumer"
+        },
+        {
+          "column": "V330",
+          "changes": [
+            "null rate 0.75 -> 0.82"
+          ],
+          "breaks": "no known downstream consumer"
+        },
+        {
+          "column": "V331",
+          "changes": [
+            "null rate 0.75 -> 0.82"
+          ],
+          "breaks": "no known downstream consumer"
+        },
+        {
+          "column": "V332",
+          "changes": [
+            "null rate 0.75 -> 0.82"
+          ],
+          "breaks": "no known downstream consumer"
+        },
+        {
+          "column": "V333",
+          "changes": [
+            "null rate 0.75 -> 0.82"
+          ],
+          "breaks": "no known downstream consumer"
+        },
+        {
+          "column": "V334",
+          "changes": [
+            "null rate 0.75 -> 0.82"
+          ],
+          "breaks": "no known downstream consumer"
+        },
+        {
+          "column": "V335",
+          "changes": [
+            "null rate 0.75 -> 0.82"
+          ],
+          "breaks": "no known downstream consumer"
+        },
+        {
+          "column": "V336",
+          "changes": [
+            "null rate 0.75 -> 0.82"
+          ],
+          "breaks": "no known downstream consumer"
+        },
+        {
+          "column": "V337",
+          "changes": [
+            "null rate 0.75 -> 0.82",
+            "range [0.00, 8250.00] -> [0.00, 21600.00]"
+          ],
+          "breaks": "no known downstream consumer"
+        },
+        {
+          "column": "V338",
+          "changes": [
+            "null rate 0.75 -> 0.82",
+            "range [0.00, 8250.00] -> [0.00, 21600.00]"
+          ],
+          "breaks": "no known downstream consumer"
+        },
+        {
+          "column": "V339",
+          "changes": [
+            "null rate 0.75 -> 0.82",
+            "range [0.00, 8250.00] -> [0.00, 21600.00]"
+          ],
+          "breaks": "no known downstream consumer"
+        },
+        {
+          "column": "V34",
+          "changes": [
+            "null rate 0.24 -> 0.17"
+          ],
+          "breaks": "no known downstream consumer"
+        },
+        {
+          "column": "V35",
+          "changes": [
+            "null rate 0.39 -> 0.45"
+          ],
+          "breaks": "no known downstream consumer"
+        },
+        {
+          "column": "V36",
+          "changes": [
+            "null rate 0.39 -> 0.45"
+          ],
+          "breaks": "no known downstream consumer"
+        },
+        {
+          "column": "V37",
+          "changes": [
+            "null rate 0.39 -> 0.45"
+          ],
+          "breaks": "no known downstream consumer"
+        },
+        {
+          "column": "V38",
+          "changes": [
+            "null rate 0.39 -> 0.45"
+          ],
+          "breaks": "no known downstream consumer"
+        },
+        {
+          "column": "V39",
+          "changes": [
+            "null rate 0.39 -> 0.45"
+          ],
+          "breaks": "no known downstream consumer"
+        },
+        {
+          "column": "V40",
+          "changes": [
+            "null rate 0.39 -> 0.45"
+          ],
+          "breaks": "no known downstream consumer"
+        },
+        {
+          "column": "V41",
+          "changes": [
+            "null rate 0.39 -> 0.45"
+          ],
+          "breaks": "no known downstream consumer"
+        },
+        {
+          "column": "V42",
+          "changes": [
+            "null rate 0.39 -> 0.45"
+          ],
+          "breaks": "no known downstream consumer"
+        },
+        {
+          "column": "V43",
+          "changes": [
+            "null rate 0.39 -> 0.45"
+          ],
+          "breaks": "no known downstream consumer"
+        },
+        {
+          "column": "V44",
+          "changes": [
+            "null rate 0.39 -> 0.45"
+          ],
+          "breaks": "no known downstream consumer"
+        },
+        {
+          "column": "V45",
+          "changes": [
+            "null rate 0.39 -> 0.45"
+          ],
+          "breaks": "no known downstream consumer"
+        },
+        {
+          "column": "V46",
+          "changes": [
+            "null rate 0.39 -> 0.45"
+          ],
+          "breaks": "no known downstream consumer"
+        },
+        {
+          "column": "V47",
+          "changes": [
+            "null rate 0.39 -> 0.45"
+          ],
+          "breaks": "no known downstream consumer"
+        },
+        {
+          "column": "V48",
+          "changes": [
+            "null rate 0.39 -> 0.45"
+          ],
+          "breaks": "no known downstream consumer"
+        },
+        {
+          "column": "V49",
+          "changes": [
+            "null rate 0.39 -> 0.45"
+          ],
+          "breaks": "no known downstream consumer"
+        },
+        {
+          "column": "V50",
+          "changes": [
+            "null rate 0.39 -> 0.45"
+          ],
+          "breaks": "no known downstream consumer"
+        },
+        {
+          "column": "V51",
+          "changes": [
+            "null rate 0.39 -> 0.45"
+          ],
+          "breaks": "no known downstream consumer"
+        },
+        {
+          "column": "V52",
+          "changes": [
+            "null rate 0.39 -> 0.45"
+          ],
+          "breaks": "no known downstream consumer"
+        },
+        {
+          "column": "V53",
+          "changes": [
+            "null rate 0.24 -> 0.17",
+            "median 1.000 -> 0.000"
+          ],
+          "breaks": "no known downstream consumer"
+        },
+        {
+          "column": "V54",
+          "changes": [
+            "null rate 0.24 -> 0.17"
+          ],
+          "breaks": "no known downstream consumer"
+        },
+        {
+          "column": "V55",
+          "changes": [
+            "null rate 0.24 -> 0.17"
+          ],
+          "breaks": "no known downstream consumer"
+        },
+        {
+          "column": "V56",
+          "changes": [
+            "null rate 0.24 -> 0.17"
+          ],
+          "breaks": "no known downstream consumer"
+        },
+        {
+          "column": "V57",
+          "changes": [
+            "null rate 0.24 -> 0.17"
+          ],
+          "breaks": "no known downstream consumer"
+        },
+        {
+          "column": "V58",
+          "changes": [
+            "null rate 0.24 -> 0.17"
+          ],
+          "breaks": "no known downstream consumer"
+        },
+        {
+          "column": "V59",
+          "changes": [
+            "null rate 0.24 -> 0.17"
+          ],
+          "breaks": "no known downstream consumer"
+        },
+        {
+          "column": "V60",
+          "changes": [
+            "null rate 0.24 -> 0.17"
+          ],
+          "breaks": "no known downstream consumer"
+        },
+        {
+          "column": "V61",
+          "changes": [
+            "null rate 0.24 -> 0.17"
+          ],
+          "breaks": "no known downstream consumer"
+        },
+        {
+          "column": "V62",
+          "changes": [
+            "null rate 0.24 -> 0.17"
+          ],
+          "breaks": "no known downstream consumer"
+        },
+        {
+          "column": "V63",
+          "changes": [
+            "null rate 0.24 -> 0.17"
+          ],
+          "breaks": "no known downstream consumer"
+        },
+        {
+          "column": "V64",
+          "changes": [
+            "null rate 0.24 -> 0.17"
+          ],
+          "breaks": "no known downstream consumer"
+        },
+        {
+          "column": "V65",
+          "changes": [
+            "null rate 0.24 -> 0.17"
+          ],
+          "breaks": "no known downstream consumer"
+        },
+        {
+          "column": "V66",
+          "changes": [
+            "null rate 0.24 -> 0.17"
+          ],
+          "breaks": "no known downstream consumer"
+        },
+        {
+          "column": "V67",
+          "changes": [
+            "null rate 0.24 -> 0.17"
+          ],
+          "breaks": "no known downstream consumer"
+        },
+        {
+          "column": "V68",
+          "changes": [
+            "null rate 0.24 -> 0.17"
+          ],
+          "breaks": "no known downstream consumer"
+        },
+        {
+          "column": "V69",
+          "changes": [
+            "null rate 0.24 -> 0.17"
+          ],
+          "breaks": "no known downstream consumer"
+        },
+        {
+          "column": "V70",
+          "changes": [
+            "null rate 0.24 -> 0.17"
+          ],
+          "breaks": "no known downstream consumer"
+        },
+        {
+          "column": "V71",
+          "changes": [
+            "null rate 0.24 -> 0.17"
+          ],
+          "breaks": "no known downstream consumer"
+        },
+        {
+          "column": "V72",
+          "changes": [
+            "null rate 0.24 -> 0.17"
+          ],
+          "breaks": "no known downstream consumer"
+        },
+        {
+          "column": "V73",
+          "changes": [
+            "null rate 0.24 -> 0.17"
+          ],
+          "breaks": "no known downstream consumer"
+        },
+        {
+          "column": "V74",
+          "changes": [
+            "null rate 0.24 -> 0.17"
+          ],
+          "breaks": "no known downstream consumer"
+        },
+        {
+          "column": "V75",
+          "changes": [
+            "null rate 0.25 -> 0.31"
+          ],
+          "breaks": "no known downstream consumer"
+        },
+        {
+          "column": "V76",
+          "changes": [
+            "null rate 0.25 -> 0.31"
+          ],
+          "breaks": "no known downstream consumer"
+        },
+        {
+          "column": "V77",
+          "changes": [
+            "null rate 0.25 -> 0.31"
+          ],
+          "breaks": "no known downstream consumer"
+        },
+        {
+          "column": "V78",
+          "changes": [
+            "null rate 0.25 -> 0.31"
+          ],
+          "breaks": "no known downstream consumer"
+        },
+        {
+          "column": "V79",
+          "changes": [
+            "null rate 0.25 -> 0.31"
+          ],
+          "breaks": "no known downstream consumer"
+        },
+        {
+          "column": "V80",
+          "changes": [
+            "null rate 0.25 -> 0.31"
+          ],
+          "breaks": "no known downstream consumer"
+        },
+        {
+          "column": "V81",
+          "changes": [
+            "null rate 0.25 -> 0.31"
+          ],
+          "breaks": "no known downstream consumer"
+        },
+        {
+          "column": "V82",
+          "changes": [
+            "null rate 0.25 -> 0.31"
+          ],
+          "breaks": "no known downstream consumer"
+        },
+        {
+          "column": "V83",
+          "changes": [
+            "null rate 0.25 -> 0.31"
+          ],
+          "breaks": "no known downstream consumer"
+        },
+        {
+          "column": "V84",
+          "changes": [
+            "null rate 0.25 -> 0.31"
+          ],
+          "breaks": "no known downstream consumer"
+        },
+        {
+          "column": "V85",
+          "changes": [
+            "null rate 0.25 -> 0.31"
+          ],
+          "breaks": "no known downstream consumer"
+        },
+        {
+          "column": "V86",
+          "changes": [
+            "null rate 0.25 -> 0.31"
+          ],
+          "breaks": "no known downstream consumer"
+        },
+        {
+          "column": "V87",
+          "changes": [
+            "null rate 0.25 -> 0.31"
+          ],
+          "breaks": "no known downstream consumer"
+        },
+        {
+          "column": "V88",
+          "changes": [
+            "null rate 0.25 -> 0.31"
+          ],
+          "breaks": "no known downstream consumer"
+        },
+        {
+          "column": "V89",
+          "changes": [
+            "null rate 0.25 -> 0.31"
+          ],
+          "breaks": "no known downstream consumer"
+        },
+        {
+          "column": "V90",
+          "changes": [
+            "null rate 0.25 -> 0.31"
+          ],
+          "breaks": "no known downstream consumer"
+        },
+        {
+          "column": "V91",
+          "changes": [
+            "null rate 0.25 -> 0.31"
+          ],
+          "breaks": "no known downstream consumer"
+        },
+        {
+          "column": "V92",
+          "changes": [
+            "null rate 0.25 -> 0.31"
+          ],
+          "breaks": "no known downstream consumer"
+        },
+        {
+          "column": "V93",
+          "changes": [
+            "null rate 0.25 -> 0.31"
+          ],
+          "breaks": "no known downstream consumer"
+        },
+        {
+          "column": "V94",
+          "changes": [
+            "null rate 0.25 -> 0.31"
+          ],
+          "breaks": "no known downstream consumer"
+        },
+        {
+          "column": "customer_id",
+          "changes": [
+            "new frequent values ['C09582', 'C09471', 'C04105']"
+          ],
+          "breaks": "card-id recovery (card_key) and OWNS edges"
+        },
+        {
+          "column": "ts",
+          "changes": [
+            "new frequent values ['2017-01-05 09:44:38', '2017-01-01 06:13:58', '2017-01-09 06:35:09']"
+          ],
+          "breaks": "every as_of-bounded query; the temporal wall"
+        }
+      ],
+      "key": "TransactionID",
+      "key_overlap_count": 0,
+      "key_overlap_sample": [],
+      "samples": {
+        "old": [
+          {
+            "TransactionID": "3000001",
+            "TransactionDT": "141",
+            "TransactionAmt": "50.02",
+            "ProductCD": "H",
+            "card1": "22563",
+            "card2": "399.0",
+            "card3": "150.0",
+            "card4": "american express",
+            "card5": "236.0",
+            "card6": "credit",
+            "addr1": NaN,
+            "addr2": NaN,
+            "dist1": NaN,
+            "dist2": NaN,
+            "P_emaildomain": "yahoo.com",
+            "R_emaildomain": NaN,
+            "C1": "1.0",
+            "C2": "1.0",
+            "C3": "0.0",
+            "C4": "0.0",
+            "C5": "0.0",
+            "C6": "1.0",
+            "C7": "0.0",
+            "C8": "1.0",
+            "C9": "0.0",
+            "C10": "1.0",
+            "C11": "1.0",
+            "C12": "0.0",
+            "C13": "1.0",
+            "C14": "1.0",
+            "D1": "0.0",
+            "D2": NaN,
+            "D3": NaN,
+            "D4": NaN,
+            "D5": NaN,
+            "D6": NaN,
+            "D7": NaN,
+            "D8": "261.95834350585943",
+            "D9": "0.9583330154418944",
+            "D10": NaN,
+            "D11": NaN,
+            "D12": NaN,
+            "D13": NaN,
+            "D14": NaN,
+            "D15": NaN,
+            "M1": NaN,
+            "M2": NaN,
+            "M3": NaN,
+            "M4": NaN,
+            "M5": NaN,
+            "M6": NaN,
+            "M7": NaN,
+            "M8": NaN,
+            "M9": NaN,
+            "V1": NaN,
+            "V2": NaN,
+            "V3": NaN,
+            "V4": NaN,
+            "V5": NaN,
+            "V6": NaN,
+            "V7": NaN,
+            "V8": NaN,
+            "V9": NaN,
+            "V10": NaN,
+            "V11": NaN,
+            "V12": NaN,
+            "V13": NaN,
+            "V14": NaN,
+            "V15": NaN,
+            "V16": NaN,
+            "V17": NaN,
+            "V18": NaN,
+            "V19": NaN,
+            "V20": NaN,
+            "V21": NaN,
+            "V22": NaN,
+            "V23": NaN,
+            "V24": NaN,
+            "V25": NaN,
+            "V26": NaN,
+            "V27": NaN,
+            "V28": NaN,
+            "V29": NaN,
+            "V30": NaN,
+            "V31": NaN,
+            "V32": NaN,
+            "V33": NaN,
+            "V34": NaN,
+            "V35": NaN,
+            "V36": NaN,
+            "V37": NaN,
+            "V38": NaN,
+            "V39": NaN,
+            "V40": NaN,
+            "V41": NaN,
+            "V42": NaN,
+            "V43": NaN,
+            "V44": NaN,
+            "V45": NaN,
+            "V46": NaN,
+            "V47": NaN,
+            "V48": NaN,
+            "V49": NaN,
+            "V50": NaN,
+            "V51": NaN,
+            "V52": NaN,
+            "V53": NaN,
+            "V54": NaN,
+            "V55": NaN,
+            "V56": NaN,
+            "V57": NaN,
+            "V58": NaN,
+            "V59": NaN,
+            "V60": NaN,
+            "V61": NaN,
+            "V62": NaN,
+            "V63": NaN,
+            "V64": NaN,
+            "V65": NaN,
+            "V66": NaN,
+            "V67": NaN,
+            "V68": NaN,
+            "V69": NaN,
+            "V70": NaN,
+            "V71": NaN,
+            "V72": NaN,
+            "V73": NaN,
+            "V74": NaN,
+            "V75": NaN,
+            "V76": NaN,
+            "V77": NaN,
+            "V78": NaN,
+            "V79": NaN,
+            "V80": NaN,
+            "V81": NaN,
+            "V82": NaN,
+            "V83": NaN,
+            "V84": NaN,
+            "V85": NaN,
+            "V86": NaN,
+            "V87": NaN,
+            "V88": NaN,
+            "V89": NaN,
+            "V90": NaN,
+            "V91": NaN,
+            "V92": NaN,
+            "V93": NaN,
+            "V94": NaN,
+            "V95": "0.0",
+            "V96": "0.0",
+            "V97": "0.0",
+            "V98": "0.0",
+            "V99": "0.0",
+            "V100": "0.0",
+            "V101": "0.0",
+            "V102": "0.0",
+            "V103": "0.0",
+            "V104": "0.0",
+            "V105": "0.0",
+            "V106": "0.0",
+            "V107": "1.0",
+            "V108": "1.0",
+            "V109": "1.0",
+            "V110": "1.0",
+            "V111": "1.0",
+            "V112": "1.0",
+            "V113": "1.0",
+            "V114": "1.0",
+            "V115": "1.0",
+            "V116": "1.0",
+            "V117": "1.0",
+            "V118": "1.0",
+            "V119": "1.0",
+            "V120": "1.0",
+            "V121": "1.0",
+            "V122": "1.0",
+            "V123": "1.0",
+            "V124": "1.0",
+            "V125": "1.0",
+            "V126": "0.0",
+            "V127": "0.0",
+            "V128": "0.0",
+            "V129": "0.0",
+            "V130": "0.0",
+            "V131": "0.0",
+            "V132": "0.0",
+            "V133": "0.0",
+            "V134": "0.0",
+            "V135": "0.0",
+            "V136": "0.0",
+            "V137": "0.0",
+            "V138": "0.0",
+            "V139": "0.0",
+            "V140": "0.0",
+            "V141": "0.0",
+            "V142": "0.0",
+            "V143": "12.0",
+            "V144": "16.0",
+            "V145": "132.0",
+            "V146": "0.0",
+            "V147": "0.0",
+            "V148": "0.0",
+            "V149": "0.0",
+            "V150": "1843.0",
+            "V151": "43.0",
+            "V152": "64.0",
+            "V153": "0.0",
+            "V154": "0.0",
+            "V155": "0.0",
+            "V156": "0.0",
+            "V157": "0.0",
+            "V158": "0.0",
+            "V159": "17051.990234375",
+            "V160": "204810.75",
+            "V161": "0.0",
+            "V162": "0.0",
+            "V163": "0.0",
+            "V164": "885.0",
+            "V165": "6115.0",
+            "V166": "1645.0",
+            "V167": "0.0",
+            "V168": "0.0",
+            "V169": "0.0",
+            "V170": "1.0",
+            "V171": "1.0",
+            "V172": "0.0",
+            "V173": "0.0",
+            "V174": "0.0",
+            "V175": "0.0",
+            "V176": "1.0",
+            "V177": "0.0",
+            "V178": "0.0",
+            "V179": "0.0",
+            "V180": "0.0",
+            "V181": "0.0",
+            "V182": "0.0",
+            "V183": "0.0",
+            "V184": "0.0",
+            "V185": "0.0",
+            "V186": "1.0",
+            "V187": "1.0",
+            "V188": "1.0",
+            "V189": "1.0",
+            "V190": "1.0",
+            "V191": "1.0",
+            "V192": "1.0",
+            "V193": "1.0",
+            "V194": "1.0",
+            "V195": "1.0",
+            "V196": "1.0",
+            "V197": "1.0",
+            "V198": "1.0",
+            "V199": "1.0",
+            "V200": "1.0",
+            "V201": "1.0",
+            "V202": "0.0",
+            "V203": "0.0",
+            "V204": "0.0",
+            "V205": "0.0",
+            "V206": "0.0",
+            "V207": "0.0",
+            "V208": "0.0",
+            "V209": "0.0",
+            "V210": "0.0",
+            "V211": "0.0",
+            "V212": "0.0",
+            "V213": "0.0",
+            "V214": "0.0",
+            "V215": "0.0",
+            "V216": "0.0",
+            "V217": "0.0",
+            "V218": "0.0",
+            "V219": "0.0",
+            "V220": "0.0",
+            "V221": "1.0",
+            "V222": "1.0",
+            "V223": "0.0",
+            "V224": "0.0",
+            "V225": "0.0",
+            "V226": "0.0",
+            "V227": "0.0",
+            "V228": "1.0",
+            "V229": "1.0",
+            "V230": "1.0",
+            "V231": "0.0",
+            "V232": "0.0",
+            "V233": "0.0",
+            "V234": "0.0",
+            "V235": "0.0",
+            "V236": "0.0",
+            "V237": "0.0",
+            "V238": "0.0",
+            "V239": "0.0",
+            "V240": "1.0",
+            "V241": "1.0",
+            "V242": "1.0",
+            "V243": "1.0",
+            "V244": "1.0",
+            "V245": "1.0",
+            "V246": "1.0",
+            "V247": "1.0",
+            "V248": "1.0",
+            "V249": "1.0",
+            "V250": "1.0",
+            "V251": "1.0",
+            "V252": "1.0",
+            "V253": "1.0",
+            "V254": "1.0",
+            "V255": "1.0",
+            "V256": "1.0",
+            "V257": "1.0",
+            "V258": "1.0",
+            "V259": "1.0",
+            "V260": "1.0",
+            "V261": "1.0",
+            "V262": "1.0",
+            "V263": "0.0",
+            "V264": "0.0",
+            "V265": "0.0",
+            "V266": "0.0",
+            "V267": "0.0",
+            "V268": "0.0",
+            "V269": "0.0",
+            "V270": "0.0",
+            "V271": "0.0",
+            "V272": "0.0",
+            "V273": "0.0",
+            "V274": "0.0",
+            "V275": "0.0",
+            "V276": "0.0",
+            "V277": "0.0",
+            "V278": "0.0",
+            "V279": "0.0",
+            "V280": "0.0",
+            "V281": "0.0",
+            "V282": "1.0",
+            "V283": "1.0",
+            "V284": "0.0",
+            "V285": "0.0",
+            "V286": "0.0",
+            "V287": "0.0",
+            "V288": "0.0",
+            "V289": "0.0",
+            "V290": "1.0",
+            "V291": "1.0",
+            "V292": "1.0",
+            "V293": "0.0",
+            "V294": "0.0",
+            "V295": "0.0",
+            "V296": "0.0",
+            "V297": "0.0",
+            "V298": "0.0",
+            "V299": "0.0",
+            "V300": "0.0",
+            "V301": "0.0",
+            "V302": "1.0",
+            "V303": "1.0",
+            "V304": "1.0",
+            "V305": "1.0",
+            "V306": "0.0",
+            "V307": "0.0",
+            "V308": "0.0",
+            "V309": "0.0",
+            "V310": "0.0",
+            "V311": "0.0",
+            "V312": "0.0",
+            "V313": "0.0",
+            "V314": "0.0",
+            "V315": "0.0",
+            "V316": "0.0",
+            "V317": "0.0",
+            "V318": "0.0",
+            "V319": "0.0",
+            "V320": "0.0",
+            "V321": "0.0",
+            "V322": "0.0",
+            "V323": "0.0",
+            "V324": "0.0",
+            "V325": "0.0",
+            "V326": "0.0",
+            "V327": "0.0",
+            "V328": "0.0",
+            "V329": "0.0",
+            "V330": "0.0",
+            "V331": "0.0",
+            "V332": "0.0",
+            "V333": "0.0",
+            "V334": "0.0",
+            "V335": "0.0",
+            "V336": "0.0",
+            "V337": "0.0",
+            "V338": "0.0",
+            "V339": "0.0",
+            "customer_id": "C06075",
+            "ts": "2016-07-02 00:02:21",
+            "channel": "online",
+            "risk_score": "0.25"
+          },
+          {
+            "TransactionID": "3000002",
+            "TransactionDT": "161",
+            "TransactionAmt": "31.92",
+            "ProductCD": "W",
+            "card1": "16104",
+            "card2": "111.0",
+            "card3": "150.0",
+            "card4": "mastercard",
+            "card5": "224.0",
+            "card6": "debit",
+            "addr1": "299.0",
+            "addr2": "87.0",
+            "dist1": NaN,
+            "dist2": NaN,
+            "P_emaildomain": "gmail.com",
+            "R_emaildomain": NaN,
+            "C1": "2.0",
+            "C2": "2.0",
+            "C3": "0.0",
+            "C4": "0.0",
+            "C5": "1.0",
+            "C6": "2.0",
+            "C7": "0.0",
+            "C8": "0.0",
+            "C9": "0.0",
+            "C10": "0.0",
+            "C11": "2.0",
+            "C12": "0.0",
+            "C13": "1.0",
+            "C14": "1.0",
+            "D1": "0.0",
+            "D2": NaN,
+            "D3": NaN,
+            "D4": NaN,
+            "D5": NaN,
+            "D6": NaN,
+            "D7": NaN,
+            "D8": NaN,
+            "D9": NaN,
+            "D10": "0.0",
+            "D11": NaN,
+            "D12": NaN,
+            "D13": NaN,
+            "D14": NaN,
+            "D15": NaN,
+            "M1": NaN,
+            "M2": NaN,
+            "M3": NaN,
+            "M4": NaN,
+            "M5": NaN,
+            "M6": "F",
+            "M7": NaN,
+            "M8": NaN,
+            "M9": NaN,
+            "V1": NaN,
+            "V2": NaN,
+            "V3": NaN,
+            "V4": NaN,
+            "V5": NaN,
+            "V6": NaN,
+            "V7": NaN,
+            "V8": NaN,
+            "V9": NaN,
+            "V10": NaN,
+            "V11": NaN,
+            "V12": "0.0",
+            "V13": "0.0",
+            "V14": "1.0",
+            "V15": "0.0",
+            "V16": "0.0",
+            "V17": "0.0",
+            "V18": "0.0",
+            "V19": "0.0",
+            "V20": "0.0",
+            "V21": "0.0",
+            "V22": "0.0",
+            "V23": "1.0",
+            "V24": "1.0",
+            "V25": "0.0",
+            "V26": "0.0",
+            "V27": "0.0",
+            "V28": "0.0",
+            "V29": "0.0",
+            "V30": "0.0",
+            "V31": "0.0",
+            "V32": "0.0",
+            "V33": "0.0",
+            "V34": "0.0",
+            "V35": NaN,
+            "V36": NaN,
+            "V37": NaN,
+            "V38": NaN,
+            "V39": NaN,
+            "V40": NaN,
+            "V41": NaN,
+            "V42": NaN,
+            "V43": NaN,
+            "V44": NaN,
+            "V45": NaN,
+            "V46": NaN,
+            "V47": NaN,
+            "V48": NaN,
+            "V49": NaN,
+            "V50": NaN,
+            "V51": NaN,
+            "V52": NaN,
+            "V53": "0.0",
+            "V54": "0.0",
+            "V55": "1.0",
+            "V56": "1.0",
+            "V57": "0.0",
+            "V58": "0.0",
+            "V59": "0.0",
+            "V60": "0.0",
+            "V61": "0.0",
+            "V62": "0.0",
+            "V63": "0.0",
+            "V64": "0.0",
+            "V65": "1.0",
+            "V66": "0.0",
+            "V67": "0.0",
+            "V68": "0.0",
+            "V69": "0.0",
+            "V70": "0.0",
+            "V71": "0.0",
+            "V72": "0.0",
+            "V73": "0.0",
+            "V74": "0.0",
+            "V75": NaN,
+            "V76": NaN,
+            "V77": NaN,
+            "V78": NaN,
+            "V79": NaN,
+            "V80": NaN,
+            "V81": NaN,
+            "V82": NaN,
+            "V83": NaN,
+            "V84": NaN,
+            "V85": NaN,
+            "V86": NaN,
+            "V87": NaN,
+            "V88": NaN,
+            "V89": NaN,
+            "V90": NaN,
+            "V91": NaN,
+            "V92": NaN,
+            "V93": NaN,
+            "V94": NaN,
+            "V95": "0.0",
+            "V96": "0.0",
+            "V97": "0.0",
+            "V98": "0.0",
+            "V99": "0.0",
+            "V100": "0.0",
+            "V101": "0.0",
+            "V102": "0.0",
+            "V103": "0.0",
+            "V104": "0.0",
+            "V105": "0.0",
+            "V106": "0.0",
+            "V107": "1.0",
+            "V108": "1.0",
+            "V109": "1.0",
+            "V110": "1.0",
+            "V111": "1.0",
+            "V112": "1.0",
+            "V113": "1.0",
+            "V114": "1.0",
+            "V115": "1.0",
+            "V116": "1.0",
+            "V117": "1.0",
+            "V118": "1.0",
+            "V119": "1.0",
+            "V120": "1.0",
+            "V121": "1.0",
+            "V122": "1.0",
+            "V123": "1.0",
+            "V124": "1.0",
+            "V125": "1.0",
+            "V126": "0.0",
+            "V127": "0.0",
+            "V128": "0.0",
+            "V129": "0.0",
+            "V130": "0.0",
+            "V131": "0.0",
+            "V132": "0.0",
+            "V133": "0.0",
+            "V134": "0.0",
+            "V135": "0.0",
+            "V136": "0.0",
+            "V137": "0.0",
+            "V138": NaN,
+            "V139": NaN,
+            "V140": NaN,
+            "V141": NaN,
+            "V142": NaN,
+            "V143": NaN,
+            "V144": NaN,
+            "V145": NaN,
+            "V146": NaN,
+            "V147": NaN,
+            "V148": NaN,
+            "V149": NaN,
+            "V150": NaN,
+            "V151": NaN,
+            "V152": NaN,
+            "V153": NaN,
+            "V154": NaN,
+            "V155": NaN,
+            "V156": NaN,
+            "V157": NaN,
+            "V158": NaN,
+            "V159": NaN,
+            "V160": NaN,
+            "V161": NaN,
+            "V162": NaN,
+            "V163": NaN,
+            "V164": NaN,
+            "V165": NaN,
+            "V166": NaN,
+            "V167": NaN,
+            "V168": NaN,
+            "V169": NaN,
+            "V170": NaN,
+            "V171": NaN,
+            "V172": NaN,
+            "V173": NaN,
+            "V174": NaN,
+            "V175": NaN,
+            "V176": NaN,
+            "V177": NaN,
+            "V178": NaN,
+            "V179": NaN,
+            "V180": NaN,
+            "V181": NaN,
+            "V182": NaN,
+            "V183": NaN,
+            "V184": NaN,
+            "V185": NaN,
+            "V186": NaN,
+            "V187": NaN,
+            "V188": NaN,
+            "V189": NaN,
+            "V190": NaN,
+            "V191": NaN,
+            "V192": NaN,
+            "V193": NaN,
+            "V194": NaN,
+            "V195": NaN,
+            "V196": NaN,
+            "V197": NaN,
+            "V198": NaN,
+            "V199": NaN,
+            "V200": NaN,
+            "V201": NaN,
+            "V202": NaN,
+            "V203": NaN,
+            "V204": NaN,
+            "V205": NaN,
+            "V206": NaN,
+            "V207": NaN,
+            "V208": NaN,
+            "V209": NaN,
+            "V210": NaN,
+            "V211": NaN,
+            "V212": NaN,
+            "V213": NaN,
+            "V214": NaN,
+            "V215": NaN,
+            "V216": NaN,
+            "V217": NaN,
+            "V218": NaN,
+            "V219": NaN,
+            "V220": NaN,
+            "V221": NaN,
+            "V222": NaN,
+            "V223": NaN,
+            "V224": NaN,
+            "V225": NaN,
+            "V226": NaN,
+            "V227": NaN,
+            "V228": NaN,
+            "V229": NaN,
+            "V230": NaN,
+            "V231": NaN,
+            "V232": NaN,
+            "V233": NaN,
+            "V234": NaN,
+            "V235": NaN,
+            "V236": NaN,
+            "V237": NaN,
+            "V238": NaN,
+            "V239": NaN,
+            "V240": NaN,
+            "V241": NaN,
+            "V242": NaN,
+            "V243": NaN,
+            "V244": NaN,
+            "V245": NaN,
+            "V246": NaN,
+            "V247": NaN,
+            "V248": NaN,
+            "V249": NaN,
+            "V250": NaN,
+            "V251": NaN,
+            "V252": NaN,
+            "V253": NaN,
+            "V254": NaN,
+            "V255": NaN,
+            "V256": NaN,
+            "V257": NaN,
+            "V258": NaN,
+            "V259": NaN,
+            "V260": NaN,
+            "V261": NaN,
+            "V262": NaN,
+            "V263": NaN,
+            "V264": NaN,
+            "V265": NaN,
+            "V266": NaN,
+            "V267": NaN,
+            "V268": NaN,
+            "V269": NaN,
+            "V270": NaN,
+            "V271": NaN,
+            "V272": NaN,
+            "V273": NaN,
+            "V274": NaN,
+            "V275": NaN,
+            "V276": NaN,
+            "V277": NaN,
+            "V278": NaN,
+            "V279": "0.0",
+            "V280": "0.0",
+            "V281": "0.0",
+            "V282": "1.0",
+            "V283": "1.0",
+            "V284": "0.0",
+            "V285": "0.0",
+            "V286": "0.0",
+            "V287": "0.0",
+            "V288": "0.0",
+            "V289": "0.0",
+            "V290": "1.0",
+            "V291": "1.0",
+            "V292": "1.0",
+            "V293": "0.0",
+            "V294": "0.0",
+            "V295": "0.0",
+            "V296": "0.0",
+            "V297": "0.0",
+            "V298": "0.0",
+            "V299": "0.0",
+            "V300": "0.0",
+            "V301": "0.0",
+            "V302": "0.0",
+            "V303": "0.0",
+            "V304": "0.0",
+            "V305": "1.0",
+            "V306": "0.0",
+            "V307": "0.0",
+            "V308": "0.0",
+            "V309": "0.0",
+            "V310": "0.0",
+            "V311": "0.0",
+            "V312": "0.0",
+            "V313": "0.0",
+            "V314": "0.0",
+            "V315": "0.0",
+            "V316": "0.0",
+            "V317": "0.0",
+            "V318": "0.0",
+            "V319": "0.0",
+            "V320": "0.0",
+            "V321": "0.0",
+            "V322": NaN,
+            "V323": NaN,
+            "V324": NaN,
+            "V325": NaN,
+            "V326": NaN,
+            "V327": NaN,
+            "V328": NaN,
+            "V329": NaN,
+            "V330": NaN,
+            "V331": NaN,
+            "V332": NaN,
+            "V333": NaN,
+            "V334": NaN,
+            "V335": NaN,
+            "V336": NaN,
+            "V337": NaN,
+            "V338": NaN,
+            "V339": NaN,
+            "customer_id": "C07096",
+            "ts": "2016-07-02 00:02:41",
+            "channel": "in_person",
+            "risk_score": "0.06"
+          },
+          {
+            "TransactionID": "3000003",
+            "TransactionDT": "187",
+            "TransactionAmt": "83.78",
+            "ProductCD": "C",
+            "card1": "22374",
+            "card2": "500.0",
+            "card3": "185.0",
+            "card4": "mastercard",
+            "card5": "219.0",
+            "card6": "credit",
+            "addr1": NaN,
+            "addr2": NaN,
+            "dist1": NaN,
+            "dist2": NaN,
+            "P_emaildomain": "hotmail.com",
+            "R_emaildomain": "hotmail.com",
+            "C1": "24.0",
+            "C2": "17.0",
+            "C3": "0.0",
+            "C4": "4.0",
+            "C5": "0.0",
+            "C6": "4.0",
+            "C7": "4.0",
+            "C8": "21.0",
+            "C9": "0.0",
+            "C10": "8.0",
+            "C11": "10.0",
+            "C12": "10.0",
+            "C13": "2.0",
+            "C14": "2.0",
+            "D1": "1.0",
+            "D2": NaN,
+            "D3": "0.0",
+            "D4": NaN,
+            "D5": NaN,
+            "D6": NaN,
+            "D7": NaN,
+            "D8": "1.0",
+            "D9": "0.0",
+            "D10": "0.0",
+            "D11": NaN,
+            "D12": NaN,
+            "D13": NaN,
+            "D14": "0.0",
+            "D15": NaN,
+            "M1": NaN,
+            "M2": NaN,
+            "M3": NaN,
+            "M4": "M2",
+            "M5": NaN,
+            "M6": NaN,
+            "M7": NaN,
+            "M8": NaN,
+            "M9": NaN,
+            "V1": NaN,
+            "V2": NaN,
+            "V3": NaN,
+            "V4": NaN,
+            "V5": NaN,
+            "V6": NaN,
+            "V7": NaN,
+            "V8": NaN,
+            "V9": NaN,
+            "V10": NaN,
+            "V11": NaN,
+            "V12": "0.0",
+            "V13": "0.0",
+            "V14": "1.0",
+            "V15": "0.0",
+            "V16": "0.0",
+            "V17": "0.0",
+            "V18": "0.0",
+            "V19": "0.0",
+            "V20": "0.0",
+            "V21": "0.0",
+            "V22": "0.0",
+            "V23": "1.0",
+            "V24": "1.0",
+            "V25": "0.0",
+            "V26": "0.0",
+            "V27": "0.0",
+            "V28": "0.0",
+            "V29": "0.0",
+            "V30": "0.0",
+            "V31": "0.0",
+            "V32": "0.0",
+            "V33": "0.0",
+            "V34": "0.0",
+            "V35": NaN,
+            "V36": NaN,
+            "V37": NaN,
+            "V38": NaN,
+            "V39": NaN,
+            "V40": NaN,
+            "V41": NaN,
+            "V42": NaN,
+            "V43": NaN,
+            "V44": NaN,
+            "V45": NaN,
+            "V46": NaN,
+            "V47": NaN,
+            "V48": NaN,
+            "V49": NaN,
+            "V50": NaN,
+            "V51": NaN,
+            "V52": NaN,
+            "V53": "0.0",
+            "V54": "0.0",
+            "V55": "2.0",
+            "V56": "2.0",
+            "V57": "0.0",
+            "V58": "0.0",
+            "V59": "0.0",
+            "V60": "0.0",
+            "V61": "0.0",
+            "V62": "0.0",
+            "V63": "0.0",
+            "V64": "0.0",
+            "V65": "1.0",
+            "V66": "0.0",
+            "V67": "0.0",
+            "V68": "0.0",
+            "V69": "0.0",
+            "V70": "0.0",
+            "V71": "0.0",
+            "V72": "0.0",
+            "V73": "0.0",
+            "V74": "0.0",
+            "V75": NaN,
+            "V76": NaN,
+            "V77": NaN,
+            "V78": NaN,
+            "V79": NaN,
+            "V80": NaN,
+            "V81": NaN,
+            "V82": NaN,
+            "V83": NaN,
+            "V84": NaN,
+            "V85": NaN,
+            "V86": NaN,
+            "V87": NaN,
+            "V88": NaN,
+            "V89": NaN,
+            "V90": NaN,
+            "V91": NaN,
+            "V92": NaN,
+            "V93": NaN,
+            "V94": NaN,
+            "V95": "0.0",
+            "V96": "0.0",
+            "V97": "0.0",
+            "V98": "0.0",
+            "V99": "0.0",
+            "V100": "0.0",
+            "V101": "0.0",
+            "V102": "0.0",
+            "V103": "0.0",
+            "V104": "0.0",
+            "V105": "0.0",
+            "V106": "0.0",
+            "V107": "1.0",
+            "V108": "1.0",
+            "V109": "1.0",
+            "V110": "1.0",
+            "V111": "1.0",
+            "V112": "1.0",
+            "V113": "1.0",
+            "V114": "1.0",
+            "V115": "1.0",
+            "V116": "1.0",
+            "V117": "1.0",
+            "V118": "1.0",
+            "V119": "1.0",
+            "V120": "1.0",
+            "V121": "1.0",
+            "V122": "1.0",
+            "V123": "1.0",
+            "V124": "1.0",
+            "V125": "1.0",
+            "V126": "0.0",
+            "V127": "0.0",
+            "V128": "0.0",
+            "V129": "0.0",
+            "V130": "0.0",
+            "V131": "0.0",
+            "V132": "0.0",
+            "V133": "0.0",
+            "V134": "0.0",
+            "V135": "0.0",
+            "V136": "0.0",
+            "V137": "0.0",
+            "V138": NaN,
+            "V139": NaN,
+            "V140": NaN,
+            "V141": NaN,
+            "V142": NaN,
+            "V143": NaN,
+            "V144": NaN,
+            "V145": NaN,
+            "V146": NaN,
+            "V147": NaN,
+            "V148": NaN,
+            "V149": NaN,
+            "V150": NaN,
+            "V151": NaN,
+            "V152": NaN,
+            "V153": NaN,
+            "V154": NaN,
+            "V155": NaN,
+            "V156": NaN,
+            "V157": NaN,
+            "V158": NaN,
+            "V159": NaN,
+            "V160": NaN,
+            "V161": NaN,
+            "V162": NaN,
+            "V163": NaN,
+            "V164": NaN,
+            "V165": NaN,
+            "V166": NaN,
+            "V167": NaN,
+            "V168": NaN,
+            "V169": NaN,
+            "V170": NaN,
+            "V171": NaN,
+            "V172": NaN,
+            "V173": NaN,
+            "V174": NaN,
+            "V175": NaN,
+            "V176": NaN,
+            "V177": NaN,
+            "V178": NaN,
+            "V179": NaN,
+            "V180": NaN,
+            "V181": NaN,
+            "V182": NaN,
+            "V183": NaN,
+            "V184": NaN,
+            "V185": NaN,
+            "V186": NaN,
+            "V187": NaN,
+            "V188": NaN,
+            "V189": NaN,
+            "V190": NaN,
+            "V191": NaN,
+            "V192": NaN,
+            "V193": NaN,
+            "V194": NaN,
+            "V195": NaN,
+            "V196": NaN,
+            "V197": NaN,
+            "V198": NaN,
+            "V199": NaN,
+            "V200": NaN,
+            "V201": NaN,
+            "V202": NaN,
+            "V203": NaN,
+            "V204": NaN,
+            "V205": NaN,
+            "V206": NaN,
+            "V207": NaN,
+            "V208": NaN,
+            "V209": NaN,
+            "V210": NaN,
+            "V211": NaN,
+            "V212": NaN,
+            "V213": NaN,
+            "V214": NaN,
+            "V215": NaN,
+            "V216": NaN,
+            "V217": NaN,
+            "V218": NaN,
+            "V219": NaN,
+            "V220": NaN,
+            "V221": NaN,
+            "V222": NaN,
+            "V223": NaN,
+            "V224": NaN,
+            "V225": NaN,
+            "V226": NaN,
+            "V227": NaN,
+            "V228": NaN,
+            "V229": NaN,
+            "V230": NaN,
+            "V231": NaN,
+            "V232": NaN,
+            "V233": NaN,
+            "V234": NaN,
+            "V235": NaN,
+            "V236": NaN,
+            "V237": NaN,
+            "V238": NaN,
+            "V239": NaN,
+            "V240": NaN,
+            "V241": NaN,
+            "V242": NaN,
+            "V243": NaN,
+            "V244": NaN,
+            "V245": NaN,
+            "V246": NaN,
+            "V247": NaN,
+            "V248": NaN,
+            "V249": NaN,
+            "V250": NaN,
+            "V251": NaN,
+            "V252": NaN,
+            "V253": NaN,
+            "V254": NaN,
+            "V255": NaN,
+            "V256": NaN,
+            "V257": NaN,
+            "V258": NaN,
+            "V259": NaN,
+            "V260": NaN,
+            "V261": NaN,
+            "V262": NaN,
+            "V263": NaN,
+            "V264": NaN,
+            "V265": NaN,
+            "V266": NaN,
+            "V267": NaN,
+            "V268": NaN,
+            "V269": NaN,
+            "V270": NaN,
+            "V271": NaN,
+            "V272": NaN,
+            "V273": NaN,
+            "V274": NaN,
+            "V275": NaN,
+            "V276": NaN,
+            "V277": NaN,
+            "V278": NaN,
+            "V279": "1.0",
+            "V280": "1.0",
+            "V281": "0.0",
+            "V282": "2.0",
+            "V283": "2.0",
+            "V284": "0.0",
+            "V285": "0.0",
+            "V286": "0.0",
+            "V287": "0.0",
+            "V288": "0.0",
+            "V289": "0.0",
+            "V290": "2.0",
+            "V291": "2.0",
+            "V292": "2.0",
+            "V293": "1.0",
+            "V294": "1.0",
+            "V295": "1.0",
+            "V296": "0.0",
+            "V297": "0.0",
+            "V298": "0.0",
+            "V299": "0.0",
+            "V300": "0.0",
+            "V301": "0.0",
+            "V302": "0.0",
+            "V303": "0.0",
+            "V304": "0.0",
+            "V305": "1.0",
+            "V306": "83.74210357666016",
+            "V307": "83.74210357666016",
+            "V308": "83.74210357666016",
+            "V309": "0.0",
+            "V310": "0.0",
+            "V311": "0.0",
+            "V312": "0.0",
+            "V313": "0.0",
+            "V314": "0.0",
+            "V315": "0.0",
+            "V316": "83.74210357666016",
+            "V317": "83.74210357666016",
+            "V318": "83.74210357666016",
+            "V319": "0.0",
+            "V320": "0.0",
+            "V321": "0.0",
+            "V322": NaN,
+            "V323": NaN,
+            "V324": NaN,
+            "V325": NaN,
+            "V326": NaN,
+            "V327": NaN,
+            "V328": NaN,
+            "V329": NaN,
+            "V330": NaN,
+            "V331": NaN,
+            "V332": NaN,
+            "V333": NaN,
+            "V334": NaN,
+            "V335": NaN,
+            "V336": NaN,
+            "V337": NaN,
+            "V338": NaN,
+            "V339": NaN,
+            "customer_id": "C11919",
+            "ts": "2016-07-02 00:03:07",
+            "channel": "online",
+            "risk_score": "0.52"
+          }
+        ],
+        "new": [
+          {
+            "TransactionID": "3601722",
+            "TransactionDT": "15811220",
+            "TransactionAmt": "168.98",
+            "ProductCD": "W",
+            "card1": "22457",
+            "card2": "302.0",
+            "card3": "150.0",
+            "card4": "visa",
+            "card5": "226.0",
+            "card6": "credit",
+            "addr1": "325.0",
+            "addr2": "87.0",
+            "dist1": "2.0",
+            "dist2": NaN,
+            "P_emaildomain": "anonymous.com",
+            "R_emaildomain": NaN,
+            "C1": "123.0",
+            "C2": "112.0",
+            "C3": "0.0",
+            "C4": "0.0",
+            "C5": "85.0",
+            "C6": "89.0",
+            "C7": "0.0",
+            "C8": "0.0",
+            "C9": "70.0",
+            "C10": "0.0",
+            "C11": "95.0",
+            "C12": "0.0",
+            "C13": "402.0",
+            "C14": "105.0",
+            "D1": "484.0",
+            "D2": "484.0",
+            "D3": "0.0",
+            "D4": "484.0",
+            "D5": "0.0",
+            "D6": NaN,
+            "D7": NaN,
+            "D8": NaN,
+            "D9": NaN,
+            "D10": "484.0",
+            "D11": "428.0",
+            "D12": NaN,
+            "D13": NaN,
+            "D14": NaN,
+            "D15": "484.0",
+            "M1": "T",
+            "M2": "T",
+            "M3": "T",
+            "M4": "M0",
+            "M5": "T",
+            "M6": "T",
+            "M7": "T",
+            "M8": "T",
+            "M9": "T",
+            "V1": "1.0",
+            "V2": "1.0",
+            "V3": "1.0",
+            "V4": "1.0",
+            "V5": "1.0",
+            "V6": "1.0",
+            "V7": "1.0",
+            "V8": "1.0",
+            "V9": "1.0",
+            "V10": "0.0",
+            "V11": "0.0",
+            "V12": "0.0",
+            "V13": "0.0",
+            "V14": "1.0",
+            "V15": "0.0",
+            "V16": "0.0",
+            "V17": "0.0",
+            "V18": "0.0",
+            "V19": "1.0",
+            "V20": "1.0",
+            "V21": "0.0",
+            "V22": "0.0",
+            "V23": "1.0",
+            "V24": "1.0",
+            "V25": "1.0",
+            "V26": "1.0",
+            "V27": "0.0",
+            "V28": "0.0",
+            "V29": "0.0",
+            "V30": "0.0",
+            "V31": "0.0",
+            "V32": "0.0",
+            "V33": "0.0",
+            "V34": "0.0",
+            "V35": "0.0",
+            "V36": "0.0",
+            "V37": "1.0",
+            "V38": "1.0",
+            "V39": "0.0",
+            "V40": "0.0",
+            "V41": "1.0",
+            "V42": "0.0",
+            "V43": "0.0",
+            "V44": "1.0",
+            "V45": "1.0",
+            "V46": "1.0",
+            "V47": "1.0",
+            "V48": "0.0",
+            "V49": "0.0",
+            "V50": "0.0",
+            "V51": "0.0",
+            "V52": "0.0",
+            "V53": "0.0",
+            "V54": "0.0",
+            "V55": "1.0",
+            "V56": "1.0",
+            "V57": "0.0",
+            "V58": "0.0",
+            "V59": "0.0",
+            "V60": "0.0",
+            "V61": "1.0",
+            "V62": "1.0",
+            "V63": "0.0",
+            "V64": "0.0",
+            "V65": "1.0",
+            "V66": "1.0",
+            "V67": "1.0",
+            "V68": "0.0",
+            "V69": "0.0",
+            "V70": "0.0",
+            "V71": "0.0",
+            "V72": "0.0",
+            "V73": "0.0",
+            "V74": "0.0",
+            "V75": "0.0",
+            "V76": "0.0",
+            "V77": "1.0",
+            "V78": "1.0",
+            "V79": "0.0",
+            "V80": "0.0",
+            "V81": "0.0",
+            "V82": "1.0",
+            "V83": "1.0",
+            "V84": "0.0",
+            "V85": "0.0",
+            "V86": "1.0",
+            "V87": "1.0",
+            "V88": "1.0",
+            "V89": "0.0",
+            "V90": "0.0",
+            "V91": "0.0",
+            "V92": "0.0",
+            "V93": "0.0",
+            "V94": "0.0",
+            "V95": "3.0",
+            "V96": "10.0",
+            "V97": "4.0",
+            "V98": "0.0",
+            "V99": "6.0",
+            "V100": "1.0",
+            "V101": "3.0",
+            "V102": "4.0",
+            "V103": "3.0",
+            "V104": "0.0",
+            "V105": "0.0",
+            "V106": "0.0",
+            "V107": "1.0",
+            "V108": "1.0",
+            "V109": "1.0",
+            "V110": "1.0",
+            "V111": "1.0",
+            "V112": "1.0",
+            "V113": "1.0",
+            "V114": "1.0",
+            "V115": "1.0",
+            "V116": "1.0",
+            "V117": "1.0",
+            "V118": "1.0",
+            "V119": "1.0",
+            "V120": "1.0",
+            "V121": "1.0",
+            "V122": "1.0",
+            "V123": "1.0",
+            "V124": "1.0",
+            "V125": "1.0",
+            "V126": "527.0",
+            "V127": "1763.0",
+            "V128": "708.0",
+            "V129": "0.0",
+            "V130": "1043.0",
+            "V131": "181.0",
+            "V132": "527.0",
+            "V133": "720.0",
+            "V134": "527.0",
+            "V135": "0.0",
+            "V136": "0.0",
+            "V137": "0.0",
+            "V138": NaN,
+            "V139": NaN,
+            "V140": NaN,
+            "V141": NaN,
+            "V142": NaN,
+            "V143": NaN,
+            "V144": NaN,
+            "V145": NaN,
+            "V146": NaN,
+            "V147": NaN,
+            "V148": NaN,
+            "V149": NaN,
+            "V150": NaN,
+            "V151": NaN,
+            "V152": NaN,
+            "V153": NaN,
+            "V154": NaN,
+            "V155": NaN,
+            "V156": NaN,
+            "V157": NaN,
+            "V158": NaN,
+            "V159": NaN,
+            "V160": NaN,
+            "V161": NaN,
+            "V162": NaN,
+            "V163": NaN,
+            "V164": NaN,
+            "V165": NaN,
+            "V166": NaN,
+            "V167": NaN,
+            "V168": NaN,
+            "V169": NaN,
+            "V170": NaN,
+            "V171": NaN,
+            "V172": NaN,
+            "V173": NaN,
+            "V174": NaN,
+            "V175": NaN,
+            "V176": NaN,
+            "V177": NaN,
+            "V178": NaN,
+            "V179": NaN,
+            "V180": NaN,
+            "V181": NaN,
+            "V182": NaN,
+            "V183": NaN,
+            "V184": NaN,
+            "V185": NaN,
+            "V186": NaN,
+            "V187": NaN,
+            "V188": NaN,
+            "V189": NaN,
+            "V190": NaN,
+            "V191": NaN,
+            "V192": NaN,
+            "V193": NaN,
+            "V194": NaN,
+            "V195": NaN,
+            "V196": NaN,
+            "V197": NaN,
+            "V198": NaN,
+            "V199": NaN,
+            "V200": NaN,
+            "V201": NaN,
+            "V202": NaN,
+            "V203": NaN,
+            "V204": NaN,
+            "V205": NaN,
+            "V206": NaN,
+            "V207": NaN,
+            "V208": NaN,
+            "V209": NaN,
+            "V210": NaN,
+            "V211": NaN,
+            "V212": NaN,
+            "V213": NaN,
+            "V214": NaN,
+            "V215": NaN,
+            "V216": NaN,
+            "V217": NaN,
+            "V218": NaN,
+            "V219": NaN,
+            "V220": NaN,
+            "V221": NaN,
+            "V222": NaN,
+            "V223": NaN,
+            "V224": NaN,
+            "V225": NaN,
+            "V226": NaN,
+            "V227": NaN,
+            "V228": NaN,
+            "V229": NaN,
+            "V230": NaN,
+            "V231": NaN,
+            "V232": NaN,
+            "V233": NaN,
+            "V234": NaN,
+            "V235": NaN,
+            "V236": NaN,
+            "V237": NaN,
+            "V238": NaN,
+            "V239": NaN,
+            "V240": NaN,
+            "V241": NaN,
+            "V242": NaN,
+            "V243": NaN,
+            "V244": NaN,
+            "V245": NaN,
+            "V246": NaN,
+            "V247": NaN,
+            "V248": NaN,
+            "V249": NaN,
+            "V250": NaN,
+            "V251": NaN,
+            "V252": NaN,
+            "V253": NaN,
+            "V254": NaN,
+            "V255": NaN,
+            "V256": NaN,
+            "V257": NaN,
+            "V258": NaN,
+            "V259": NaN,
+            "V260": NaN,
+            "V261": NaN,
+            "V262": NaN,
+            "V263": NaN,
+            "V264": NaN,
+            "V265": NaN,
+            "V266": NaN,
+            "V267": NaN,
+            "V268": NaN,
+            "V269": NaN,
+            "V270": NaN,
+            "V271": NaN,
+            "V272": NaN,
+            "V273": NaN,
+            "V274": NaN,
+            "V275": NaN,
+            "V276": NaN,
+            "V277": NaN,
+            "V278": NaN,
+            "V279": "6.0",
+            "V280": "12.0",
+            "V281": "0.0",
+            "V282": "0.0",
+            "V283": "0.0",
+            "V284": "1.0",
+            "V285": "14.0",
+            "V286": "0.0",
+            "V287": "5.0",
+            "V288": "0.0",
+            "V289": "0.0",
+            "V290": "2.0",
+            "V291": "3.0",
+            "V292": "2.0",
+            "V293": "5.0",
+            "V294": "8.0",
+            "V295": "7.0",
+            "V296": "0.0",
+            "V297": "0.0",
+            "V298": "0.0",
+            "V299": "0.0",
+            "V300": "0.0",
+            "V301": "0.0",
+            "V302": "0.0",
+            "V303": "0.0",
+            "V304": "0.0",
+            "V305": "1.0",
+            "V306": "765.0",
+            "V307": "3539.0",
+            "V308": "1833.0",
+            "V309": "87.0",
+            "V310": "2334.0",
+            "V311": "0.0",
+            "V312": "821.0",
+            "V313": "0.0",
+            "V314": "0.0",
+            "V315": "0.0",
+            "V316": "678.0",
+            "V317": "1205.0",
+            "V318": "1012.0",
+            "V319": "0.0",
+            "V320": "0.0",
+            "V321": "0.0",
+            "V322": NaN,
+            "V323": NaN,
+            "V324": NaN,
+            "V325": NaN,
+            "V326": NaN,
+            "V327": NaN,
+            "V328": NaN,
+            "V329": NaN,
+            "V330": NaN,
+            "V331": NaN,
+            "V332": NaN,
+            "V333": NaN,
+            "V334": NaN,
+            "V335": NaN,
+            "V336": NaN,
+            "V337": NaN,
+            "V338": NaN,
+            "V339": NaN,
+            "customer_id": "C00543",
+            "ts": "2017-01-01 00:00:20",
+            "channel": "in_person",
+            "risk_score": "0.06"
+          },
+          {
+            "TransactionID": "3602445",
+            "TransactionDT": "15811225",
+            "TransactionAmt": "1053.79",
+            "ProductCD": "W",
+            "card1": "16300",
+            "card2": "327.0",
+            "card3": "150.0",
+            "card4": "discover",
+            "card5": "102.0",
+            "card6": "credit",
+            "addr1": "315.0",
+            "addr2": "87.0",
+            "dist1": NaN,
+            "dist2": NaN,
+            "P_emaildomain": "aol.com",
+            "R_emaildomain": NaN,
+            "C1": "1.0",
+            "C2": "1.0",
+            "C3": "0.0",
+            "C4": "0.0",
+            "C5": "1.0",
+            "C6": "1.0",
+            "C7": "0.0",
+            "C8": "0.0",
+            "C9": "0.0",
+            "C10": "0.0",
+            "C11": "1.0",
+            "C12": "0.0",
+            "C13": "2.0",
+            "C14": "1.0",
+            "D1": "32.0",
+            "D2": "32.0",
+            "D3": "31.0",
+            "D4": NaN,
+            "D5": NaN,
+            "D6": NaN,
+            "D7": NaN,
+            "D8": NaN,
+            "D9": NaN,
+            "D10": "31.0",
+            "D11": NaN,
+            "D12": NaN,
+            "D13": NaN,
+            "D14": NaN,
+            "D15": NaN,
+            "M1": NaN,
+            "M2": NaN,
+            "M3": NaN,
+            "M4": NaN,
+            "M5": NaN,
+            "M6": "T",
+            "M7": NaN,
+            "M8": NaN,
+            "M9": NaN,
+            "V1": NaN,
+            "V2": NaN,
+            "V3": NaN,
+            "V4": NaN,
+            "V5": NaN,
+            "V6": NaN,
+            "V7": NaN,
+            "V8": NaN,
+            "V9": NaN,
+            "V10": NaN,
+            "V11": NaN,
+            "V12": "0.0",
+            "V13": "0.0",
+            "V14": "1.0",
+            "V15": "0.0",
+            "V16": "0.0",
+            "V17": "0.0",
+            "V18": "0.0",
+            "V19": "1.0",
+            "V20": "1.0",
+            "V21": "0.0",
+            "V22": "0.0",
+            "V23": "1.0",
+            "V24": "1.0",
+            "V25": "1.0",
+            "V26": "1.0",
+            "V27": "0.0",
+            "V28": "0.0",
+            "V29": "1.0",
+            "V30": "1.0",
+            "V31": "0.0",
+            "V32": "0.0",
+            "V33": "0.0",
+            "V34": "0.0",
+            "V35": NaN,
+            "V36": NaN,
+            "V37": NaN,
+            "V38": NaN,
+            "V39": NaN,
+            "V40": NaN,
+            "V41": NaN,
+            "V42": NaN,
+            "V43": NaN,
+            "V44": NaN,
+            "V45": NaN,
+            "V46": NaN,
+            "V47": NaN,
+            "V48": NaN,
+            "V49": NaN,
+            "V50": NaN,
+            "V51": NaN,
+            "V52": NaN,
+            "V53": "0.0",
+            "V54": "0.0",
+            "V55": "1.0",
+            "V56": "1.0",
+            "V57": "0.0",
+            "V58": "0.0",
+            "V59": "0.0",
+            "V60": "0.0",
+            "V61": "1.0",
+            "V62": "1.0",
+            "V63": "0.0",
+            "V64": "0.0",
+            "V65": "1.0",
+            "V66": "1.0",
+            "V67": "1.0",
+            "V68": "0.0",
+            "V69": "1.0",
+            "V70": "1.0",
+            "V71": "0.0",
+            "V72": "0.0",
+            "V73": "0.0",
+            "V74": "0.0",
+            "V75": NaN,
+            "V76": NaN,
+            "V77": NaN,
+            "V78": NaN,
+            "V79": NaN,
+            "V80": NaN,
+            "V81": NaN,
+            "V82": NaN,
+            "V83": NaN,
+            "V84": NaN,
+            "V85": NaN,
+            "V86": NaN,
+            "V87": NaN,
+            "V88": NaN,
+            "V89": NaN,
+            "V90": NaN,
+            "V91": NaN,
+            "V92": NaN,
+            "V93": NaN,
+            "V94": NaN,
+            "V95": "0.0",
+            "V96": "0.0",
+            "V97": "0.0",
+            "V98": "0.0",
+            "V99": "0.0",
+            "V100": "0.0",
+            "V101": "0.0",
+            "V102": "0.0",
+            "V103": "0.0",
+            "V104": "0.0",
+            "V105": "0.0",
+            "V106": "0.0",
+            "V107": "1.0",
+            "V108": "1.0",
+            "V109": "1.0",
+            "V110": "1.0",
+            "V111": "1.0",
+            "V112": "1.0",
+            "V113": "1.0",
+            "V114": "1.0",
+            "V115": "1.0",
+            "V116": "1.0",
+            "V117": "1.0",
+            "V118": "1.0",
+            "V119": "1.0",
+            "V120": "1.0",
+            "V121": "1.0",
+            "V122": "1.0",
+            "V123": "1.0",
+            "V124": "1.0",
+            "V125": "1.0",
+            "V126": "0.0",
+            "V127": "0.0",
+            "V128": "0.0",
+            "V129": "0.0",
+            "V130": "0.0",
+            "V131": "0.0",
+            "V132": "0.0",
+            "V133": "0.0",
+            "V134": "0.0",
+            "V135": "0.0",
+            "V136": "0.0",
+            "V137": "0.0",
+            "V138": NaN,
+            "V139": NaN,
+            "V140": NaN,
+            "V141": NaN,
+            "V142": NaN,
+            "V143": NaN,
+            "V144": NaN,
+            "V145": NaN,
+            "V146": NaN,
+            "V147": NaN,
+            "V148": NaN,
+            "V149": NaN,
+            "V150": NaN,
+            "V151": NaN,
+            "V152": NaN,
+            "V153": NaN,
+            "V154": NaN,
+            "V155": NaN,
+            "V156": NaN,
+            "V157": NaN,
+            "V158": NaN,
+            "V159": NaN,
+            "V160": NaN,
+            "V161": NaN,
+            "V162": NaN,
+            "V163": NaN,
+            "V164": NaN,
+            "V165": NaN,
+            "V166": NaN,
+            "V167": NaN,
+            "V168": NaN,
+            "V169": NaN,
+            "V170": NaN,
+            "V171": NaN,
+            "V172": NaN,
+            "V173": NaN,
+            "V174": NaN,
+            "V175": NaN,
+            "V176": NaN,
+            "V177": NaN,
+            "V178": NaN,
+            "V179": NaN,
+            "V180": NaN,
+            "V181": NaN,
+            "V182": NaN,
+            "V183": NaN,
+            "V184": NaN,
+            "V185": NaN,
+            "V186": NaN,
+            "V187": NaN,
+            "V188": NaN,
+            "V189": NaN,
+            "V190": NaN,
+            "V191": NaN,
+            "V192": NaN,
+            "V193": NaN,
+            "V194": NaN,
+            "V195": NaN,
+            "V196": NaN,
+            "V197": NaN,
+            "V198": NaN,
+            "V199": NaN,
+            "V200": NaN,
+            "V201": NaN,
+            "V202": NaN,
+            "V203": NaN,
+            "V204": NaN,
+            "V205": NaN,
+            "V206": NaN,
+            "V207": NaN,
+            "V208": NaN,
+            "V209": NaN,
+            "V210": NaN,
+            "V211": NaN,
+            "V212": NaN,
+            "V213": NaN,
+            "V214": NaN,
+            "V215": NaN,
+            "V216": NaN,
+            "V217": NaN,
+            "V218": NaN,
+            "V219": NaN,
+            "V220": NaN,
+            "V221": NaN,
+            "V222": NaN,
+            "V223": NaN,
+            "V224": NaN,
+            "V225": NaN,
+            "V226": NaN,
+            "V227": NaN,
+            "V228": NaN,
+            "V229": NaN,
+            "V230": NaN,
+            "V231": NaN,
+            "V232": NaN,
+            "V233": NaN,
+            "V234": NaN,
+            "V235": NaN,
+            "V236": NaN,
+            "V237": NaN,
+            "V238": NaN,
+            "V239": NaN,
+            "V240": NaN,
+            "V241": NaN,
+            "V242": NaN,
+            "V243": NaN,
+            "V244": NaN,
+            "V245": NaN,
+            "V246": NaN,
+            "V247": NaN,
+            "V248": NaN,
+            "V249": NaN,
+            "V250": NaN,
+            "V251": NaN,
+            "V252": NaN,
+            "V253": NaN,
+            "V254": NaN,
+            "V255": NaN,
+            "V256": NaN,
+            "V257": NaN,
+            "V258": NaN,
+            "V259": NaN,
+            "V260": NaN,
+            "V261": NaN,
+            "V262": NaN,
+            "V263": NaN,
+            "V264": NaN,
+            "V265": NaN,
+            "V266": NaN,
+            "V267": NaN,
+            "V268": NaN,
+            "V269": NaN,
+            "V270": NaN,
+            "V271": NaN,
+            "V272": NaN,
+            "V273": NaN,
+            "V274": NaN,
+            "V275": NaN,
+            "V276": NaN,
+            "V277": NaN,
+            "V278": NaN,
+            "V279": "0.0",
+            "V280": "0.0",
+            "V281": "0.0",
+            "V282": "1.0",
+            "V283": "1.0",
+            "V284": "0.0",
+            "V285": "0.0",
+            "V286": "0.0",
+            "V287": "0.0",
+            "V288": "1.0",
+            "V289": "1.0",
+            "V290": "1.0",
+            "V291": "1.0",
+            "V292": "1.0",
+            "V293": "0.0",
+            "V294": "0.0",
+            "V295": "0.0",
+            "V296": "0.0",
+            "V297": "0.0",
+            "V298": "0.0",
+            "V299": "0.0",
+            "V300": "0.0",
+            "V301": "0.0",
+            "V302": "0.0",
+            "V303": "0.0",
+            "V304": "0.0",
+            "V305": "1.0",
+            "V306": "0.0",
+            "V307": "0.0",
+            "V308": "0.0",
+            "V309": "0.0",
+            "V310": "0.0",
+            "V311": "0.0",
+            "V312": "0.0",
+            "V313": "1068.8399658203125",
+            "V314": "1068.8399658203125",
+            "V315": "1068.8399658203125",
+            "V316": "0.0",
+            "V317": "0.0",
+            "V318": "0.0",
+            "V319": "0.0",
+            "V320": "0.0",
+            "V321": "0.0",
+            "V322": NaN,
+            "V323": NaN,
+            "V324": NaN,
+            "V325": NaN,
+            "V326": NaN,
+            "V327": NaN,
+            "V328": NaN,
+            "V329": NaN,
+            "V330": NaN,
+            "V331": NaN,
+            "V332": NaN,
+            "V333": NaN,
+            "V334": NaN,
+            "V335": NaN,
+            "V336": NaN,
+            "V337": NaN,
+            "V338": NaN,
+            "V339": NaN,
+            "customer_id": "C00750",
+            "ts": "2017-01-01 00:00:25",
+            "channel": "in_person",
+            "risk_score": "0.06"
+          },
+          {
+            "TransactionID": "3611104",
+            "TransactionDT": "15811240",
+            "TransactionAmt": "3025.17",
+            "ProductCD": "W",
+            "card1": "19787",
+            "card2": "161.0",
+            "card3": "150.0",
+            "card4": "mastercard",
+            "card5": "117.0",
+            "card6": "debit",
+            "addr1": "123.0",
+            "addr2": "87.0",
+            "dist1": "2.0",
+            "dist2": NaN,
+            "P_emaildomain": "gmail.com",
+            "R_emaildomain": NaN,
+            "C1": "1.0",
+            "C2": "1.0",
+            "C3": "0.0",
+            "C4": "0.0",
+            "C5": "1.0",
+            "C6": "1.0",
+            "C7": "0.0",
+            "C8": "0.0",
+            "C9": "1.0",
+            "C10": "0.0",
+            "C11": "1.0",
+            "C12": "0.0",
+            "C13": "1.0",
+            "C14": "1.0",
+            "D1": "0.0",
+            "D2": NaN,
+            "D3": NaN,
+            "D4": "0.0",
+            "D5": NaN,
+            "D6": NaN,
+            "D7": NaN,
+            "D8": NaN,
+            "D9": NaN,
+            "D10": "0.0",
+            "D11": "0.0",
+            "D12": NaN,
+            "D13": NaN,
+            "D14": NaN,
+            "D15": "0.0",
+            "M1": "T",
+            "M2": "T",
+            "M3": "F",
+            "M4": NaN,
+            "M5": NaN,
+            "M6": "T",
+            "M7": "F",
+            "M8": "T",
+            "M9": "T",
+            "V1": "1.0",
+            "V2": "1.0",
+            "V3": "1.0",
+            "V4": "1.0",
+            "V5": "1.0",
+            "V6": "1.0",
+            "V7": "1.0",
+            "V8": "1.0",
+            "V9": "1.0",
+            "V10": "1.0",
+            "V11": "1.0",
+            "V12": "1.0",
+            "V13": "1.0",
+            "V14": "1.0",
+            "V15": "0.0",
+            "V16": "0.0",
+            "V17": "0.0",
+            "V18": "0.0",
+            "V19": "1.0",
+            "V20": "1.0",
+            "V21": "0.0",
+            "V22": "0.0",
+            "V23": "1.0",
+            "V24": "1.0",
+            "V25": "1.0",
+            "V26": "1.0",
+            "V27": "0.0",
+            "V28": "0.0",
+            "V29": "1.0",
+            "V30": "1.0",
+            "V31": "0.0",
+            "V32": "0.0",
+            "V33": "0.0",
+            "V34": "0.0",
+            "V35": "1.0",
+            "V36": "1.0",
+            "V37": "1.0",
+            "V38": "1.0",
+            "V39": "0.0",
+            "V40": "0.0",
+            "V41": "1.0",
+            "V42": "0.0",
+            "V43": "0.0",
+            "V44": "1.0",
+            "V45": "1.0",
+            "V46": "1.0",
+            "V47": "1.0",
+            "V48": "1.0",
+            "V49": "1.0",
+            "V50": "0.0",
+            "V51": "0.0",
+            "V52": "0.0",
+            "V53": "1.0",
+            "V54": "1.0",
+            "V55": "1.0",
+            "V56": "1.0",
+            "V57": "0.0",
+            "V58": "0.0",
+            "V59": "0.0",
+            "V60": "0.0",
+            "V61": "1.0",
+            "V62": "1.0",
+            "V63": "0.0",
+            "V64": "0.0",
+            "V65": "1.0",
+            "V66": "1.0",
+            "V67": "1.0",
+            "V68": "0.0",
+            "V69": "1.0",
+            "V70": "1.0",
+            "V71": "0.0",
+            "V72": "0.0",
+            "V73": "0.0",
+            "V74": "0.0",
+            "V75": "1.0",
+            "V76": "1.0",
+            "V77": "1.0",
+            "V78": "1.0",
+            "V79": "0.0",
+            "V80": "0.0",
+            "V81": "0.0",
+            "V82": "1.0",
+            "V83": "1.0",
+            "V84": "0.0",
+            "V85": "0.0",
+            "V86": "1.0",
+            "V87": "1.0",
+            "V88": "1.0",
+            "V89": "0.0",
+            "V90": "1.0",
+            "V91": "1.0",
+            "V92": "0.0",
+            "V93": "0.0",
+            "V94": "0.0",
+            "V95": "0.0",
+            "V96": "0.0",
+            "V97": "0.0",
+            "V98": "0.0",
+            "V99": "0.0",
+            "V100": "0.0",
+            "V101": "0.0",
+            "V102": "0.0",
+            "V103": "0.0",
+            "V104": "0.0",
+            "V105": "0.0",
+            "V106": "0.0",
+            "V107": "1.0",
+            "V108": "1.0",
+            "V109": "1.0",
+            "V110": "1.0",
+            "V111": "1.0",
+            "V112": "1.0",
+            "V113": "1.0",
+            "V114": "1.0",
+            "V115": "1.0",
+            "V116": "1.0",
+            "V117": "1.0",
+            "V118": "1.0",
+            "V119": "1.0",
+            "V120": "1.0",
+            "V121": "1.0",
+            "V122": "1.0",
+            "V123": "1.0",
+            "V124": "1.0",
+            "V125": "1.0",
+            "V126": "0.0",
+            "V127": "0.0",
+            "V128": "0.0",
+            "V129": "0.0",
+            "V130": "0.0",
+            "V131": "0.0",
+            "V132": "0.0",
+            "V133": "0.0",
+            "V134": "0.0",
+            "V135": "0.0",
+            "V136": "0.0",
+            "V137": "0.0",
+            "V138": NaN,
+            "V139": NaN,
+            "V140": NaN,
+            "V141": NaN,
+            "V142": NaN,
+            "V143": NaN,
+            "V144": NaN,
+            "V145": NaN,
+            "V146": NaN,
+            "V147": NaN,
+            "V148": NaN,
+            "V149": NaN,
+            "V150": NaN,
+            "V151": NaN,
+            "V152": NaN,
+            "V153": NaN,
+            "V154": NaN,
+            "V155": NaN,
+            "V156": NaN,
+            "V157": NaN,
+            "V158": NaN,
+            "V159": NaN,
+            "V160": NaN,
+            "V161": NaN,
+            "V162": NaN,
+            "V163": NaN,
+            "V164": NaN,
+            "V165": NaN,
+            "V166": NaN,
+            "V167": NaN,
+            "V168": NaN,
+            "V169": NaN,
+            "V170": NaN,
+            "V171": NaN,
+            "V172": NaN,
+            "V173": NaN,
+            "V174": NaN,
+            "V175": NaN,
+            "V176": NaN,
+            "V177": NaN,
+            "V178": NaN,
+            "V179": NaN,
+            "V180": NaN,
+            "V181": NaN,
+            "V182": NaN,
+            "V183": NaN,
+            "V184": NaN,
+            "V185": NaN,
+            "V186": NaN,
+            "V187": NaN,
+            "V188": NaN,
+            "V189": NaN,
+            "V190": NaN,
+            "V191": NaN,
+            "V192": NaN,
+            "V193": NaN,
+            "V194": NaN,
+            "V195": NaN,
+            "V196": NaN,
+            "V197": NaN,
+            "V198": NaN,
+            "V199": NaN,
+            "V200": NaN,
+            "V201": NaN,
+            "V202": NaN,
+            "V203": NaN,
+            "V204": NaN,
+            "V205": NaN,
+            "V206": NaN,
+            "V207": NaN,
+            "V208": NaN,
+            "V209": NaN,
+            "V210": NaN,
+            "V211": NaN,
+            "V212": NaN,
+            "V213": NaN,
+            "V214": NaN,
+            "V215": NaN,
+            "V216": NaN,
+            "V217": NaN,
+            "V218": NaN,
+            "V219": NaN,
+            "V220": NaN,
+            "V221": NaN,
+            "V222": NaN,
+            "V223": NaN,
+            "V224": NaN,
+            "V225": NaN,
+            "V226": NaN,
+            "V227": NaN,
+            "V228": NaN,
+            "V229": NaN,
+            "V230": NaN,
+            "V231": NaN,
+            "V232": NaN,
+            "V233": NaN,
+            "V234": NaN,
+            "V235": NaN,
+            "V236": NaN,
+            "V237": NaN,
+            "V238": NaN,
+            "V239": NaN,
+            "V240": NaN,
+            "V241": NaN,
+            "V242": NaN,
+            "V243": NaN,
+            "V244": NaN,
+            "V245": NaN,
+            "V246": NaN,
+            "V247": NaN,
+            "V248": NaN,
+            "V249": NaN,
+            "V250": NaN,
+            "V251": NaN,
+            "V252": NaN,
+            "V253": NaN,
+            "V254": NaN,
+            "V255": NaN,
+            "V256": NaN,
+            "V257": NaN,
+            "V258": NaN,
+            "V259": NaN,
+            "V260": NaN,
+            "V261": NaN,
+            "V262": NaN,
+            "V263": NaN,
+            "V264": NaN,
+            "V265": NaN,
+            "V266": NaN,
+            "V267": NaN,
+            "V268": NaN,
+            "V269": NaN,
+            "V270": NaN,
+            "V271": NaN,
+            "V272": NaN,
+            "V273": NaN,
+            "V274": NaN,
+            "V275": NaN,
+            "V276": NaN,
+            "V277": NaN,
+            "V278": NaN,
+            "V279": "0.0",
+            "V280": "0.0",
+            "V281": "0.0",
+            "V282": "1.0",
+            "V283": "1.0",
+            "V284": "0.0",
+            "V285": "0.0",
+            "V286": "0.0",
+            "V287": "0.0",
+            "V288": "0.0",
+            "V289": "0.0",
+            "V290": "1.0",
+            "V291": "1.0",
+            "V292": "1.0",
+            "V293": "0.0",
+            "V294": "0.0",
+            "V295": "0.0",
+            "V296": "0.0",
+            "V297": "0.0",
+            "V298": "0.0",
+            "V299": "0.0",
+            "V300": "0.0",
+            "V301": "0.0",
+            "V302": "0.0",
+            "V303": "0.0",
+            "V304": "0.0",
+            "V305": "1.0",
+            "V306": "0.0",
+            "V307": "0.0",
+            "V308": "0.0",
+            "V309": "0.0",
+            "V310": "0.0",
+            "V311": "0.0",
+            "V312": "0.0",
+            "V313": "0.0",
+            "V314": "0.0",
+            "V315": "0.0",
+            "V316": "0.0",
+            "V317": "0.0",
+            "V318": "0.0",
+            "V319": "0.0",
+            "V320": "0.0",
+            "V321": "0.0",
+            "V322": NaN,
+            "V323": NaN,
+            "V324": NaN,
+            "V325": NaN,
+            "V326": NaN,
+            "V327": NaN,
+            "V328": NaN,
+            "V329": NaN,
+            "V330": NaN,
+            "V331": NaN,
+            "V332": NaN,
+            "V333": NaN,
+            "V334": NaN,
+            "V335": NaN,
+            "V336": NaN,
+            "V337": NaN,
+            "V338": NaN,
+            "V339": NaN,
+            "customer_id": "C02502",
+            "ts": "2017-01-01 00:00:40",
+            "channel": "in_person",
+            "risk_score": "0.2"
+          }
+        ]
+      }
+    },
+    {
+      "old": "identity.csv",
+      "new": "identity_2017q1.csv",
+      "rows_sampled": [
+        144432,
+        15893
+      ],
+      "added": [],
+      "removed": [],
+      "renames_proposed": [],
+      "changes": [
+        {
+          "column": "id_13",
+          "changes": [
+            "null rate 0.12 -> 0.20"
+          ],
+          "breaks": "no known downstream consumer"
+        },
+        {
+          "column": "id_14",
+          "changes": [
+            "null rate 0.44 -> 0.34"
+          ],
+          "breaks": "no known downstream consumer"
+        },
+        {
+          "column": "id_30",
+          "changes": [
+            "null rate 0.46 -> 0.35",
+            "new frequent values ['Mac OS X 10_12_6']"
+          ],
+          "breaks": "no known downstream consumer"
+        },
+        {
+          "column": "id_31",
+          "changes": [
+            "new frequent values ['chrome 62.0']"
+          ],
+          "breaks": "no known downstream consumer"
+        },
+        {
+          "column": "id_32",
+          "changes": [
+            "null rate 0.46 -> 0.35"
+          ],
+          "breaks": "no known downstream consumer"
+        },
+        {
+          "column": "id_33",
+          "changes": [
+            "null rate 0.49 -> 0.40"
+          ],
+          "breaks": "no known downstream consumer"
+        },
+        {
+          "column": "id_34",
+          "changes": [
+            "null rate 0.46 -> 0.36"
+          ],
+          "breaks": "no known downstream consumer"
+        }
+      ],
+      "key": "TransactionID",
+      "key_overlap_count": 0,
+      "key_overlap_sample": [],
+      "samples": {
+        "old": [
+          {
+            "TransactionID": "3005755",
+            "id_01": "0.0",
+            "id_02": "70787.0",
+            "id_03": NaN,
+            "id_04": NaN,
+            "id_05": NaN,
+            "id_06": NaN,
+            "id_07": NaN,
+            "id_08": NaN,
+            "id_09": NaN,
+            "id_10": NaN,
+            "id_11": "100.0",
+            "id_12": "NotFound",
+            "id_13": NaN,
+            "id_14": "-480.0",
+            "id_15": "New",
+            "id_16": "NotFound",
+            "id_17": "166.0",
+            "id_18": NaN,
+            "id_19": "542.0",
+            "id_20": "144.0",
+            "id_21": NaN,
+            "id_22": NaN,
+            "id_23": NaN,
+            "id_24": NaN,
+            "id_25": NaN,
+            "id_26": NaN,
+            "id_27": NaN,
+            "id_28": "New",
+            "id_29": "NotFound",
+            "id_30": "Android 7.0",
+            "id_31": "samsung browser 6.2",
+            "id_32": "32.0",
+            "id_33": "2220x1080",
+            "id_34": "match_status:2",
+            "id_35": "T",
+            "id_36": "F",
+            "id_37": "T",
+            "id_38": "T",
+            "DeviceType": "mobile",
+            "DeviceInfo": "SAMSUNG SM-G892A Build/NRD90M"
+          },
+          {
+            "TransactionID": "3009321",
+            "id_01": "-5.0",
+            "id_02": "98945.0",
+            "id_03": NaN,
+            "id_04": NaN,
+            "id_05": "0.0",
+            "id_06": "-5.0",
+            "id_07": NaN,
+            "id_08": NaN,
+            "id_09": NaN,
+            "id_10": NaN,
+            "id_11": "100.0",
+            "id_12": "NotFound",
+            "id_13": "49.0",
+            "id_14": "-300.0",
+            "id_15": "New",
+            "id_16": "NotFound",
+            "id_17": "166.0",
+            "id_18": NaN,
+            "id_19": "621.0",
+            "id_20": "500.0",
+            "id_21": NaN,
+            "id_22": NaN,
+            "id_23": NaN,
+            "id_24": NaN,
+            "id_25": NaN,
+            "id_26": NaN,
+            "id_27": NaN,
+            "id_28": "New",
+            "id_29": "NotFound",
+            "id_30": "iOS 11.1.2",
+            "id_31": "mobile safari 11.0",
+            "id_32": "32.0",
+            "id_33": "1334x750",
+            "id_34": "match_status:1",
+            "id_35": "T",
+            "id_36": "F",
+            "id_37": "F",
+            "id_38": "T",
+            "DeviceType": "mobile",
+            "DeviceInfo": "iOS Device"
+          },
+          {
+            "TransactionID": "3002077",
+            "id_01": "-5.0",
+            "id_02": "191631.0",
+            "id_03": "0.0",
+            "id_04": "0.0",
+            "id_05": "0.0",
+            "id_06": "0.0",
+            "id_07": NaN,
+            "id_08": NaN,
+            "id_09": "0.0",
+            "id_10": "0.0",
+            "id_11": "100.0",
+            "id_12": "NotFound",
+            "id_13": "52.0",
+            "id_14": NaN,
+            "id_15": "Found",
+            "id_16": "Found",
+            "id_17": "121.0",
+            "id_18": NaN,
+            "id_19": "410.0",
+            "id_20": "142.0",
+            "id_21": NaN,
+            "id_22": NaN,
+            "id_23": NaN,
+            "id_24": NaN,
+            "id_25": NaN,
+            "id_26": NaN,
+            "id_27": NaN,
+            "id_28": "Found",
+            "id_29": "Found",
+            "id_30": NaN,
+            "id_31": "chrome 62.0",
+            "id_32": NaN,
+            "id_33": NaN,
+            "id_34": NaN,
+            "id_35": "F",
+            "id_36": "F",
+            "id_37": "T",
+            "id_38": "T",
+            "DeviceType": "desktop",
+            "DeviceInfo": "Windows"
+          }
+        ],
+        "new": [
+          {
+            "TransactionID": "3600015",
+            "id_01": "-5.0",
+            "id_02": "137016.0",
+            "id_03": NaN,
+            "id_04": NaN,
+            "id_05": "2.0",
+            "id_06": "0.0",
+            "id_07": NaN,
+            "id_08": NaN,
+            "id_09": "2.0",
+            "id_10": "0.0",
+            "id_11": "94.37000274658205",
+            "id_12": "NotFound",
+            "id_13": "52.0",
+            "id_14": "-300.0",
+            "id_15": "New",
+            "id_16": "NotFound",
+            "id_17": "166.0",
+            "id_18": NaN,
+            "id_19": "542.0",
+            "id_20": "600.0",
+            "id_21": NaN,
+            "id_22": NaN,
+            "id_23": NaN,
+            "id_24": NaN,
+            "id_25": NaN,
+            "id_26": NaN,
+            "id_27": NaN,
+            "id_28": "Found",
+            "id_29": "Found",
+            "id_30": "Windows 10",
+            "id_31": "ie 11.0 for desktop",
+            "id_32": "24.0",
+            "id_33": "1366x768",
+            "id_34": "match_status:2",
+            "id_35": "T",
+            "id_36": "F",
+            "id_37": "T",
+            "id_38": "T",
+            "DeviceType": "desktop",
+            "DeviceInfo": "Trident/7.0"
+          },
+          {
+            "TransactionID": "3600018",
+            "id_01": "0.0",
+            "id_02": "29045.0",
+            "id_03": NaN,
+            "id_04": NaN,
+            "id_05": "0.0",
+            "id_06": "0.0",
+            "id_07": NaN,
+            "id_08": NaN,
+            "id_09": NaN,
+            "id_10": NaN,
+            "id_11": "100.0",
+            "id_12": "NotFound",
+            "id_13": NaN,
+            "id_14": "-360.0",
+            "id_15": "New",
+            "id_16": "NotFound",
+            "id_17": "166.0",
+            "id_18": NaN,
+            "id_19": "529.0",
+            "id_20": "299.0",
+            "id_21": NaN,
+            "id_22": NaN,
+            "id_23": NaN,
+            "id_24": NaN,
+            "id_25": NaN,
+            "id_26": NaN,
+            "id_27": NaN,
+            "id_28": "New",
+            "id_29": "NotFound",
+            "id_30": "iOS 11.0.1",
+            "id_31": "mobile safari 11.0",
+            "id_32": "32.0",
+            "id_33": "2048x1536",
+            "id_34": "match_status:1",
+            "id_35": "T",
+            "id_36": "F",
+            "id_37": "T",
+            "id_38": "T",
+            "DeviceType": "mobile",
+            "DeviceInfo": "iOS Device"
+          },
+          {
+            "TransactionID": "3600019",
+            "id_01": "-5.0",
+            "id_02": "37536.0",
+            "id_03": "0.0",
+            "id_04": "0.0",
+            "id_05": "0.0",
+            "id_06": "0.0",
+            "id_07": NaN,
+            "id_08": NaN,
+            "id_09": "0.0",
+            "id_10": "0.0",
+            "id_11": "100.0",
+            "id_12": "Found",
+            "id_13": "52.0",
+            "id_14": "-360.0",
+            "id_15": "Found",
+            "id_16": "Found",
+            "id_17": "166.0",
+            "id_18": NaN,
+            "id_19": "312.0",
+            "id_20": "299.0",
+            "id_21": NaN,
+            "id_22": NaN,
+            "id_23": NaN,
+            "id_24": NaN,
+            "id_25": NaN,
+            "id_26": NaN,
+            "id_27": NaN,
+            "id_28": "Found",
+            "id_29": "Found",
+            "id_30": "Windows 10",
+            "id_31": "edge 16.0",
+            "id_32": "24.0",
+            "id_33": NaN,
+            "id_34": "match_status:2",
+            "id_35": "T",
+            "id_36": "F",
+            "id_37": "T",
+            "id_38": "T",
+            "DeviceType": "desktop",
+            "DeviceInfo": "Windows"
+          }
+        ]
+      }
+    },
+    {
+      "old": "closed_cases_history.csv",
+      "new": "closed_cases_history.csv",
+      "rows_sampled": [
+        5565,
+        5585
+      ],
+      "added": [],
+      "removed": [],
+      "renames_proposed": [],
+      "changes": [
+        {
+          "column": "actions_taken",
+          "changes": [
+            "new frequent values ['ALLOW_TRANSACTION|CLOSE_NO_FRAUD|MONITOR_CARD|VERIFY_WITH_CUSTOMER', 'BLOCK_CARD|CREATE_CASE']"
+          ],
+          "breaks": "no known downstream consumer"
+        },
+        {
+          "column": "connected_card_ids",
+          "changes": [
+            "new frequent values ['C00466-K1|C01890-K1|C02265-K1|C03633-K1|C05423-K1|C05766-K1|C05851-K1|C06881-K1|C10751-K1|C10990-K1|C12641-K2']"
+          ],
+          "breaks": "no known downstream consumer"
+        }
+      ],
+      "key": "case_id",
+      "key_overlap_count": 5565,
+      "key_overlap_sample": [
+        "CC-0001",
+        "CC-0002",
+        "CC-0003",
+        "CC-0004",
+        "CC-0005",
+        "CC-0006",
+        "CC-0007",
+        "CC-0008",
+        "CC-0009",
+        "CC-0010",
+        "CC-0011",
+        "CC-0012",
+        "CC-0013",
+        "CC-0014",
+        "CC-0015",
+        "CC-0016",
+        "CC-0017",
+        "CC-0018",
+        "CC-0019",
+        "CC-0020"
+      ],
+      "samples": {
+        "old": [
+          {
+            "case_id": "CC-0001",
+            "customer_id": "C00259",
+            "card_id": "C00259-K1",
+            "opened_at": "2016-07-02 07:17:26",
+            "closed_at": "2016-07-06 01:17:26",
+            "outcome": "confirmed_fraud",
+            "pattern": "card_not_present_fraud",
+            "first_fraud_txn_id": "3000120.0",
+            "txn_ids": "3000120",
+            "n_txns": "1",
+            "exposure_usd": "155.43",
+            "connected_card_ids": NaN,
+            "actions_taken": "CREATE_CASE|BLOCK_CARD",
+            "report_filed": "No",
+            "analyst_notes": "Case CC-0001: cardholder C00259 reported unrecognized activity on card C00259-K1. 1 transaction(s) between 2016-07-02 and 2016-07-02 totaling $155.43 were confirmed fraudulent. Online purchases inconsistent with the cardholder's usual merchants and amounts. Card blocked and reissued. Customer reimbursed."
+          },
+          {
+            "case_id": "CC-0002",
+            "customer_id": "C06403",
+            "card_id": "C06403-K2",
+            "opened_at": "2016-07-02 08:51:57",
+            "closed_at": "2016-07-04 05:51:57",
+            "outcome": "confirmed_fraud",
+            "pattern": "out_of_region_use",
+            "first_fraud_txn_id": "3000332.0",
+            "txn_ids": "3000332",
+            "n_txns": "1",
+            "exposure_usd": "117.05",
+            "connected_card_ids": NaN,
+            "actions_taken": "CREATE_CASE|BLOCK_CARD",
+            "report_filed": "No",
+            "analyst_notes": "Case CC-0002: cardholder C06403 reported unrecognized activity on card C06403-K2. 1 transaction(s) between 2016-07-02 and 2016-07-02 totaling $117.05 were confirmed fraudulent. Card-present use in a billing region the cardholder had no history in, while the cardholder retained the card. Card blocked and reissued. Customer reimbursed."
+          },
+          {
+            "case_id": "CC-0003",
+            "customer_id": "C05876",
+            "card_id": "C05876-K2",
+            "opened_at": "2016-07-02 16:34:01",
+            "closed_at": "2016-07-05 13:34:01",
+            "outcome": "cleared",
+            "pattern": "none",
+            "first_fraud_txn_id": NaN,
+            "txn_ids": "3000607",
+            "n_txns": "1",
+            "exposure_usd": "0.0",
+            "connected_card_ids": NaN,
+            "actions_taken": "VERIFY_WITH_CUSTOMER|CLOSE_NO_FRAUD",
+            "report_filed": "No",
+            "analyst_notes": "Case CC-0003: model scored a $442.92 transaction at 0.91. Cardholder confirmed travel to the billing region in question. Alert cleared."
+          }
+        ],
+        "new": [
+          {
+            "case_id": "CC-0001",
+            "customer_id": "C00259",
+            "card_id": "C00259-K1",
+            "opened_at": "2016-07-02 07:17:26",
+            "closed_at": "2016-07-06 01:17:26",
+            "outcome": "confirmed_fraud",
+            "pattern": "card_not_present_fraud",
+            "first_fraud_txn_id": "3000120.0",
+            "txn_ids": "3000120",
+            "n_txns": "1",
+            "exposure_usd": "155.43",
+            "connected_card_ids": NaN,
+            "actions_taken": "CREATE_CASE|BLOCK_CARD",
+            "report_filed": "No",
+            "analyst_notes": "Case CC-0001: cardholder C00259 reported unrecognized activity on card C00259-K1. 1 transaction(s) between 2016-07-02 and 2016-07-02 totaling $155.43 were confirmed fraudulent. Online purchases inconsistent with the cardholder's usual merchants and amounts. Card blocked and reissued. Customer reimbursed."
+          },
+          {
+            "case_id": "CC-0002",
+            "customer_id": "C06403",
+            "card_id": "C06403-K2",
+            "opened_at": "2016-07-02 08:51:57",
+            "closed_at": "2016-07-04 05:51:57",
+            "outcome": "confirmed_fraud",
+            "pattern": "out_of_region_use",
+            "first_fraud_txn_id": "3000332.0",
+            "txn_ids": "3000332",
+            "n_txns": "1",
+            "exposure_usd": "117.05",
+            "connected_card_ids": NaN,
+            "actions_taken": "CREATE_CASE|BLOCK_CARD",
+            "report_filed": "No",
+            "analyst_notes": "Case CC-0002: cardholder C06403 reported unrecognized activity on card C06403-K2. 1 transaction(s) between 2016-07-02 and 2016-07-02 totaling $117.05 were confirmed fraudulent. Card-present use in a billing region the cardholder had no history in, while the cardholder retained the card. Card blocked and reissued. Customer reimbursed."
+          },
+          {
+            "case_id": "CC-0003",
+            "customer_id": "C05876",
+            "card_id": "C05876-K2",
+            "opened_at": "2016-07-02 16:34:01",
+            "closed_at": "2016-07-05 13:34:01",
+            "outcome": "cleared",
+            "pattern": "none",
+            "first_fraud_txn_id": NaN,
+            "txn_ids": "3000607",
+            "n_txns": "1",
+            "exposure_usd": "0.0",
+            "connected_card_ids": NaN,
+            "actions_taken": "VERIFY_WITH_CUSTOMER|CLOSE_NO_FRAUD",
+            "report_filed": "No",
+            "analyst_notes": "Case CC-0003: model scored a $442.92 transaction at 0.91. Cardholder confirmed travel to the billing region in question. Alert cleared."
+          }
+        ]
+      }
+    },
+    {
+      "old": "case_pack.csv",
+      "new": "case_pack_final.csv",
+      "rows_sampled": [
+        20,
+        18
+      ],
+      "added": [],
+      "removed": [],
+      "renames_proposed": [],
+      "changes": [
+        {
+          "column": "card_id",
+          "changes": [
+            "new frequent values ['C05061-K1', 'C06220-K1', 'C11663-K1']"
+          ],
+          "breaks": "no known downstream consumer"
+        },
+        {
+          "column": "case_id",
+          "changes": [
+            "new frequent values ['HHF-001', 'HHF-002', 'HHF-003']"
+          ],
+          "breaks": "no known downstream consumer"
+        },
+        {
+          "column": "customer_id",
+          "changes": [
+            "new frequent values ['C05061', 'C06220', 'C11663']"
+          ],
+          "breaks": "card-id recovery (card_key) and OWNS edges"
+        },
+        {
+          "column": "opened_at",
+          "changes": [
+            "new frequent values ['2017-01-15 01:25:19', '2017-01-19 23:18:58', '2017-01-31 20:31:28']"
+          ],
+          "breaks": "no known downstream consumer"
+        },
+        {
+          "column": "risk_score",
+          "changes": [
+            "null rate 0.45 -> 0.39"
+          ],
+          "breaks": "the trigger prior and the January neutralisation"
+        },
+        {
+          "column": "trigger_text",
+          "changes": [
+            "new frequent values ['Analyst request: several cards this month show losses with no shared device. Review transaction 3660108 on card C05061-K1 and look for what the affected cards have in common.', 'Analyst request: several cards this month show losses with no shared device. Review transaction 3660127 on card C06220-K1 and look for what the affected cards have in common.', \"Customer C11663 message: 'I did not make these charges on my card. Please look into it.' Refers to 3660153.\"]"
+          ],
+          "breaks": "no known downstream consumer"
+        }
+      ],
+      "key": "case_id",
+      "key_overlap_count": 0,
+      "key_overlap_sample": [],
+      "samples": {
+        "old": [
+          {
+            "case_id": "HHG-001",
+            "opened_at": "2016-12-05 01:55:28",
+            "trigger_type": "risk_score",
+            "trigger_text": "Real-time model scored transaction 3514030 ($77.07, in billing region 444.0) at 0.61. Review and decide.",
+            "flagged_txn_id": "3514030",
+            "card_id": "C12382-K1",
+            "customer_id": "C12382",
+            "risk_score": "0.61"
+          },
+          {
+            "case_id": "HHG-002",
+            "opened_at": "2016-11-22 23:27:07",
+            "trigger_type": "risk_score",
+            "trigger_text": "Real-time model scored transaction 3478782 ($292.36, online) at 0.79. Review and decide.",
+            "flagged_txn_id": "3478782",
+            "card_id": "C11891-K1",
+            "customer_id": "C11891",
+            "risk_score": "0.79"
+          },
+          {
+            "case_id": "HHG-003",
+            "opened_at": "2016-12-10 15:01:21",
+            "trigger_type": "customer_report",
+            "trigger_text": "Customer C08623 message: 'I never made this $49.00 purchase. Please check my card.' Refers to 3530164.",
+            "flagged_txn_id": "3530164",
+            "card_id": "C08623-K2",
+            "customer_id": "C08623",
+            "risk_score": NaN
+          }
+        ],
+        "new": [
+          {
+            "case_id": "HHF-001",
+            "opened_at": "2017-01-15 01:25:19",
+            "trigger_type": "analyst_request",
+            "trigger_text": "Analyst request: several cards this month show losses with no shared device. Review transaction 3660108 on card C05061-K1 and look for what the affected cards have in common.",
+            "flagged_txn_id": "3660108",
+            "card_id": "C05061-K1",
+            "customer_id": "C05061",
+            "risk_score": NaN
+          },
+          {
+            "case_id": "HHF-002",
+            "opened_at": "2017-01-19 23:18:58",
+            "trigger_type": "analyst_request",
+            "trigger_text": "Analyst request: several cards this month show losses with no shared device. Review transaction 3660127 on card C06220-K1 and look for what the affected cards have in common.",
+            "flagged_txn_id": "3660127",
+            "card_id": "C06220-K1",
+            "customer_id": "C06220",
+            "risk_score": NaN
+          },
+          {
+            "case_id": "HHF-003",
+            "opened_at": "2017-01-31 20:31:28",
+            "trigger_type": "customer_report",
+            "trigger_text": "Customer C11663 message: 'I did not make these charges on my card. Please look into it.' Refers to 3660153.",
+            "flagged_txn_id": "3660153",
+            "card_id": "C11663-K1",
+            "customer_id": "C11663",
+            "risk_score": NaN
+          }
+        ]
+      }
+    }
+  ],
+  "detect_seconds": 9.9
+}

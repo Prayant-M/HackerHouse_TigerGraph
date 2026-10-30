@@ -1,0 +1,741 @@
+{
+  "rings": 80,
+  "origins_found": 0,
+  "base_rate": 0.07613,
+  "arms": {
+    "A0 none": {
+      "rings": 80,
+      "flagged": 0,
+      "hits": 0,
+      "precision": 0.0,
+      "loss_preempted_usd": 0,
+      "step_ups": 0,
+      "blocks_on_innocents": 0,
+      "lift": null
+    },
+    "A1 device fan-out": {
+      "rings": 80,
+      "flagged": 99284,
+      "hits": 20128,
+      "precision": 0.2027,
+      "loss_preempted_usd": 25430640.99,
+      "step_ups": 99284,
+      "blocks_on_innocents": 0,
+      "lift": 2.66
+    },
+    "A1b fan-out, rare devices only": {
+      "rings": 80,
+      "flagged": 8166,
+      "hits": 4113,
+      "precision": 0.5037,
+      "loss_preempted_usd": 8610620.97,
+      "step_ups": 8166,
+      "blocks_on_innocents": 0,
+      "lift": 6.62
+    },
+    "A2 origin lift (controls)": {
+      "rings": 80,
+      "flagged": 0,
+      "hits": 0,
+      "precision": 0.0,
+      "loss_preempted_usd": 0,
+      "step_ups": 0,
+      "blocks_on_innocents": 0,
+      "lift": null
+    },
+    "A2b origin lift, no specificity cap": {
+      "rings": 80,
+      "flagged": 0,
+      "hits": 0,
+      "precision": 0.0,
+      "loss_preempted_usd": 0,
+      "step_ups": 0,
+      "blocks_on_innocents": 0,
+      "lift": null
+    },
+    "A3 origin raw counts (no controls)": {
+      "rings": 80,
+      "flagged": 0,
+      "hits": 0,
+      "precision": 0.0,
+      "loss_preempted_usd": 0,
+      "step_ups": 0,
+      "blocks_on_innocents": 0,
+      "lift": null
+    },
+    "A4 time-sliced WCC component (as_of, 45 d)": {
+      "rings": 80,
+      "flagged": 0,
+      "hits": 0,
+      "precision": 0.0,
+      "loss_preempted_usd": 0,
+      "step_ups": 0,
+      "blocks_on_innocents": 0,
+      "lift": null
+    },
+    "A4b all-time component (ablation)": {
+      "rings": 80,
+      "flagged": 0,
+      "hits": 0,
+      "precision": 0.0,
+      "loss_preempted_usd": 0,
+      "step_ups": 0,
+      "blocks_on_innocents": 0,
+      "lift": null
+    },
+    "A5 agent: origin lift + time-sliced component": {
+      "rings": 80,
+      "flagged": 0,
+      "hits": 0,
+      "precision": 0.0,
+      "loss_preempted_usd": 0,
+      "step_ups": 0,
+      "blocks_on_innocents": 0,
+      "lift": null
+    }
+  },
+  "per_ring": [
+    {
+      "ring_device": "explicit",
+      "as_of": "2016-08-27 04:53:00",
+      "ring_cards": 24,
+      "base_rate": 0.07433,
+      "origin": null,
+      "raw_origin": ""
+    },
+    {
+      "ring_device": "explicit",
+      "as_of": "2016-09-03 03:25:00",
+      "ring_cards": 24,
+      "base_rate": 0.076,
+      "origin": null,
+      "raw_origin": ""
+    },
+    {
+      "ring_device": "explicit",
+      "as_of": "2016-09-03 10:20:00",
+      "ring_cards": 24,
+      "base_rate": 0.074,
+      "origin": null,
+      "raw_origin": ""
+    },
+    {
+      "ring_device": "explicit",
+      "as_of": "2016-09-04 12:44:00",
+      "ring_cards": 24,
+      "base_rate": 0.07467,
+      "origin": null,
+      "raw_origin": ""
+    },
+    {
+      "ring_device": "SM-G550T Build/MMB29K | Android 6.0.1 | chrome 59.0 for andr",
+      "as_of": "2016-07-06 01:30:14",
+      "ring_cards": 3,
+      "base_rate": 0.14808,
+      "origin": null,
+      "raw_origin": ""
+    },
+    {
+      "ring_device": "Y635-L03 Build/HuaweiY635-L03 |  | chrome 62.0 for android",
+      "as_of": "2016-07-06 20:40:03",
+      "ring_cards": 3,
+      "base_rate": 0.14005,
+      "origin": null,
+      "raw_origin": ""
+    },
+    {
+      "ring_device": "Android | chrome 62.0 | 801x480",
+      "as_of": "2016-08-02 22:34:21",
+      "ring_cards": 3,
+      "base_rate": 0.06733,
+      "origin": null,
+      "raw_origin": ""
+    },
+    {
+      "ring_device": "HUAWEI |  | chrome 62.0 for android",
+      "as_of": "2016-07-14 16:02:19",
+      "ring_cards": 3,
+      "base_rate": 0.08467,
+      "origin": null,
+      "raw_origin": ""
+    },
+    {
+      "ring_device": "BLADE V8 SE Build/NRD90M |  | chrome 62.0 for android",
+      "as_of": "2016-07-09 05:06:43",
+      "ring_cards": 3,
+      "base_rate": 0.109,
+      "origin": null,
+      "raw_origin": ""
+    },
+    {
+      "ring_device": "SM-A720F Build/MMB29K |  | chrome 62.0 for android",
+      "as_of": "2016-07-15 03:15:05",
+      "ring_cards": 3,
+      "base_rate": 0.08333,
+      "origin": null,
+      "raw_origin": ""
+    },
+    {
+      "ring_device": "XT1635-01 Build/NDNS26.118-23-12-3 |  | chrome 62.0 for andr",
+      "as_of": "2016-07-15 03:15:05",
+      "ring_cards": 3,
+      "base_rate": 0.08267,
+      "origin": null,
+      "raw_origin": ""
+    },
+    {
+      "ring_device": "XT1563 Build/MPDS24.107-52-5 |  | chrome 60.0 for android",
+      "as_of": "2016-07-24 17:34:08",
+      "ring_cards": 2,
+      "base_rate": 0.07,
+      "origin": null,
+      "raw_origin": ""
+    },
+    {
+      "ring_device": "rv:57.0 | Windows 8.1 | firefox 57.0 | 1366x768",
+      "as_of": "2016-07-19 23:34:34",
+      "ring_cards": 3,
+      "base_rate": 0.073,
+      "origin": null,
+      "raw_origin": ""
+    },
+    {
+      "ring_device": "HUAWEI CUN-L03 Build/HUAWEICUN-L03 |  | chrome 62.0 for andr",
+      "as_of": "2016-07-24 11:58:23",
+      "ring_cards": 3,
+      "base_rate": 0.067,
+      "origin": null,
+      "raw_origin": ""
+    },
+    {
+      "ring_device": "HUAWEI TAG-L13 Build/HUAWEITAG-L13 |  | chrome 61.0 for andr",
+      "as_of": "2016-07-20 02:01:46",
+      "ring_cards": 3,
+      "base_rate": 0.06333,
+      "origin": null,
+      "raw_origin": ""
+    },
+    {
+      "ring_device": "NOKIA |  | edge",
+      "as_of": "2016-07-24 11:58:23",
+      "ring_cards": 3,
+      "base_rate": 0.06567,
+      "origin": null,
+      "raw_origin": ""
+    },
+    {
+      "ring_device": "opera",
+      "as_of": "2016-07-26 22:21:17",
+      "ring_cards": 3,
+      "base_rate": 0.067,
+      "origin": null,
+      "raw_origin": ""
+    },
+    {
+      "ring_device": "Linux | chrome 55.0 | 1366x768",
+      "as_of": "2016-07-27 06:28:44",
+      "ring_cards": 3,
+      "base_rate": 0.05967,
+      "origin": null,
+      "raw_origin": ""
+    },
+    {
+      "ring_device": "F5121 Build/34.3.A.0.238 |  | chrome 63.0 for android",
+      "as_of": "2016-07-26 02:50:50",
+      "ring_cards": 3,
+      "base_rate": 0.07267,
+      "origin": null,
+      "raw_origin": ""
+    },
+    {
+      "ring_device": "Z835 Build/NMF26V | Android 7.1.1 | other | 855x480",
+      "as_of": "2016-08-10 03:15:05",
+      "ring_cards": 3,
+      "base_rate": 0.063,
+      "origin": null,
+      "raw_origin": ""
+    },
+    {
+      "ring_device": "5049W Build/NRD90M | Android 7.0 | chrome 62.0 for android |",
+      "as_of": "2016-07-24 23:28:12",
+      "ring_cards": 3,
+      "base_rate": 0.069,
+      "origin": null,
+      "raw_origin": ""
+    },
+    {
+      "ring_device": "SAMSUNG SM-G550T1 Build/MMB29K | Android 6.0.1 | samsung bro",
+      "as_of": "2016-07-28 19:31:32",
+      "ring_cards": 3,
+      "base_rate": 0.07467,
+      "origin": null,
+      "raw_origin": ""
+    },
+    {
+      "ring_device": "Le X520 Build/IEXCNFN5902303111S |  | chrome 63.0 for androi",
+      "as_of": "2016-08-18 20:06:57",
+      "ring_cards": 3,
+      "base_rate": 0.07133,
+      "origin": null,
+      "raw_origin": ""
+    },
+    {
+      "ring_device": "5015A Build/LMY47I |  | chrome 63.0 for android",
+      "as_of": "2016-07-29 10:15:57",
+      "ring_cards": 3,
+      "base_rate": 0.063,
+      "origin": null,
+      "raw_origin": ""
+    },
+    {
+      "ring_device": "SM-N920A Build/MMB29K |  | chrome 61.0 for android",
+      "as_of": "2016-08-07 13:40:39",
+      "ring_cards": 2,
+      "base_rate": 0.07067,
+      "origin": null,
+      "raw_origin": ""
+    },
+    {
+      "ring_device": "Moto Z2 Play Build/NPSS26.118-19-11 |  | chrome 63.0 for and",
+      "as_of": "2016-07-30 02:32:12",
+      "ring_cards": 3,
+      "base_rate": 0.06233,
+      "origin": null,
+      "raw_origin": ""
+    },
+    {
+      "ring_device": "SAMSUNG SM-J701M Build/NRD90M |  | samsung browser 6.2",
+      "as_of": "2016-08-06 15:35:03",
+      "ring_cards": 1,
+      "base_rate": 0.06567,
+      "origin": null,
+      "raw_origin": ""
+    },
+    {
+      "ring_device": "SAMSUNG SM-G955F Build/NRD90M |  | samsung browser 6.2",
+      "as_of": "2016-08-28 17:23:08",
+      "ring_cards": 3,
+      "base_rate": 0.07833,
+      "origin": null,
+      "raw_origin": ""
+    },
+    {
+      "ring_device": "SM-G550T1 Build/MMB29K | Android 6.0.1 | chrome 63.0 for and",
+      "as_of": "2016-08-22 22:13:19",
+      "ring_cards": 2,
+      "base_rate": 0.07467,
+      "origin": null,
+      "raw_origin": ""
+    },
+    {
+      "ring_device": "Blade L3 Build/KOT49H |  | chrome 61.0 for android",
+      "as_of": "2016-08-08 13:32:56",
+      "ring_cards": 3,
+      "base_rate": 0.06333,
+      "origin": null,
+      "raw_origin": ""
+    },
+    {
+      "ring_device": "LG-X220 Build/LMY47I |  | chrome 63.0 for android",
+      "as_of": "2016-08-21 21:22:45",
+      "ring_cards": 3,
+      "base_rate": 0.07067,
+      "origin": null,
+      "raw_origin": ""
+    },
+    {
+      "ring_device": "SM-G530H Build/KTU84P |  | chrome 49.0 for android",
+      "as_of": "2016-08-15 12:49:38",
+      "ring_cards": 2,
+      "base_rate": 0.07133,
+      "origin": null,
+      "raw_origin": ""
+    },
+    {
+      "ring_device": "SM-J730GM Build/NRD90M |  | chrome 58.0 for android",
+      "as_of": "2016-08-18 02:39:35",
+      "ring_cards": 3,
+      "base_rate": 0.072,
+      "origin": null,
+      "raw_origin": ""
+    },
+    {
+      "ring_device": "GT-I9060M Build/KTU84P |  | chrome 63.0 for android",
+      "as_of": "2016-08-17 18:04:51",
+      "ring_cards": 3,
+      "base_rate": 0.068,
+      "origin": null,
+      "raw_origin": ""
+    },
+    {
+      "ring_device": "Linux | chrome 63.0 | 1536x864",
+      "as_of": "2016-09-02 23:35:59",
+      "ring_cards": 3,
+      "base_rate": 0.076,
+      "origin": null,
+      "raw_origin": ""
+    },
+    {
+      "ring_device": "M4 SS4456 Build/LMY47V |  | chrome 46.0 for android",
+      "as_of": "2016-08-17 14:46:43",
+      "ring_cards": 3,
+      "base_rate": 0.06667,
+      "origin": null,
+      "raw_origin": ""
+    },
+    {
+      "ring_device": "MacOS | Mac OS X 10_13_2 | chrome 63.0 | 1366x768",
+      "as_of": "2016-08-14 18:43:38",
+      "ring_cards": 3,
+      "base_rate": 0.07833,
+      "origin": null,
+      "raw_origin": ""
+    },
+    {
+      "ring_device": "SAMSUNG SM-J120H Build/LMY47V |  | chrome generic",
+      "as_of": "2016-08-17 01:39:22",
+      "ring_cards": 3,
+      "base_rate": 0.07033,
+      "origin": null,
+      "raw_origin": ""
+    },
+    {
+      "ring_device": "E6603 Build/32.4.A.1.54 |  | chrome 58.0 for android",
+      "as_of": "2016-08-17 14:46:43",
+      "ring_cards": 3,
+      "base_rate": 0.07467,
+      "origin": null,
+      "raw_origin": ""
+    },
+    {
+      "ring_device": "SM-G530H Build/LRX22G |  | chrome 46.0 for android",
+      "as_of": "2016-08-18 08:22:57",
+      "ring_cards": 3,
+      "base_rate": 0.07,
+      "origin": null,
+      "raw_origin": ""
+    },
+    {
+      "ring_device": "TA-1039 Build/N2G47H |  | chrome 63.0 for android",
+      "as_of": "2016-08-21 21:22:45",
+      "ring_cards": 3,
+      "base_rate": 0.07,
+      "origin": null,
+      "raw_origin": ""
+    },
+    {
+      "ring_device": "TA-1038 Build/NMF26O |  | chrome 63.0 for android",
+      "as_of": "2016-08-17 14:07:24",
+      "ring_cards": 3,
+      "base_rate": 0.07033,
+      "origin": null,
+      "raw_origin": ""
+    },
+    {
+      "ring_device": "es-mx |  | android browser 4.0",
+      "as_of": "2016-08-23 16:20:58",
+      "ring_cards": 3,
+      "base_rate": 0.07367,
+      "origin": null,
+      "raw_origin": ""
+    },
+    {
+      "ring_device": "Redmi 4X Build/N2G47H |  | chrome 63.0 for android",
+      "as_of": "2016-08-22 20:53:05",
+      "ring_cards": 3,
+      "base_rate": 0.07133,
+      "origin": null,
+      "raw_origin": ""
+    },
+    {
+      "ring_device": "SAMSUNG SM-J327T1 Build/NRD90M | Android 7.0 | samsung brows",
+      "as_of": "2016-09-17 23:46:27",
+      "ring_cards": 2,
+      "base_rate": 0.08067,
+      "origin": null,
+      "raw_origin": ""
+    },
+    {
+      "ring_device": "Windows | Windows 10 | chrome 62.0 | 1600x1200",
+      "as_of": "2016-09-01 07:41:56",
+      "ring_cards": 3,
+      "base_rate": 0.08,
+      "origin": null,
+      "raw_origin": ""
+    },
+    {
+      "ring_device": "Windows | Windows 10 | chrome 61.0 | 1600x1200",
+      "as_of": "2016-08-26 00:50:11",
+      "ring_cards": 3,
+      "base_rate": 0.07433,
+      "origin": null,
+      "raw_origin": ""
+    },
+    {
+      "ring_device": "5010G Build/MRA58K |  | chrome 52.0 for android",
+      "as_of": "2016-08-26 21:20:22",
+      "ring_cards": 3,
+      "base_rate": 0.07633,
+      "origin": null,
+      "raw_origin": ""
+    },
+    {
+      "ring_device": "ALE-L23 Build/HuaweiALE-L23 |  | chrome 50.0 for android",
+      "as_of": "2016-08-27 23:26:21",
+      "ring_cards": 3,
+      "base_rate": 0.07967,
+      "origin": null,
+      "raw_origin": ""
+    },
+    {
+      "ring_device": "SAMSUNG SM-G891A Build/NRD90M | Android 7.0 | samsung browse",
+      "as_of": "2016-09-07 17:56:14",
+      "ring_cards": 3,
+      "base_rate": 0.087,
+      "origin": null,
+      "raw_origin": ""
+    },
+    {
+      "ring_device": "TR10CS1 Build/JDQ39 |  | chrome 63.0 for android",
+      "as_of": "2016-08-30 06:53:22",
+      "ring_cards": 3,
+      "base_rate": 0.08167,
+      "origin": null,
+      "raw_origin": ""
+    },
+    {
+      "ring_device": "rv:57.0 | Windows 7 | firefox 57.0 | 1280x1024",
+      "as_of": "2016-08-31 11:51:57",
+      "ring_cards": 3,
+      "base_rate": 0.07867,
+      "origin": null,
+      "raw_origin": ""
+    },
+    {
+      "ring_device": "F5121 Build/34.3.A.0.252 |  | chrome generic for android",
+      "as_of": "2016-09-09 20:10:52",
+      "ring_cards": 3,
+      "base_rate": 0.08367,
+      "origin": null,
+      "raw_origin": ""
+    },
+    {
+      "ring_device": "E2104 Build/24.0.A.5.14 |  | chrome generic",
+      "as_of": "2016-09-06 04:50:36",
+      "ring_cards": 3,
+      "base_rate": 0.08033,
+      "origin": null,
+      "raw_origin": ""
+    },
+    {
+      "ring_device": "TA-1039 Build/NMF26F |  | chrome 64.0 for android",
+      "as_of": "2016-09-08 13:41:22",
+      "ring_cards": 3,
+      "base_rate": 0.07367,
+      "origin": null,
+      "raw_origin": ""
+    },
+    {
+      "ring_device": "ZTE Blade A511 Build/MRA58K |  | chrome 63.0 for android",
+      "as_of": "2016-09-07 08:41:17",
+      "ring_cards": 3,
+      "base_rate": 0.089,
+      "origin": null,
+      "raw_origin": ""
+    },
+    {
+      "ring_device": "rv:58.0 | Mac OS X 10.11 | firefox 58.0 | 1280x800",
+      "as_of": "2016-09-11 16:23:16",
+      "ring_cards": 3,
+      "base_rate": 0.08033,
+      "origin": null,
+      "raw_origin": ""
+    },
+    {
+      "ring_device": "SM-N920A Build/MMB29K |  | chrome 63.0 for android",
+      "as_of": "2016-09-11 19:39:47",
+      "ring_cards": 3,
+      "base_rate": 0.07867,
+      "origin": null,
+      "raw_origin": ""
+    },
+    {
+      "ring_device": "SM-G955F Build/NRD90M |  | chrome 64.0 for android",
+      "as_of": "2016-09-19 09:12:20",
+      "ring_cards": 2,
+      "base_rate": 0.07467,
+      "origin": null,
+      "raw_origin": ""
+    },
+    {
+      "ring_device": "SAMSUNG SM-G925F Build/NRD90M |  | samsung browser 6.2",
+      "as_of": "2016-09-16 18:02:10",
+      "ring_cards": 3,
+      "base_rate": 0.08233,
+      "origin": null,
+      "raw_origin": ""
+    },
+    {
+      "ring_device": "rv:47.0 | Windows 10 | firefox 47.0 | 1768x992",
+      "as_of": "2016-09-13 13:38:30",
+      "ring_cards": 3,
+      "base_rate": 0.07867,
+      "origin": null,
+      "raw_origin": ""
+    },
+    {
+      "ring_device": "Windows | Windows 7 | firefox 58.0 | 1440x900",
+      "as_of": "2016-09-11 00:32:36",
+      "ring_cards": 3,
+      "base_rate": 0.079,
+      "origin": null,
+      "raw_origin": ""
+    },
+    {
+      "ring_device": "Windows | Windows 10 | chrome 64.0 | 1280x800",
+      "as_of": "2016-09-11 09:48:57",
+      "ring_cards": 3,
+      "base_rate": 0.073,
+      "origin": null,
+      "raw_origin": ""
+    },
+    {
+      "ring_device": "5012G Build/MRA58K |  | chrome 62.0 for android",
+      "as_of": "2016-09-15 18:00:25",
+      "ring_cards": 3,
+      "base_rate": 0.07133,
+      "origin": null,
+      "raw_origin": ""
+    },
+    {
+      "ring_device": "rv:58.0 | Windows 10 | firefox | 1366x768",
+      "as_of": "2016-09-30 09:33:47",
+      "ring_cards": 3,
+      "base_rate": 0.07267,
+      "origin": null,
+      "raw_origin": ""
+    },
+    {
+      "ring_device": "MacOS | Mac OS X 10_13_1 | chrome 64.0 | 1920x1080",
+      "as_of": "2016-09-16 20:26:50",
+      "ring_cards": 3,
+      "base_rate": 0.07733,
+      "origin": null,
+      "raw_origin": ""
+    },
+    {
+      "ring_device": "SM-J100VPP Build/LMY48B |  | chrome 63.0 for android",
+      "as_of": "2016-10-11 08:58:35",
+      "ring_cards": 2,
+      "base_rate": 0.06,
+      "origin": null,
+      "raw_origin": ""
+    },
+    {
+      "ring_device": "Moto G Play Build/NPI26.48-36 |  | chrome 64.0 for android",
+      "as_of": "2016-09-20 00:12:45",
+      "ring_cards": 3,
+      "base_rate": 0.07633,
+      "origin": null,
+      "raw_origin": ""
+    },
+    {
+      "ring_device": "SM-J320M Build/LMY47V |  | chrome 64.0 for android",
+      "as_of": "2016-09-28 10:23:16",
+      "ring_cards": 1,
+      "base_rate": 0.072,
+      "origin": null,
+      "raw_origin": ""
+    },
+    {
+      "ring_device": "SM-J700M Build/LMY48B |  | chrome 64.0 for android",
+      "as_of": "2016-09-21 22:38:18",
+      "ring_cards": 2,
+      "base_rate": 0.075,
+      "origin": null,
+      "raw_origin": ""
+    },
+    {
+      "ring_device": "Windows | Windows 10 | opera | 1366x768",
+      "as_of": "2016-09-21 04:00:14",
+      "ring_cards": 3,
+      "base_rate": 0.07233,
+      "origin": null,
+      "raw_origin": ""
+    },
+    {
+      "ring_device": "SM-N920A Build/MMB29K |  | chrome 64.0 for android",
+      "as_of": "2016-09-21 13:13:27",
+      "ring_cards": 3,
+      "base_rate": 0.07367,
+      "origin": null,
+      "raw_origin": ""
+    },
+    {
+      "ring_device": "Windows | Windows 8.1 | chrome 58.0 | 1366x768",
+      "as_of": "2016-09-24 23:43:23",
+      "ring_cards": 3,
+      "base_rate": 0.07833,
+      "origin": null,
+      "raw_origin": ""
+    },
+    {
+      "ring_device": "HUAWEI Y360-U23 Build/HUAWEIY360-U23 |  | chrome 62.0 for an",
+      "as_of": "2016-09-26 10:51:20",
+      "ring_cards": 2,
+      "base_rate": 0.076,
+      "origin": null,
+      "raw_origin": ""
+    },
+    {
+      "ring_device": "F8331 Build/41.2.A.7.76 |  | chrome 64.0 for android",
+      "as_of": "2016-09-23 07:01:23",
+      "ring_cards": 3,
+      "base_rate": 0.075,
+      "origin": null,
+      "raw_origin": ""
+    },
+    {
+      "ring_device": "Windows | Linux | chrome generic | 640x360",
+      "as_of": "2016-09-26 09:52:47",
+      "ring_cards": 3,
+      "base_rate": 0.07633,
+      "origin": null,
+      "raw_origin": ""
+    },
+    {
+      "ring_device": "MYA-L03 Build/HUAWEIMYA-L03 |  | chrome 64.0 for android",
+      "as_of": "2016-09-28 10:23:16",
+      "ring_cards": 3,
+      "base_rate": 0.075,
+      "origin": null,
+      "raw_origin": ""
+    },
+    {
+      "ring_device": "rv:58.0 | Windows 10 | firefox | 1920x1080",
+      "as_of": "2016-09-25 15:53:47",
+      "ring_cards": 3,
+      "base_rate": 0.08033,
+      "origin": null,
+      "raw_origin": ""
+    },
+    {
+      "ring_device": "Windows | Windows 7 | chrome 64.0 | 1920x975",
+      "as_of": "2016-09-28 01:10:45",
+      "ring_cards": 3,
+      "base_rate": 0.07733,
+      "origin": null,
+      "raw_origin": ""
+    },
+    {
+      "ring_device": "GT-I9060M Build/KTU84P |  | chrome 64.0 for android",
+      "as_of": "2016-09-28 23:07:51",
+      "ring_cards": 3,
+      "base_rate": 0.078,
+      "origin": null,
+      "raw_origin": ""
+    }
+  ],
+  "backend": "tigergraph",
+  "seconds": 46.2
+}

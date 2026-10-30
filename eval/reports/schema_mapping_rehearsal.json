@@ -1,0 +1,322 @@
+{
+  "mapping": [
+    {
+      "from": "prodCode",
+      "to": "ProductCD",
+      "score": 1.0,
+      "evidence": {
+        "name_overlap": 1.0,
+        "types": [
+          "categorical",
+          "categorical"
+        ],
+        "values": "5 shared distinct values",
+        "value_similarity": 1.0
+      },
+      "transform": "identity",
+      "samples": {
+        "variant": [
+          "H",
+          "W",
+          "C"
+        ],
+        "reference": [
+          "H",
+          "W",
+          "C"
+        ]
+      }
+    },
+    {
+      "from": "modelAlertScore",
+      "to": "risk_score",
+      "score": 1.0,
+      "evidence": {
+        "name_overlap": 1.0,
+        "types": [
+          "numeric",
+          "numeric"
+        ],
+        "values": "quantiles match at scale x1",
+        "value_similarity": 1.0
+      },
+      "transform": "identity",
+      "samples": {
+        "variant": [
+          "0.25",
+          "0.06",
+          "0.52"
+        ],
+        "reference": [
+          "0.25",
+          "0.06",
+          "0.52"
+        ]
+      }
+    },
+    {
+      "from": "chan",
+      "to": "channel",
+      "score": 1.0,
+      "evidence": {
+        "name_overlap": 1.0,
+        "types": [
+          "categorical",
+          "categorical"
+        ],
+        "values": "2 shared distinct values",
+        "value_similarity": 1.0
+      },
+      "transform": "identity",
+      "samples": {
+        "variant": [
+          "online",
+          "in_person",
+          "online"
+        ],
+        "reference": [
+          "online",
+          "in_person",
+          "online"
+        ]
+      }
+    },
+    {
+      "from": "valueCents",
+      "to": "TransactionAmt",
+      "score": 0.825,
+      "evidence": {
+        "name_overlap": 0.5,
+        "types": [
+          "numeric",
+          "numeric"
+        ],
+        "values": "quantiles match at scale x0.01",
+        "value_similarity": 1.0
+      },
+      "transform": "multiply by 0.01",
+      "samples": {
+        "variant": [
+          "5002.0",
+          "3192.0",
+          "8378.0"
+        ],
+        "reference": [
+          "50.02",
+          "31.92",
+          "83.78"
+        ]
+      }
+    },
+    {
+      "from": "paymentRef",
+      "to": "TransactionID",
+      "score": 0.825,
+      "evidence": {
+        "name_overlap": 0.5,
+        "types": [
+          "numeric",
+          "numeric"
+        ],
+        "values": "quantiles match at scale x1",
+        "value_similarity": 1.0
+      },
+      "transform": "identity",
+      "samples": {
+        "variant": [
+          "3000001",
+          "3000002",
+          "3000003"
+        ],
+        "reference": [
+          "3000001",
+          "3000002",
+          "3000003"
+        ]
+      }
+    },
+    {
+      "from": "clientNo",
+      "to": "customer_id",
+      "score": 0.825,
+      "evidence": {
+        "name_overlap": 0.5,
+        "types": [
+          "card_or_customer_id",
+          "card_or_customer_id"
+        ],
+        "values": "1020 shared distinct values",
+        "value_similarity": 1.0
+      },
+      "transform": "identity",
+      "samples": {
+        "variant": [
+          "C06075",
+          "C07096",
+          "C11919"
+        ],
+        "reference": [
+          "C06075",
+          "C07096",
+          "C11919"
+        ]
+      }
+    },
+    {
+      "from": "payeeMailDomain",
+      "to": "R_emaildomain",
+      "score": 0.65,
+      "evidence": {
+        "name_overlap": 0.0,
+        "types": [
+          "categorical",
+          "categorical"
+        ],
+        "values": "51 shared distinct values",
+        "value_similarity": 1.0
+      },
+      "transform": "identity",
+      "samples": {
+        "variant": [
+          "hotmail.com",
+          "hotmail.com",
+          "gmail.com"
+        ],
+        "reference": [
+          "hotmail.com",
+          "hotmail.com",
+          "gmail.com"
+        ]
+      }
+    },
+    {
+      "from": "network",
+      "to": "card4",
+      "score": 0.65,
+      "evidence": {
+        "name_overlap": 0.0,
+        "types": [
+          "categorical",
+          "categorical"
+        ],
+        "values": "4 shared distinct values",
+        "value_similarity": 1.0
+      },
+      "transform": "identity",
+      "samples": {
+        "variant": [
+          "american express",
+          "mastercard",
+          "mastercard"
+        ],
+        "reference": [
+          "american express",
+          "mastercard",
+          "mastercard"
+        ]
+      }
+    },
+    {
+      "from": "fundingType",
+      "to": "card6",
+      "score": 0.65,
+      "evidence": {
+        "name_overlap": 0.0,
+        "types": [
+          "categorical",
+          "categorical"
+        ],
+        "values": "2 shared distinct values",
+        "value_similarity": 1.0
+      },
+      "transform": "identity",
+      "samples": {
+        "variant": [
+          "credit",
+          "debit",
+          "credit"
+        ],
+        "reference": [
+          "credit",
+          "debit",
+          "credit"
+        ]
+      }
+    },
+    {
+      "from": "buyerMailDomain",
+      "to": "P_emaildomain",
+      "score": 0.65,
+      "evidence": {
+        "name_overlap": 0.0,
+        "types": [
+          "categorical",
+          "categorical"
+        ],
+        "values": "47 shared distinct values",
+        "value_similarity": 1.0
+      },
+      "transform": "identity",
+      "samples": {
+        "variant": [
+          "yahoo.com",
+          "gmail.com",
+          "hotmail.com"
+        ],
+        "reference": [
+          "yahoo.com",
+          "gmail.com",
+          "hotmail.com"
+        ]
+      }
+    },
+    {
+      "from": "billingZip",
+      "to": "addr1",
+      "score": 0.65,
+      "evidence": {
+        "name_overlap": 0.0,
+        "types": [
+          "numeric",
+          "numeric"
+        ],
+        "values": "quantiles match at scale x1",
+        "value_similarity": 1.0
+      },
+      "transform": "identity",
+      "samples": {
+        "variant": [
+          "299.0",
+          "181.0",
+          "123.0"
+        ],
+        "reference": [
+          "299.0",
+          "181.0",
+          "123.0"
+        ]
+      }
+    }
+  ],
+  "unmapped_variant_columns": [
+    "eventDate",
+    "eventTime"
+  ],
+  "reshapes": [
+    {
+      "reshape": "timestamp split",
+      "columns": [
+        "eventDate",
+        "eventTime"
+      ],
+      "transform": "ts = eventDate + ' ' + eventTime"
+    }
+  ],
+  "rehearsal": {
+    "columns": 11,
+    "correct": 11,
+    "wrong": {},
+    "timestamp_split_detected": true,
+    "cents_detected": true
+  }
+}

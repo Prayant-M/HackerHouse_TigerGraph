@@ -1,0 +1,23 @@
+/* data_gaps — C11 data-quality detective, per set of transactions: missing
+   identity (no FROM_DEVICE edge), empty billing region, placeholder purchaser
+   email. Each list is record ids, so the taint report is attested.           */
+
+USE GRAPH FraudGraph
+
+CREATE OR REPLACE QUERY data_gaps(SET<STRING> txn_ids)
+FOR GRAPH FraudGraph SYNTAX v2 {
+  OrAccum @has_dev, @placeholder_email;
+  SetAccum<STRING> @@no_identity, @@empty_region, @@placeholder_email;
+  s = {Transaction.*};
+  s = SELECT t FROM s:t WHERE txn_ids.contains(t.txn_id);
+  x = SELECT t FROM s:t -(FROM_DEVICE>:e)- DeviceProfile:d ACCUM t.@has_dev += TRUE;
+  y = SELECT t FROM s:t -(PURCHASER_EMAIL>:e)- EmailDomain:m
+      WHERE m.domain == "anonymous.com" ACCUM t.@placeholder_email += TRUE;
+  z = SELECT t FROM s:t
+      POST-ACCUM
+        CASE WHEN NOT t.@has_dev THEN @@no_identity += t.txn_id END,
+        CASE WHEN t.region == "" THEN @@empty_region += t.txn_id END,
+        CASE WHEN t.@placeholder_email THEN @@placeholder_email += t.txn_id END;
+  PRINT s.size() AS n, @@no_identity AS no_identity, @@empty_region AS empty_region,
+        @@placeholder_email AS placeholder_email;
+}

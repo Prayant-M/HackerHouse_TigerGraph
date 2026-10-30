@@ -1,0 +1,31 @@
+/* rbac.gsql — least-privilege graph access for the agent (run once as superuser).
+
+   Three principals:
+     loader      superuser; schema changes, loading jobs, fact masks, canaries
+     fraud_agent may EXECUTE the installed investigation queries and the single
+                 write query case_write — nothing else (no schema, no loading,
+                 no interpreted GSQL, no generic upserts)
+     console     may EXECUTE governance_write (human approvals, feedback,
+                 detector and schema-change approvals) and read queries
+
+   Client-side, the same allow-lists are enforced again
+   (graphstore/tigergraph.py allowed_queries, graphstore/mcp_client.py
+   allowed_tools), so a misconfigured role still cannot reach a write tool.
+
+   Users are created with `CREATE USER` in the GSQL shell (it prompts for the
+   password), then:  GRANT ROLE agent_role ON GRAPH FraudGraph TO fraud_agent */
+
+USE GRAPH FraudGraph
+
+CREATE ROLE agent_role
+GRANT EXECUTE ON QUERY card_baseline, card_window, episode_window, card_testing_probe,
+      threshold_structuring_probe, mixed_channel_probe, out_of_region_probe,
+      recurring_charge_probe, device_fanout, peer_purchases, shared_entity_ring,
+      fraud_proximity, hybrid_case_recall, behavioural_neighbours, policy_retrieve,
+      card_community, case_chain, ring_at_asof, origin_counts, origin_touchers,
+      ring_exposure, precedent_by_facts, compromise_watch, data_gaps, case_write
+      IN GRAPH FraudGraph TO agent_role
+
+CREATE ROLE console_role
+GRANT EXECUTE ON QUERY governance_write, case_chain, data_gaps
+      IN GRAPH FraudGraph TO console_role

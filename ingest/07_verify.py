@@ -48,11 +48,24 @@ def main() -> int:
     tx = pd.read_parquet(PATHS.tx_parquet)
     tx["txn_id"] = tx["txn_id"].astype(str)
     cc = pd.read_parquet(PATHS.closed_cases_parquet)
-    pack = pd.read_csv(PATHS.case_pack_csv)
+    pack = pd.concat([pd.read_csv(f) for f in PATHS.case_pack_files()], ignore_index=True)
+    jan = any("2017" in f.name for f in PATHS.transaction_files())
+    want_tx = 590_742 + (60_196 if jan else 0)
+    want_cc = 5_585 if len(cc) > 5_565 else 5_565
 
-    check("transactions loaded", len(tx) == 590_742, f"{len(tx):,} rows (expected 590,742)")
-    check("closed cases loaded", len(cc) == 5_565, f"{len(cc):,} rows (expected 5,565)")
-    check("case pack loaded", len(pack) == 20, f"{len(pack)} cases")
+    check("transactions loaded", len(tx) == want_tx, f"{len(tx):,} rows (expected {want_tx:,}"
+          f"{' incl. January 2017' if jan else ''})")
+    check("closed cases loaded", len(cc) == want_cc, f"{len(cc):,} rows (expected {want_cc:,})")
+    check("case pack loaded", len(pack) in {20, 18, 38}, f"{len(pack)} cases from "
+          f"{', '.join(f.name for f in PATHS.case_pack_files())}")
+    # Card-id pinning must hold for every pack card, January included; a card
+    # that does not resolve breaks card-scoped queries silently, so fail loudly.
+    unresolved = sorted(set(pack["card_id"]) - set(tx["card_id"]))
+    check("every case-pack card id resolves", not unresolved,
+          f"unresolved: {unresolved[:10]}" if unresolved else "all resolve")
+    cc_unresolved = sorted(set(cc["card_id"]) - set(tx["card_id"]))
+    check("every closed-case card id resolves", not cc_unresolved,
+          f"unresolved: {cc_unresolved[:10]}" if cc_unresolved else "all resolve")
 
     # ---- card_id recovery, against the dataset's own labels -----------------
     by_txn = tx.set_index("txn_id")["card_id"]
@@ -115,7 +128,7 @@ def main() -> int:
 
     # ---- the two undocumented typologies are still detectable ---------------
     und = cc[cc["pattern"] == "undocumented"]
-    check("undocumented seed cases present", len(und) == 9,
+    check("undocumented seed cases present", len(und) >= 9,
           f"{len(und)} closed cases the bank's analysts could not categorise")
 
     ring_dev = ("SM-G935F Build/NRD90M | Android 7.0 | chrome 62.0 for android | 1920x1080")

@@ -111,3 +111,17 @@ class InvestigationState(TypedDict, total=False):
     narrative: dict[str, Any]
     result: dict[str, Any]
     trace: list[dict[str, Any]]
+
+    # final-round layers (agent/final_round.py). LangGraph keeps only declared
+    # keys between nodes, so every one of them is declared here.
+    _store: Any
+    text_facts: dict[str, Any]
+    p_graph_only: float
+    compromise_watch: list[dict[str, Any]]
+    quality: dict[str, Any]
+    conformal: dict[str, Any]
+    proof: dict[str, Any]
+    gate: dict[str, Any]
+    containment: dict[str, Any] | None
+    feedback_applied: list[dict[str, Any]]
+    typology_detections: list[dict[str, Any]]

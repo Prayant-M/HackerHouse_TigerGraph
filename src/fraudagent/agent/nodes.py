@@ -39,6 +39,9 @@ from ..core.evidence_ledger import EvidenceLedger, trigger_prior
 from ..core.ledger import DecisionLedger
 from ..core.policy_engine import CaseState
 from ..core.signals import extract
+from ..core.text_facts import data_block, extract_text_facts
+from ..governance import feedback
+from . import final_round as FR
 from ..graphstore.base import GraphStore
 from .llm import LLMClient
 from .simulator import respond
@@ -99,9 +102,16 @@ def trigger_intake(state: InvestigationState, store: GraphStore,
     state["customer_response"] = ""
     state["step_up_result"] = ""
     state["analyst_response"] = ""
+    state["_store"] = store
+    # trigger_text is data, never instruction. Only the allow-listed facts the
+    # extractor reads can reach a decision; instruction-like spans are flagged.
+    tf = extract_text_facts(t.text, t.type)
+    state["text_facts"] = tf.as_dict()
     _trace(state, "trigger_intake",
            {"trigger_type": t.type, "flagged_txn_id": t.flagged_txn_id,
-            "as_of": str(t.opened_at)})
+            "as_of": str(t.opened_at), "hostile_text_detected": tf.hostile_text_detected,
+            "hostile_spans": [s["kind"] for s in tf.hostile_spans],
+            "january_regime": FR.january(t.opened_at)})
     return state
 
 
@@ -111,7 +121,8 @@ def case_opener(state: InvestigationState, store: GraphStore,
     """Open the case and set the temporal wall. `as_of` never advances again."""
     state["graph_case_id"] = f"CASE-{state['case_id']}"
     state["decisions"] = DecisionLedger(state["case_id"])
-    prior = trigger_prior(state["trigger"].type)
+    prior = FR.soften_prior(trigger_prior(state["trigger"].type), state["trigger"].type,
+                            state["as_of"])
     state["ledger"] = EvidenceLedger(prior)
     state["decisions"].record(
         "case_opener", prior, prior,
@@ -133,7 +144,7 @@ def evidence_planner(state: InvestigationState, store: GraphStore,
     t = state["trigger"]
     plan = llm.complete_json(
         PLANNER_SYSTEM,
-        f"Trigger type: {t.type}\nTrigger text: {t.text}\n"
+        f"Trigger type: {t.type}\n{data_block(t.text)}\n"
         f"Flagged transaction: {t.flagged_txn_id} on card {t.card_id}\n"
         f"Available primitives: {', '.join(TOOLKIT)}\n"
         f"Which do you want, and why?")
@@ -168,6 +179,20 @@ def memory_recall(state: InvestigationState, store: GraphStore,
     query = _recall_query(ctx)
     priors = store.hybrid_case_recall(query, ctx.entity_ids(), state["as_of"], k=5)
     state["priors"] = priors
+    # Read back COMPROMISE_POINT edges earlier investigations wrote: memory of
+    # *where* fraud came from, not only what it was.
+    f = ctx.flagged
+    watch = store.compromise_watch([f.device_profile, f.region, f.email_p], state["as_of"])
+    state["compromise_watch"] = watch
+    if watch:
+        w = watch[0]
+        state["ledger"].add(
+            "compromise_point_recall", "memory",
+            {h: (0.55 if h == H.NONE else 1.25) for h in H.HYPOTHESES}, 0.8,
+            claim=(f"{w['entity'][:60]} was named a compromise point by {w['graph_case_id']} "
+                   f"(lift {w['lift']:.1f}); this transaction passed through it"),
+            ref=f"query:compromise_watch(as_of={state['as_of']})",
+            entity_ids=[w["graph_case_id"], f.txn_id])
 
     ledger: EvidenceLedger = state["ledger"]
     if priors:
@@ -259,11 +284,26 @@ def ledger_update(state: InvestigationState, store: GraphStore,
     ledger: EvidenceLedger = state["ledger"]
     before = ledger.snapshot()
     folded = 0
+    jan = FR.january(state["as_of"])
+    fb_adj = feedback.adjustments()
+    applied: list[dict[str, Any]] = []
     for name in ctx.signals:
         if name == "customer_disputed":
             continue                  # already carried by the trigger-conditioned prior
-        if ledger.add_signal(ctx.signals[name]) is not None:
+        if jan and name in FR.RISK_PRIOR_SIGNALS:
+            continue                  # January: the bank model has not seen this data (LR 1)
+        scale = 1.0
+        if ctx.signals[name].fired:
+            scale, caused_by = feedback.factor(name, state["trigger"].card_id, fb_adj)
+            if caused_by:
+                applied.append({"signal": name, "factor": scale, "caused_by": caused_by})
+            if scale == 0.0:
+                continue              # an analyst rejected this finding on this card
+        if ledger.add_signal(ctx.signals[name], scale=scale) is not None:
             folded += 1
+    state["feedback_applied"] = applied
+    # Graph-only belief, before any solicited evidence: what conformal calibrates.
+    state["p_graph_only"] = ledger.fraud_probability
     state["decisions"].record(
         "ledger_update", before, ledger.snapshot(),
         f"Folded {folded} measured observations into the posterior. Fraud probability moved "
@@ -435,14 +475,34 @@ def action_recommender(state: InvestigationState, store: GraphStore,
     """The final recommendation, after everything that was going to arrive has."""
     ledger: EvidenceLedger = state["ledger"]
     ctx = state["ctx"]
-    verdict = policy_engine.verdict_for(ledger.posterior, AGENT)
+    core_verdict = policy_engine.verdict_for(ledger.posterior, AGENT)
+    # Layer 1 — conformal abstention: widen a fraud verdict to uncertain when the
+    # 90%-coverage set does not single out fraud, the case is outside the
+    # calibration support, or the data is tainted.
+    verdict, conf = FR.conformal_layer(state, store, core_verdict)
     pattern, sub = _pattern_for(state, verdict)
     state["verdict"] = verdict
     state["pattern"] = pattern
     state["sub_typology"] = sub
     state["episode"] = episode_mod.build(store, ctx, pattern, verdict)
 
-    decision = _policy_for(state, final=True)
+    base = _case_state(state, final=True)
+    decision = policy_engine.evaluate(base)
+    # Layer 2 — proof object and the one-way gate.
+    decision, prf, gate_rec = FR.proof_and_gate(state, decision, base)
+    state["proof"], state["gate"] = prf, gate_rec
+    if gate_rec.get("applied"):
+        state["verdict"] = verdict = "uncertain"
+        pattern, sub = _pattern_for(state, verdict)
+        state["pattern"], state["sub_typology"] = pattern, sub
+    # Layer 3 — predictive containment on ring cases.
+    state["containment"] = FR.containment_layer(state, store)
+    # New-typology detectors (C1) and approved discovered / policy detectors
+    # (C2, C3): reported as attested evidence, never a block on their own.
+    from ..detectors.typologies import run_all as run_detectors
+    state["typology_detections"] = run_detectors(store, state["trigger"].card_id,
+                                                 state["as_of"], ctx.flagged,
+                                                 set(ctx.fired_names()))
     state["final_decision"] = decision
     if state.get("initial_decision") is None:
         state["initial_decision"] = decision
@@ -458,7 +518,11 @@ def action_recommender(state: InvestigationState, store: GraphStore,
     _trace(state, "action_recommender",
            {"verdict": verdict, "pattern": pattern,
             "exposure": round(state["episode"].exposure_usd, 2),
-            "actions": decision.as_list(), "cited_rules": decision.cited_rules})
+            "actions": decision.as_list(), "cited_rules": decision.cited_rules,
+            "conformal_set": conf.get("set"), "conformal_widened": conf.get("widened_by"),
+            "proof_margin": prf.get("margin_k"), "minimal_facts": prf.get(
+                "minimal_sufficient_facts"), "gate": gate_rec.get("reason"),
+            "containment_origin": (state["containment"] or {}).get("origin")})
     return state
 
 
@@ -604,6 +668,15 @@ def _pattern_for(state: InvestigationState, verdict: str) -> tuple[str, str]:
     ledger: EvidenceLedger = state["ledger"]
     if verdict == "legitimate":
         return H.NONE, ""
+    # R9 (undocumented) obliges a report. An *uncertain* case is not established
+    # coordinated abuse, so it never claims the undocumented typology; the
+    # sub-typology is still named in the evidence and open questions.
+    if verdict == "uncertain":
+        ranked = sorted(((h, p) for h, p in ledger.posterior.items()
+                         if h not in (H.NONE, H.UNDOCUMENTED)), key=lambda kv: -kv[1])
+        if ledger.fraud_probability < AGENT.t_monitor or not ranked:
+            return H.NONE, ""
+        return ranked[0][0], ""
     # hard matchers win over the posterior: their signature is near-deterministic
     if ctx.fired("threshold_structuring"):
         return H.UNDOCUMENTED, "threshold_structuring"
@@ -663,6 +736,13 @@ def _case_state(state: InvestigationState, final: bool) -> CaseState:
                                 if r.type == "customer_validation"]),
         evidence_requested=bool(state["requests"]),
         has_pending_authorisation=True,
+        # Abstained: the conformal set could not single out fraud, or the proof
+        # gate withheld a harmful action. Either way fraud is not "strongly
+        # suspected" for §3a until an analyst has looked.
+        conformal_abstained=bool(final and (
+            ((state.get("conformal") or {}).get("verdict_after") == "uncertain"
+             and (state.get("conformal") or {}).get("verdict_before") == "fraud")
+            or (state.get("gate") or {}).get("applied"))),
     )
 
 

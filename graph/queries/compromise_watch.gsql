@@ -1,0 +1,32 @@
+/* compromise_watch — read-back of agent memory (C7 write-back).
+
+   Has any earlier investigation named one of these entities as a compromise
+   point? Walks COMPROMISED_IN from device / region / email entities back to the
+   FraudCase that wrote the COMPROMISE_POINT edge, as_of-bounded.              */
+
+USE GRAPH FraudGraph
+
+CREATE OR REPLACE QUERY compromise_watch(SET<STRING> entity_ids, DATETIME as_of)
+FOR GRAPH FraudGraph SYNTAX v2 {
+  ListAccum<STRING> @@hits;
+
+  d = {DeviceProfile.*};
+  d = SELECT v FROM d:v WHERE entity_ids.contains(v.device_profile);
+  hd = SELECT c FROM d:v -(COMPROMISED_IN>:e)- FraudCase:c
+       WHERE c.as_of < as_of
+       ACCUM @@hits += (c.graph_case_id + "\t" + v.device_profile + "\t"
+                        + to_string(e.lift) + "\t" + to_string(e.p_value));
+  r = {BillingRegion.*};
+  r = SELECT v FROM r:v WHERE entity_ids.contains(v.region);
+  hr = SELECT c FROM r:v -(COMPROMISED_IN>:e)- FraudCase:c
+       WHERE c.as_of < as_of
+       ACCUM @@hits += (c.graph_case_id + "\t" + v.region + "\t"
+                        + to_string(e.lift) + "\t" + to_string(e.p_value));
+  m = {EmailDomain.*};
+  m = SELECT v FROM m:v WHERE entity_ids.contains(v.domain);
+  hm = SELECT c FROM m:v -(COMPROMISED_IN>:e)- FraudCase:c
+       WHERE c.as_of < as_of
+       ACCUM @@hits += (c.graph_case_id + "\t" + v.domain + "\t"
+                        + to_string(e.lift) + "\t" + to_string(e.p_value));
+  PRINT @@hits AS hits;
+}

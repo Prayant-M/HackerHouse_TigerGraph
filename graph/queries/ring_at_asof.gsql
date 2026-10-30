@@ -1,0 +1,48 @@
+/* ring_at_asof — the time-sliced ring (Innovation 2, C7).
+
+   A seeded connected component (WCC restricted to the seed's component) over
+   the card-device co-occurrence, cut at `as_of`. Only transactions inside
+   [as_of - lookback_days, as_of] create links, and a device links cards only
+   if it is rare in that window (2..rare_cards cards) or mostly reached through
+   an anonymising proxy. Popular browser strings are not compromise points.
+
+   Round 1 ran WCC over all six months, so its output was context, never
+   weighed. Cut at as_of it is evidence: it can only see what existed then.  */
+
+USE GRAPH FraudGraph
+
+CREATE OR REPLACE QUERY ring_at_asof(STRING card_id, DATETIME as_of,
+                                     INT lookback_days = 45, INT rare_cards = 10,
+                                     INT max_cards = 60)
+FOR GRAPH FraudGraph SYNTAX v2 {
+  DATETIME since = epoch_to_datetime(datetime_to_epoch(as_of) - lookback_days * 86400);
+  OrAccum @visited;
+  SetAccum<STRING> @win_cards;
+  SumAccum<INT> @anon_n, @all_n;
+  SetAccum<STRING> @@cards, @@devices;
+  INT hops = 0;
+
+  frontier = {Card.*};
+  frontier = SELECT k FROM frontier:k WHERE k.card_id == card_id
+             POST-ACCUM k.@visited = TRUE;
+  WHILE frontier.size() > 0 AND @@cards.size() < max_cards AND hops < 3 DO
+    txns = SELECT t FROM frontier:k -(MADE>:e)- Transaction:t
+           WHERE t.ts >= since AND t.ts <= as_of;
+    devs = SELECT d FROM txns:t -(FROM_DEVICE>:e)- DeviceProfile:d;
+    dtx  = SELECT t FROM devs:d -(DEVICE_USED_IN>:e)- Transaction:t
+           WHERE t.ts >= since AND t.ts <= as_of
+           ACCUM d.@win_cards += t.card_id, d.@all_n += 1,
+                 CASE WHEN t.proxy_type == "IP_PROXY:ANONYMOUS" THEN d.@anon_n += 1 END;
+    link = SELECT d FROM devs:d
+           WHERE d.@win_cards.size() >= 2
+             AND (d.@win_cards.size() <= rare_cards OR d.@anon_n * 2 >= d.@all_n)
+           POST-ACCUM @@devices += d.device_profile;
+    ntx  = SELECT t FROM link:d -(DEVICE_USED_IN>:e)- Transaction:t
+           WHERE t.ts >= since AND t.ts <= as_of;
+    frontier = SELECT k FROM ntx:t -(MADE_WITH>:e)- Card:k
+               WHERE k.@visited == FALSE
+               POST-ACCUM k.@visited = TRUE, @@cards += k.card_id;
+    hops = hops + 1;
+  END;
+  PRINT @@cards AS cards, @@devices AS devices, @@cards.size() + 1 AS size;
+}

@@ -1,0 +1,32 @@
+{
+  "relations": {
+    "M1": {
+      "runs": 18,
+      "violations": []
+    },
+    "M2": {
+      "runs": 720,
+      "violations": [],
+      "flagged": 468
+    },
+    "M4": {
+      "runs": 18,
+      "violations": []
+    },
+    "M5": {
+      "runs": 90,
+      "violations": []
+    },
+    "M6": {
+      "runs": 18,
+      "violations": []
+    },
+    "M7": {
+      "runs": 18,
+      "violations": []
+    }
+  },
+  "n_cases": 18,
+  "seconds": 49.8,
+  "templates": 40
+}

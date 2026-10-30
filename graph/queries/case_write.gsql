@@ -1,0 +1,209 @@
+/* case_write — the agent's ONLY write path into the graph (least privilege).
+
+   Round 1 wrote the case subgraph through generic vertex/edge upserts (MCP
+   add_node / add_edge), which meant the agent's credentials could write
+   anything anywhere. Now the agent user may run installed queries only, and
+   this is the single query that writes. It accepts one JSON document built by
+   `report/answer.py` (the same payload as the answer file), and can only
+   create the case subgraph: FraudCase, Evidence, Decision, RecommendedAction,
+   EvidenceRequest, SAR, CaseStateChange, WATCH child cases, and the
+   COMPROMISE_POINT edge — plus links to entities that already exist.
+
+   Upsert semantics throughout: running the same case twice overwrites the
+   same vertex ids, so there are no duplicate evidence items or approvals.     */
+
+USE GRAPH FraudGraph
+
+CREATE OR REPLACE QUERY case_write(STRING graph_case_id, STRING case_json)
+FOR GRAPH FraudGraph SYNTAX v2 {
+  SetAccum<STRING> @@txn_ids, @@conn_cards, @@devices, @@priors, @@policies;
+  SumAccum<INT> @@n_evidence, @@n_decisions, @@n_actions, @@n_requests, @@n_children,
+                @@n_states;
+  JSONOBJECT c = parse_json_object(case_json);
+  JSONARRAY ev = c.getJsonArray("evidence");
+  JSONARRAY de = c.getJsonArray("decisions");
+  JSONARRAY ac = c.getJsonArray("actions");
+  JSONARRAY rq = c.getJsonArray("requests");
+  JSONARRAY ch = c.getJsonArray("watch_children");
+  JSONARRAY st = c.getJsonArray("state_changes");
+  JSONOBJECT lk = c.getJsonObject("links");
+  JSONARRAY lt = lk.getJsonArray("txn_ids");
+  JSONARRAY lc = lk.getJsonArray("connected_card_ids");
+  JSONARRAY ld = lk.getJsonArray("device_profiles");
+  JSONARRAY lp = lk.getJsonArray("prior_case_ids");
+  JSONARRAY lr = lk.getJsonArray("policy_doc_ids");
+
+  INSERT INTO FraudCase (PRIMARY_ID, source_case_id, status, verdict, trigger_type,
+      opened_at, as_of, fraud_probability, confidence, pattern, pattern_description,
+      exposure_usd, summary, narrative, stop_reason, ledger_head, tool_calls, latency_s,
+      lifecycle_state, parent_case, proof_margin, proof_minimal, gate_applied,
+      conformal_set, data_snapshot, answer_hash)
+    VALUES (graph_case_id, c.getString("case_id"), c.getString("status"),
+      c.getString("verdict"), c.getString("trigger_type"),
+      to_datetime(c.getString("opened_at")), to_datetime(c.getString("as_of")),
+      c.getDouble("fraud_probability"), c.getDouble("confidence"), c.getString("pattern"),
+      c.getString("pattern_description"), c.getDouble("exposure_usd"),
+      c.getString("summary"), c.getString("narrative"), c.getString("stop_reason"),
+      c.getString("ledger_head"), c.getInt("tool_calls"), c.getDouble("latency_s"),
+      c.getString("lifecycle_state"), c.getString("parent_case"), c.getInt("proof_margin"),
+      c.getString("proof_minimal"), c.getBool("gate_applied"), c.getString("conformal_set"),
+      c.getString("data_snapshot"), c.getString("answer_hash"));
+
+  IF ev.size() > 0 THEN
+    FOREACH i IN RANGE[0, ev.size() - 1] DO
+      INSERT INTO Evidence (PRIMARY_ID, kind, claim, source_tool, collected_at, reliability,
+                            delta_fraud_probability)
+        VALUES (ev.getJsonObject(i).getString("id"), ev.getJsonObject(i).getString("kind"),
+                ev.getJsonObject(i).getString("claim"),
+                ev.getJsonObject(i).getString("source_tool"),
+                to_datetime(c.getString("as_of")), ev.getJsonObject(i).getDouble("reliability"),
+                ev.getJsonObject(i).getDouble("delta"));
+      INSERT INTO HAS_EVIDENCE (FROM, TO) VALUES (graph_case_id, ev.getJsonObject(i).getString("id"));
+      @@n_evidence += 1;
+    END;
+  END;
+
+  IF de.size() > 0 THEN
+    FOREACH i IN RANGE[0, de.size() - 1] DO
+      INSERT INTO Decision (PRIMARY_ID, step, node, posterior_before, posterior_after,
+                            rationale, prev_hash, hash)
+        VALUES (de.getJsonObject(i).getString("id"), de.getJsonObject(i).getInt("step"),
+                de.getJsonObject(i).getString("node"), de.getJsonObject(i).getDouble("before"),
+                de.getJsonObject(i).getDouble("after"), de.getJsonObject(i).getString("rationale"),
+                de.getJsonObject(i).getString("prev_hash"), de.getJsonObject(i).getString("hash"));
+      INSERT INTO DECIDED (FROM, TO) VALUES (graph_case_id, de.getJsonObject(i).getString("id"));
+      @@n_decisions += 1;
+    END;
+  END;
+
+  IF ac.size() > 0 THEN
+    FOREACH i IN RANGE[0, ac.size() - 1] DO
+      INSERT INTO RecommendedAction (PRIMARY_ID, action_type, phase, approval_route, reason,
+                                     policy_rule, executed)
+        VALUES (ac.getJsonObject(i).getString("id"), ac.getJsonObject(i).getString("action"),
+                ac.getJsonObject(i).getString("phase"), ac.getJsonObject(i).getString("route"),
+                ac.getJsonObject(i).getString("reason"), ac.getJsonObject(i).getString("rule"),
+                ac.getJsonObject(i).getBool("executed"));
+      INSERT INTO RECOMMENDS (FROM, TO) VALUES (graph_case_id, ac.getJsonObject(i).getString("id"));
+      @@n_actions += 1;
+    END;
+  END;
+
+  IF rq.size() > 0 THEN
+    FOREACH i IN RANGE[0, rq.size() - 1] DO
+      INSERT INTO EvidenceRequest (PRIMARY_ID, request_type, channel, question,
+                                   expected_info_gain, friction_cost, asked_after_step,
+                                   simulated, simulation_seed, response)
+        VALUES (rq.getJsonObject(i).getString("id"), rq.getJsonObject(i).getString("type"),
+                rq.getJsonObject(i).getString("channel"), rq.getJsonObject(i).getString("question"),
+                rq.getJsonObject(i).getDouble("gain"), rq.getJsonObject(i).getDouble("cost"),
+                rq.getJsonObject(i).getInt("asked_after_step"), TRUE,
+                rq.getJsonObject(i).getInt("seed"), rq.getJsonObject(i).getString("response"));
+      INSERT INTO REQUESTED (FROM, TO) VALUES (graph_case_id, rq.getJsonObject(i).getString("id"));
+      @@n_requests += 1;
+    END;
+  END;
+
+  IF c.getJsonObject("sar").getBool("file") THEN
+    INSERT INTO SAR (PRIMARY_ID, filed, reason, narrative, total_amount_usd, activity_start,
+                     activity_end)
+      VALUES (graph_case_id + "-SAR", TRUE, c.getJsonObject("sar").getString("reason"),
+              c.getJsonObject("sar").getString("narrative"),
+              c.getJsonObject("sar").getDouble("total_amount_usd"),
+              c.getJsonObject("sar").getString("activity_start"),
+              c.getJsonObject("sar").getString("activity_end"));
+    INSERT INTO FILED (FROM, TO) VALUES (graph_case_id, graph_case_id + "-SAR");
+  END;
+
+  IF st.size() > 0 THEN
+    FOREACH i IN RANGE[0, st.size() - 1] DO
+      INSERT INTO CaseStateChange (PRIMARY_ID, case_id, from_state, to_state, at, actor,
+                                   actor_role, reason, evidence_ids)
+        VALUES (st.getJsonObject(i).getString("id"), c.getString("case_id"),
+                st.getJsonObject(i).getString("from"), st.getJsonObject(i).getString("to"),
+                to_datetime(st.getJsonObject(i).getString("at")),
+                st.getJsonObject(i).getString("actor"), st.getJsonObject(i).getString("role"),
+                st.getJsonObject(i).getString("reason"),
+                st.getJsonObject(i).getString("evidence_ids"));
+      INSERT INTO CASE_STATE (FROM, TO) VALUES (graph_case_id, st.getJsonObject(i).getString("id"));
+      @@n_states += 1;
+    END;
+  END;
+
+  IF ch.size() > 0 THEN
+    FOREACH i IN RANGE[0, ch.size() - 1] DO
+      INSERT INTO FraudCase (PRIMARY_ID, source_case_id, status, verdict, trigger_type,
+                             opened_at, as_of, lifecycle_state, parent_case, summary)
+        VALUES (ch.getJsonObject(i).getString("id"), c.getString("case_id"), "open",
+                "uncertain", "containment_watch", to_datetime(c.getString("as_of")),
+                to_datetime(c.getString("as_of")), "WATCH", graph_case_id,
+                ch.getJsonObject(i).getString("reason"));
+      INSERT INTO CHILD_CASE (FROM, TO, reason)
+        VALUES (graph_case_id, ch.getJsonObject(i).getString("id"),
+                ch.getJsonObject(i).getString("reason"));
+      @@n_children += 1;
+    END;
+  END;
+
+  FOREACH i IN RANGE[0, lt.size() - 1] DO @@txn_ids += lt.getString(i); END;
+  FOREACH i IN RANGE[0, lc.size() - 1] DO @@conn_cards += lc.getString(i); END;
+  FOREACH i IN RANGE[0, ld.size() - 1] DO @@devices += ld.getString(i); END;
+  FOREACH i IN RANGE[0, lp.size() - 1] DO @@priors += lp.getString(i); END;
+  FOREACH i IN RANGE[0, lr.size() - 1] DO @@policies += lr.getString(i); END;
+
+  cards = {Card.*};
+  cards = SELECT k FROM cards:k WHERE k.card_id == c.getString("card_id")
+          ACCUM INSERT INTO INVESTIGATES_CARD VALUES (graph_case_id, k);
+  custs = {Customer.*};
+  custs = SELECT u FROM custs:u WHERE u.customer_id == c.getString("customer_id")
+          ACCUM INSERT INTO INVESTIGATES_CUSTOMER VALUES (graph_case_id, u);
+  txns = {Transaction.*};
+  txns = SELECT t FROM txns:t WHERE @@txn_ids.contains(t.txn_id)
+         ACCUM INSERT INTO INVESTIGATES_TXN VALUES (graph_case_id, t);
+  conn = {Card.*};
+  conn = SELECT k FROM conn:k WHERE @@conn_cards.contains(k.card_id)
+         ACCUM INSERT INTO CONNECTED_CARD VALUES (graph_case_id, k);
+  devs = {DeviceProfile.*};
+  devs = SELECT d FROM devs:d WHERE @@devices.contains(d.device_profile)
+         ACCUM INSERT INTO INVESTIGATES_DEVICE VALUES (graph_case_id, d);
+  priors = {ClosedCase.*};
+  priors = SELECT p FROM priors:p WHERE @@priors.contains(p.case_id)
+           ACCUM INSERT INTO RECALLED_CASE VALUES (graph_case_id, p, 0.0, 0, 0.0);
+  pol = {PolicyDoc.*};
+  pol = SELECT d FROM pol:d WHERE @@policies.contains(d.doc_id)
+        ACCUM INSERT INTO CITES_POLICY VALUES (graph_case_id, d);
+
+  IF c.containsKey("origin") THEN
+    IF c.getJsonObject("origin").getString("type") == "device_profile" THEN
+      od = {DeviceProfile.*};
+      od = SELECT d FROM od:d
+           WHERE d.device_profile == c.getJsonObject("origin").getString("id")
+           ACCUM INSERT INTO COMPROMISE_POINT VALUES (graph_case_id FraudCase, d DeviceProfile,
+                 to_datetime(c.getJsonObject("origin").getString("from")),
+                 to_datetime(c.getJsonObject("origin").getString("to")),
+                 c.getJsonObject("origin").getDouble("lift"),
+                 c.getJsonObject("origin").getDouble("p_value"));
+    ELSE IF c.getJsonObject("origin").getString("type") == "region" THEN
+      orr = {BillingRegion.*};
+      orr = SELECT r FROM orr:r WHERE r.region == c.getJsonObject("origin").getString("id")
+            ACCUM INSERT INTO COMPROMISE_POINT VALUES (graph_case_id FraudCase, r BillingRegion,
+                  to_datetime(c.getJsonObject("origin").getString("from")),
+                  to_datetime(c.getJsonObject("origin").getString("to")),
+                  c.getJsonObject("origin").getDouble("lift"),
+                  c.getJsonObject("origin").getDouble("p_value"));
+    ELSE IF c.getJsonObject("origin").getString("type") == "email_p" THEN
+      om = {EmailDomain.*};
+      om = SELECT m FROM om:m WHERE m.domain == c.getJsonObject("origin").getString("id")
+           ACCUM INSERT INTO COMPROMISE_POINT VALUES (graph_case_id FraudCase, m EmailDomain,
+                 to_datetime(c.getJsonObject("origin").getString("from")),
+                 to_datetime(c.getJsonObject("origin").getString("to")),
+                 c.getJsonObject("origin").getDouble("lift"),
+                 c.getJsonObject("origin").getDouble("p_value"));
+    END;
+  END;
+
+  PRINT graph_case_id, @@n_evidence AS evidence, @@n_decisions AS decisions,
+        @@n_actions AS actions, @@n_requests AS requests, @@n_states AS state_changes,
+        @@n_children AS watch_children, txns.size() AS linked_transactions,
+        conn.size() AS linked_connected_cards;
+}

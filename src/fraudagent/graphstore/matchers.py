@@ -16,6 +16,22 @@ from typing import Any, Sequence
 
 ROUND_THRESHOLDS: tuple[float, ...] = (100.0, 200.0, 250.0, 500.0, 1000.0, 2000.0, 5000.0)
 
+# Evasion-frontier hardening (eval/attacks.py). The Round 1 structuring rule was
+# derived from five cases and its edges are exactly where an attacker would
+# sit: legs at 86% of the ceiling, a 90-minute burst, one ordinary purchase
+# mixed in. FRONTIER_HARDENING=1 switches to relative rules — legs within 15%
+# below any round ceiling, a two-hour burst, 60% of the burst in band — which
+# eval/attacks.py backtests for legitimate hits before it is turned on. It costs
+# 67 legitimate flags on the closed history for 68 extra frauds, so it stays OFF
+# in the core and runs as an evidence-only frontier detector instead
+# (detectors/typologies.py), which can flag but never block.
+import os as _os
+
+_HARD = _os.environ.get("FRONTIER_HARDENING", "0").lower() in {"1", "true", "yes"}
+STRUCTURING_BAND = 0.85 if _HARD else 0.90
+STRUCTURING_WINDOW_MIN = 120.0 if _HARD else 60.0
+STRUCTURING_SHARE = 0.60 if _HARD else 0.75
+
 
 def detect_card_testing(online_rows: Sequence[dict[str, Any]],
                         small_amount: float = 5.0,
@@ -70,8 +86,9 @@ def detect_card_testing(online_rows: Sequence[dict[str, Any]],
 
 
 def detect_threshold_structuring(online_rows: Sequence[dict[str, Any]],
-                                 window_minutes: float = 60.0,
-                                 min_txns: int = 3) -> dict[str, Any]:
+                                 window_minutes: float | None = None,
+                                 min_txns: int = 3, band: float | None = None,
+                                 share: float | None = None) -> dict[str, Any]:
     """UNDOCUMENTED typology U1 — sub-threshold authorisation structuring.
 
     Mined from closed cases CC-3748, CC-3841, CC-3907, CC-4086 and CC-4124: a
@@ -86,6 +103,9 @@ def detect_threshold_structuring(online_rows: Sequence[dict[str, Any]],
     sitting in that band, so an ordinary pair of purchases near a round number
     does not trip it.
     """
+    window_minutes = STRUCTURING_WINDOW_MIN if window_minutes is None else window_minutes
+    band = STRUCTURING_BAND if band is None else band
+    share = STRUCTURING_SHARE if share is None else share
     rows = sorted(online_rows, key=lambda r: r["ts"])
     best: dict[str, Any] = {"matched": False}
     j = 0
@@ -101,9 +121,9 @@ def detect_threshold_structuring(online_rows: Sequence[dict[str, Any]],
             continue
         amounts = [float(r["amount"]) for r in group]
         for thr in ROUND_THRESHOLDS:
-            lo = thr * 0.90
+            lo = thr * band
             idx = [n for n, a in enumerate(amounts) if lo <= a < thr]
-            if len(idx) < min_txns or len(idx) / len(amounts) < 0.75:
+            if len(idx) < min_txns or len(idx) / len(amounts) < share:
                 continue
             picked = [group[n] for n in idx]
             total = sum(amounts[n] for n in idx)

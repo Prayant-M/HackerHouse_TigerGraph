@@ -1,0 +1,51 @@
+/* governance_write — the console's write path for human decisions.
+
+   Separate from case_write on purpose: the agent's user may run case_write but
+   not this; the console's server-side user may run this but not case_write.
+   Human approvals, analyst feedback, detector approvals and schema-change
+   approvals all land here, append-only by id (the id carries the hash-chain
+   position, so a second write to the same id is the same record).             */
+
+USE GRAPH FraudGraph
+
+CREATE OR REPLACE QUERY governance_write(STRING kind, STRING record_json)
+FOR GRAPH FraudGraph SYNTAX v2 {
+  JSONOBJECT r = parse_json_object(record_json);
+  STRING written = "";
+
+  IF kind == "approval" THEN
+    INSERT INTO ApprovalRecord (PRIMARY_ID, case_id, action, approved, actor_id, actor_role,
+                                at, prev_hash, hash, signature)
+      VALUES (r.getString("id"), r.getString("case_id"), r.getString("action"),
+              r.getBool("approved"), r.getString("actor_id"), r.getString("actor_role"),
+              to_datetime(r.getString("at")), r.getString("prev_hash"), r.getString("hash"),
+              r.getString("signature"));
+    cases = {FraudCase.*};
+    cases = SELECT c FROM cases:c WHERE c.graph_case_id == r.getString("graph_case_id")
+            ACCUM INSERT INTO APPROVAL_OF VALUES (r.getString("id") ApprovalRecord, c FraudCase);
+    written = r.getString("id");
+  ELSE IF kind == "feedback" THEN
+    INSERT INTO AnalystFeedback (PRIMARY_ID, case_id, target_finding, accepted, analyst, at, note)
+      VALUES (r.getString("id"), r.getString("case_id"), r.getString("target"),
+              r.getBool("accepted"), r.getString("analyst"), to_datetime(r.getString("at")),
+              r.getString("note"));
+    cases = {FraudCase.*};
+    cases = SELECT c FROM cases:c WHERE c.graph_case_id == r.getString("graph_case_id")
+            ACCUM INSERT INTO FEEDBACK_ON VALUES (r.getString("id") AnalystFeedback, c FraudCase);
+    written = r.getString("id");
+  ELSE IF kind == "detector" THEN
+    INSERT INTO Detector (PRIMARY_ID, name, origin, spec, status, backtest, approved_by)
+      VALUES (r.getString("id"), r.getString("name"), r.getString("origin"),
+              r.getString("spec"), r.getString("status"), r.getString("backtest"),
+              r.getString("approved_by"));
+    written = r.getString("id");
+  ELSE IF kind == "schema_change" THEN
+    INSERT INTO SchemaChange (PRIMARY_ID, created_at, summary, mapping, approved_by,
+                              approved_at, signature)
+      VALUES (r.getString("id"), to_datetime(r.getString("created_at")), r.getString("summary"),
+              r.getString("mapping"), r.getString("approved_by"),
+              to_datetime(r.getString("approved_at")), r.getString("signature"));
+    written = r.getString("id");
+  END;
+  PRINT kind, written;
+}

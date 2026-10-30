@@ -67,6 +67,88 @@ class RecalledCase:
     shared_with: list[str] = field(default_factory=list)
 
 
+def _dt19(v: Any) -> str:
+    s = str(v or "")[:19]
+    return s if len(s) == 19 else "1970-01-01 00:00:00"
+
+
+def case_write_doc(gid: str, c: dict[str, Any]) -> dict[str, Any]:
+    """The JSON document the installed `case_write` query accepts. Every key the
+    query reads is always present, so a missing field fails here, in Python,
+    with a clear message, rather than as an opaque GSQL runtime error."""
+    sar = c.get("sar") or {}
+    dates = sar.get("activity_dates") or ["", ""]
+    proof = c.get("proof") or {}
+    doc: dict[str, Any] = {
+        "case_id": str(c.get("case_id", "")), "status": c.get("status", ""),
+        "verdict": c.get("verdict", ""), "trigger_type": c.get("trigger_type", ""),
+        "opened_at": _dt19(c.get("opened_at")), "as_of": _dt19(c.get("as_of")),
+        "fraud_probability": float(c.get("fraud_probability", 0.0)),
+        "confidence": float(c.get("confidence", 0.0)), "pattern": c.get("pattern", ""),
+        "pattern_description": c.get("pattern_description", ""),
+        "exposure_usd": float(c.get("exposure_usd", 0.0)), "summary": c.get("summary", ""),
+        "narrative": c.get("narrative", ""), "stop_reason": c.get("stop_reason", ""),
+        "ledger_head": c.get("ledger_head", ""), "tool_calls": int(c.get("tool_calls", 0)),
+        "latency_s": float(c.get("latency_s", 0.0)),
+        "lifecycle_state": c.get("lifecycle_state", ""), "parent_case": c.get("parent_case", ""),
+        "proof_margin": int(proof.get("margin_k") or -1),
+        "proof_minimal": ",".join(proof.get("minimal_sufficient_facts", [])),
+        "gate_applied": bool((c.get("gate") or {}).get("applied", False)),
+        "conformal_set": ",".join((c.get("conformal") or {}).get("set", []) or []),
+        "data_snapshot": c.get("data_snapshot", ""), "answer_hash": c.get("answer_hash", ""),
+        "card_id": c.get("card_id", ""), "customer_id": c.get("customer_id", ""),
+        "evidence": [{"id": f"{gid}-E{i:02d}", "kind": e.get("source", "graph"),
+                      "claim": e.get("claim", ""), "source_tool": e.get("ref", ""),
+                      "reliability": float(e.get("reliability", 1.0) or 1.0),
+                      "delta": float(e.get("delta_fraud_probability", 0.0) or 0.0)}
+                     for i, e in enumerate(c.get("evidence", []), 1)],
+        "decisions": [{"id": d["decision_id"], "step": int(d.get("step", 0)),
+                       "node": d.get("node", ""), "before": float(d.get("p_fraud_before", 0.0)),
+                       "after": float(d.get("p_fraud_after", 0.0)),
+                       "rationale": d.get("rationale", ""), "prev_hash": d.get("prev_hash", ""),
+                       "hash": d.get("hash", "")} for d in c.get("decisions", [])],
+        "actions": [{"id": f"{gid}-{ph[:3].upper()}-{i:02d}", "action": a["action"],
+                     "phase": ph, "route": a["route"], "reason": a.get("reason", ""),
+                     "rule": a.get("reason", "").split(":", 1)[0],
+                     "executed": bool(a.get("executed", False))}
+                    for ph in ("initial", "final")
+                    for i, a in enumerate((c.get("actions") or {}).get(ph, []), 1)],
+        "requests": [{"id": f"{gid}-R{i:02d}", "type": r.get("type", ""),
+                      "channel": r.get("channel", ""), "question": r.get("question", ""),
+                      "gain": float(r.get("expected_info_gain", 0.0)),
+                      "cost": float(r.get("cost", 0.0)),
+                      "asked_after_step": int(r.get("asked_after_step", 0)),
+                      "seed": int(r.get("simulation_seed", 0)) % 2147483647,
+                      "response": r.get("assumed_response", "")}
+                     for i, r in enumerate(c.get("evidence_requests", []), 1)],
+        "sar": {"file": bool(sar.get("file")), "reason": sar.get("reason", ""),
+                "narrative": sar.get("narrative", ""),
+                "total_amount_usd": float(sar.get("total_amount_usd", 0.0) or 0.0),
+                "activity_start": str(dates[0]) if dates else "",
+                "activity_end": str(dates[-1]) if dates else ""},
+        "state_changes": [{"id": f"{gid}-S{i:02d}", "from": s.get("from", ""),
+                           "to": s.get("to", ""), "at": _dt19(s.get("at")),
+                           "actor": s.get("actor", ""), "role": s.get("role", ""),
+                           "reason": s.get("reason", ""),
+                           "evidence_ids": ",".join(map(str, s.get("evidence_ids", [])))}
+                          for i, s in enumerate(c.get("state_changes", []), 1)],
+        "watch_children": [{"id": w["id"], "card_id": w.get("card_id", ""),
+                            "reason": w.get("reason", "")}
+                           for w in c.get("watch_children", [])],
+        "links": {"txn_ids": [str(x) for x in c.get("affected_txn_ids", [])],
+                  "connected_card_ids": list(c.get("connected_card_ids", [])),
+                  "device_profiles": list(c.get("connected_device_profiles", [])),
+                  "prior_case_ids": list(c.get("similar_prior_cases", [])),
+                  "policy_doc_ids": [f"POLICY-{r}" for r in c.get("cited_rules", [])]},
+    }
+    origin = c.get("origin")
+    if origin:
+        doc["origin"] = {"type": origin["to_type"], "id": origin["to"],
+                         "from": _dt19(origin["window"][0]), "to": _dt19(origin["window"][1]),
+                         "lift": float(origin["lift"]), "p_value": float(origin["p_value"])}
+    return doc
+
+
 class GraphStore(ABC):
     """Read/write surface the agent and the MCP server both sit on."""
 
@@ -180,6 +262,36 @@ class GraphStore(ABC):
     @abstractmethod
     def case_chain(self, graph_case_id: str) -> dict[str, Any]:
         """Reconstruct a written case: evidence -> findings -> decisions -> actions."""
+
+    # ------------------------------------------ final-round primitives ----
+    def ring_at_asof(self, card_id: str, as_of: datetime, lookback_days: int = 45,
+                     max_cards: int = 60, rare_cards: int = 10) -> dict[str, Any]:
+        return {"seed": card_id, "cards": [], "size": 1}
+
+    def origin_counts(self, ring_cards: Sequence[str], since: datetime, until: datetime,
+                      as_of: datetime) -> dict[str, Any]:
+        return {"entities": [], "n_control": 0, "n_ring": len(ring_cards)}
+
+    def origin_touchers(self, entity_type: str, entity: str, since: datetime,
+                        until: datetime, as_of: datetime) -> list[dict[str, Any]]:
+        return []
+
+    def ring_exposure(self, ring_cards: Sequence[str], as_of: datetime,
+                      lookback_days: int = 45, window_hours: float = 72.0) -> list[dict]:
+        return []
+
+    def precedent_by_facts(self, fact_mask: int, as_of: datetime) -> dict[str, Any] | None:
+        """None means "answer from the local fact table" (core/proof.py)."""
+        return None
+
+    def compromise_watch(self, entity_ids: Sequence[str], as_of: datetime) -> list[dict]:
+        return []
+
+    def behaviour_vector(self, txn_id: str) -> list[float] | None:
+        return None
+
+    def data_gaps(self, txn_ids: Sequence[str]) -> dict[str, Any]:
+        return {"n": 0, "no_identity": [], "empty_region": [], "placeholder_email": []}
 
     # ----------------------------------------------------------- health ----
     def health(self) -> dict[str, Any]:

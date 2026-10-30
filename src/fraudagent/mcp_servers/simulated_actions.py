@@ -21,7 +21,7 @@ from __future__ import annotations
 
 import hashlib
 import json
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import Any
 
 from ..config import PATHS, SIM
@@ -70,7 +70,7 @@ def execute(action: str, case_id: str, card_id: str, customer_id: str,
         "executed": True,
         "simulated": True,
         "reference": _reference(action, case_id, card_id or customer_id),
-        "executed_at": datetime.utcnow().isoformat(timespec="seconds") + "Z",
+        "executed_at": datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ"),
         "effect": _effect(action, card_id, customer_id),
         "customer_impact": ACTIONS[action]["customer_impact"],
     }
@@ -87,7 +87,7 @@ def recommend_only(action: str, case_id: str, reason: str,
         "action": action, "case_id": case_id, "route": r, "executed": False,
         "simulated": True, "reason": reason,
         "awaiting": {"L1": "team lead", "L2": "fraud manager"}.get(r, "human review"),
-        "recorded_at": datetime.utcnow().isoformat(timespec="seconds") + "Z",
+        "recorded_at": datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ"),
     }
     _append(receipt)
     return receipt

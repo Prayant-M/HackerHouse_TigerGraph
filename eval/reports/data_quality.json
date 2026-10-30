@@ -1,0 +1,778 @@
+{
+  "dataset": {
+    "transactions": 650938,
+    "no_identity": {
+      "n": 490613,
+      "share": 0.7537,
+      "online_share_without": 0.0455,
+      "sample": [
+        "3190332",
+        "3281241",
+        "3569435",
+        "3314716",
+        "3027673"
+      ],
+      "blinds": [
+        "device_new_on_account",
+        "device_shared_across_cards",
+        "anonymising_proxy",
+        "device_proxy_hub",
+        "peer_purchases"
+      ]
+    },
+    "empty_billing_region": {
+      "n": 70713,
+      "sample": [
+        "3011877",
+        "3092038",
+        "3104049",
+        "3154015",
+        "3552557"
+      ],
+      "blinds": [
+        "region_unseen",
+        "out_of_region_card_present",
+        "home_activity_continues",
+        "sustained_regional_stay"
+      ]
+    },
+    "placeholder_email": {
+      "n": 40752,
+      "sample": [
+        "3063216",
+        "3190332",
+        "3321781",
+        "3111798",
+        "3100548"
+      ],
+      "blinds": [
+        "email_mismatch"
+      ]
+    },
+    "placeholder_device": {
+      "n": 0,
+      "sample": [],
+      "blinds": [
+        "device_new_on_account",
+        "device_shared_across_cards"
+      ]
+    },
+    "thin_cards": {
+      "n": 8083,
+      "of_cards": 14849,
+      "sample": [
+        "C00001-K1",
+        "C00002-K1",
+        "C00003-K1",
+        "C00004-K1",
+        "C00005-K1"
+      ],
+      "blinds": [
+        "amount_anomalous",
+        "amount_extreme",
+        "region_unseen",
+        "device_new_on_account"
+      ]
+    }
+  },
+  "investigations": [
+    {
+      "case": "HHF-001",
+      "verdict": "fraud",
+      "tainted": false,
+      "severity": "none",
+      "issues": [],
+      "record_ids": [],
+      "graph_check": {
+        "no_identity": [],
+        "empty_region": [],
+        "placeholder_email": []
+      },
+      "conformal_widened": false
+    },
+    {
+      "case": "HHF-002",
+      "verdict": "fraud",
+      "tainted": false,
+      "severity": "none",
+      "issues": [],
+      "record_ids": [],
+      "graph_check": {
+        "no_identity": [],
+        "empty_region": [],
+        "placeholder_email": [
+          "3660125"
+        ]
+      },
+      "conformal_widened": false
+    },
+    {
+      "case": "HHF-003",
+      "verdict": "fraud",
+      "tainted": true,
+      "severity": "high",
+      "issues": [
+        "missing_identity"
+      ],
+      "record_ids": [
+        "3660153"
+      ],
+      "graph_check": {
+        "no_identity": [
+          "3660153"
+        ],
+        "empty_region": [],
+        "placeholder_email": []
+      },
+      "conformal_widened": true
+    },
+    {
+      "case": "HHF-004",
+      "verdict": "fraud",
+      "tainted": true,
+      "severity": "high",
+      "issues": [
+        "missing_identity"
+      ],
+      "record_ids": [
+        "3660260"
+      ],
+      "graph_check": {
+        "no_identity": [
+          "3660260"
+        ],
+        "empty_region": [],
+        "placeholder_email": []
+      },
+      "conformal_widened": true
+    },
+    {
+      "case": "HHF-005",
+      "verdict": "fraud",
+      "tainted": true,
+      "severity": "high",
+      "issues": [
+        "missing_identity",
+        "placeholder_email"
+      ],
+      "record_ids": [
+        "3660250"
+      ],
+      "graph_check": {
+        "no_identity": [
+          "3601214",
+          "3660250"
+        ],
+        "empty_region": [],
+        "placeholder_email": []
+      },
+      "conformal_widened": true
+    },
+    {
+      "case": "HHF-006",
+      "verdict": "legitimate",
+      "tainted": true,
+      "severity": "high",
+      "issues": [
+        "missing_identity"
+      ],
+      "record_ids": [
+        "3660263"
+      ],
+      "graph_check": {
+        "no_identity": [
+          "3660263"
+        ],
+        "empty_region": [],
+        "placeholder_email": []
+      },
+      "conformal_widened": true
+    },
+    {
+      "case": "HHF-007",
+      "verdict": "fraud",
+      "tainted": true,
+      "severity": "high",
+      "issues": [
+        "missing_identity"
+      ],
+      "record_ids": [
+        "3660350"
+      ],
+      "graph_check": {
+        "no_identity": [
+          "3660346",
+          "3660347",
+          "3660348",
+          "3660349",
+          "3660350"
+        ],
+        "empty_region": [],
+        "placeholder_email": []
+      },
+      "conformal_widened": true
+    },
+    {
+      "case": "HHF-008",
+      "verdict": "legitimate",
+      "tainted": false,
+      "severity": "none",
+      "issues": [],
+      "record_ids": [],
+      "graph_check": {
+        "no_identity": [],
+        "empty_region": [],
+        "placeholder_email": []
+      },
+      "conformal_widened": false
+    },
+    {
+      "case": "HHF-009",
+      "verdict": "legitimate",
+      "tainted": false,
+      "severity": "low",
+      "issues": [
+        "placeholder_email"
+      ],
+      "record_ids": [
+        "3660355"
+      ],
+      "graph_check": {
+        "no_identity": [],
+        "empty_region": [],
+        "placeholder_email": [
+          "3660355"
+        ]
+      },
+      "conformal_widened": false
+    },
+    {
+      "case": "HHF-010",
+      "verdict": "legitimate",
+      "tainted": false,
+      "severity": "low",
+      "issues": [
+        "missing_identity"
+      ],
+      "record_ids": [
+        "3631383"
+      ],
+      "graph_check": {
+        "no_identity": [
+          "3631383"
+        ],
+        "empty_region": [],
+        "placeholder_email": []
+      },
+      "conformal_widened": false
+    },
+    {
+      "case": "HHF-011",
+      "verdict": "legitimate",
+      "tainted": false,
+      "severity": "low",
+      "issues": [
+        "missing_identity",
+        "placeholder_email"
+      ],
+      "record_ids": [
+        "3640919"
+      ],
+      "graph_check": {
+        "no_identity": [
+          "3640919"
+        ],
+        "empty_region": [],
+        "placeholder_email": []
+      },
+      "conformal_widened": false
+    },
+    {
+      "case": "HHF-012",
+      "verdict": "legitimate",
+      "tainted": false,
+      "severity": "low",
+      "issues": [
+        "missing_identity"
+      ],
+      "record_ids": [
+        "3655457"
+      ],
+      "graph_check": {
+        "no_identity": [
+          "3655457"
+        ],
+        "empty_region": [],
+        "placeholder_email": []
+      },
+      "conformal_widened": false
+    },
+    {
+      "case": "HHF-013",
+      "verdict": "legitimate",
+      "tainted": false,
+      "severity": "low",
+      "issues": [
+        "missing_identity"
+      ],
+      "record_ids": [
+        "3626720"
+      ],
+      "graph_check": {
+        "no_identity": [
+          "3626720"
+        ],
+        "empty_region": [],
+        "placeholder_email": []
+      },
+      "conformal_widened": false
+    },
+    {
+      "case": "HHF-014",
+      "verdict": "legitimate",
+      "tainted": false,
+      "severity": "low",
+      "issues": [
+        "missing_identity"
+      ],
+      "record_ids": [
+        "3602445"
+      ],
+      "graph_check": {
+        "no_identity": [
+          "3602445"
+        ],
+        "empty_region": [],
+        "placeholder_email": []
+      },
+      "conformal_widened": false
+    },
+    {
+      "case": "HHF-015",
+      "verdict": "legitimate",
+      "tainted": false,
+      "severity": "low",
+      "issues": [
+        "missing_identity",
+        "placeholder_email"
+      ],
+      "record_ids": [
+        "3601725"
+      ],
+      "graph_check": {
+        "no_identity": [
+          "3601725"
+        ],
+        "empty_region": [],
+        "placeholder_email": []
+      },
+      "conformal_widened": false
+    },
+    {
+      "case": "HHF-016",
+      "verdict": "uncertain",
+      "tainted": false,
+      "severity": "low",
+      "issues": [
+        "missing_identity"
+      ],
+      "record_ids": [
+        "3611043"
+      ],
+      "graph_check": {
+        "no_identity": [
+          "3611043"
+        ],
+        "empty_region": [],
+        "placeholder_email": []
+      },
+      "conformal_widened": false
+    },
+    {
+      "case": "HHF-017",
+      "verdict": "fraud",
+      "tainted": false,
+      "severity": "none",
+      "issues": [],
+      "record_ids": [],
+      "graph_check": {
+        "no_identity": [],
+        "empty_region": [],
+        "placeholder_email": []
+      },
+      "conformal_widened": false
+    },
+    {
+      "case": "HHF-018",
+      "verdict": "legitimate",
+      "tainted": false,
+      "severity": "none",
+      "issues": [],
+      "record_ids": [],
+      "graph_check": {
+        "no_identity": [],
+        "empty_region": [],
+        "placeholder_email": []
+      },
+      "conformal_widened": false
+    },
+    {
+      "case": "HHG-001",
+      "verdict": "legitimate",
+      "tainted": false,
+      "severity": "low",
+      "issues": [
+        "missing_identity",
+        "placeholder_email"
+      ],
+      "record_ids": [
+        "3514030"
+      ],
+      "graph_check": {
+        "no_identity": [
+          "3514030"
+        ],
+        "empty_region": [],
+        "placeholder_email": []
+      },
+      "conformal_widened": false
+    },
+    {
+      "case": "HHG-002",
+      "verdict": "legitimate",
+      "tainted": true,
+      "severity": "high",
+      "issues": [
+        "missing_identity",
+        "empty_billing_region"
+      ],
+      "record_ids": [
+        "3478782"
+      ],
+      "graph_check": {
+        "no_identity": [
+          "3478782"
+        ],
+        "empty_region": [
+          "3478782"
+        ],
+        "placeholder_email": []
+      },
+      "conformal_widened": false
+    },
+    {
+      "case": "HHG-003",
+      "verdict": "fraud",
+      "tainted": false,
+      "severity": "low",
+      "issues": [
+        "missing_identity"
+      ],
+      "record_ids": [
+        "3530164"
+      ],
+      "graph_check": {
+        "no_identity": [
+          "3527215",
+          "3530056",
+          "3530164"
+        ],
+        "empty_region": [],
+        "placeholder_email": []
+      },
+      "conformal_widened": false
+    },
+    {
+      "case": "HHG-004",
+      "verdict": "fraud",
+      "tainted": false,
+      "severity": "low",
+      "issues": [
+        "empty_billing_region"
+      ],
+      "record_ids": [
+        "3583227"
+      ],
+      "graph_check": {
+        "no_identity": [],
+        "empty_region": [
+          "3583227"
+        ],
+        "placeholder_email": []
+      },
+      "conformal_widened": false
+    },
+    {
+      "case": "HHG-005",
+      "verdict": "legitimate",
+      "tainted": false,
+      "severity": "none",
+      "issues": [],
+      "record_ids": [],
+      "graph_check": {
+        "no_identity": [],
+        "empty_region": [],
+        "placeholder_email": []
+      },
+      "conformal_widened": false
+    },
+    {
+      "case": "HHG-006",
+      "verdict": "fraud",
+      "tainted": false,
+      "severity": "none",
+      "issues": [],
+      "record_ids": [],
+      "graph_check": {
+        "no_identity": [],
+        "empty_region": [],
+        "placeholder_email": []
+      },
+      "conformal_widened": false
+    },
+    {
+      "case": "HHG-007",
+      "verdict": "legitimate",
+      "tainted": false,
+      "severity": "low",
+      "issues": [
+        "missing_identity"
+      ],
+      "record_ids": [
+        "3514948"
+      ],
+      "graph_check": {
+        "no_identity": [
+          "3514948"
+        ],
+        "empty_region": [],
+        "placeholder_email": []
+      },
+      "conformal_widened": false
+    },
+    {
+      "case": "HHG-008",
+      "verdict": "fraud",
+      "tainted": false,
+      "severity": "low",
+      "issues": [
+        "empty_billing_region"
+      ],
+      "record_ids": [
+        "3558054"
+      ],
+      "graph_check": {
+        "no_identity": [],
+        "empty_region": [
+          "3555768",
+          "3556719",
+          "3557118",
+          "3557979",
+          "3557987",
+          "3558054"
+        ],
+        "placeholder_email": []
+      },
+      "conformal_widened": false
+    },
+    {
+      "case": "HHG-009",
+      "verdict": "uncertain",
+      "tainted": true,
+      "severity": "high",
+      "issues": [
+        "missing_identity",
+        "placeholder_email"
+      ],
+      "record_ids": [
+        "3581141"
+      ],
+      "graph_check": {
+        "no_identity": [
+          "3581141"
+        ],
+        "empty_region": [],
+        "placeholder_email": []
+      },
+      "conformal_widened": false
+    },
+    {
+      "case": "HHG-010",
+      "verdict": "legitimate",
+      "tainted": null,
+      "severity": null,
+      "issues": [],
+      "record_ids": [],
+      "graph_check": {
+        "no_identity": [],
+        "empty_region": [],
+        "placeholder_email": [
+          "3506725"
+        ]
+      },
+      "conformal_widened": false
+    },
+    {
+      "case": "HHG-011",
+      "verdict": "fraud",
+      "tainted": null,
+      "severity": null,
+      "issues": [],
+      "record_ids": [],
+      "graph_check": {
+        "no_identity": [],
+        "empty_region": [
+          "3583368"
+        ],
+        "placeholder_email": []
+      },
+      "conformal_widened": false
+    },
+    {
+      "case": "HHG-012",
+      "verdict": "legitimate",
+      "tainted": null,
+      "severity": null,
+      "issues": [],
+      "record_ids": [],
+      "graph_check": {
+        "no_identity": [
+          "3553342"
+        ],
+        "empty_region": [],
+        "placeholder_email": []
+      },
+      "conformal_widened": false
+    },
+    {
+      "case": "HHG-013",
+      "verdict": "legitimate",
+      "tainted": null,
+      "severity": null,
+      "issues": [],
+      "record_ids": [],
+      "graph_check": {
+        "no_identity": [],
+        "empty_region": [
+          "3526826"
+        ],
+        "placeholder_email": []
+      },
+      "conformal_widened": false
+    },
+    {
+      "case": "HHG-014",
+      "verdict": "fraud",
+      "tainted": false,
+      "severity": "none",
+      "issues": [],
+      "record_ids": [],
+      "graph_check": {
+        "no_identity": [],
+        "empty_region": [],
+        "placeholder_email": []
+      },
+      "conformal_widened": false
+    },
+    {
+      "case": "HHG-015",
+      "verdict": "legitimate",
+      "tainted": false,
+      "severity": "low",
+      "issues": [
+        "placeholder_email"
+      ],
+      "record_ids": [
+        "3464869"
+      ],
+      "graph_check": {
+        "no_identity": [],
+        "empty_region": [],
+        "placeholder_email": [
+          "3464869"
+        ]
+      },
+      "conformal_widened": false
+    },
+    {
+      "case": "HHG-016",
+      "verdict": "fraud",
+      "tainted": null,
+      "severity": null,
+      "issues": [],
+      "record_ids": [],
+      "graph_check": {
+        "no_identity": [],
+        "empty_region": [
+          "3534820"
+        ],
+        "placeholder_email": []
+      },
+      "conformal_widened": false
+    },
+    {
+      "case": "HHG-017",
+      "verdict": "legitimate",
+      "tainted": false,
+      "severity": "low",
+      "issues": [
+        "placeholder_email"
+      ],
+      "record_ids": [
+        "3450629"
+      ],
+      "graph_check": {
+        "no_identity": [],
+        "empty_region": [],
+        "placeholder_email": [
+          "3450629"
+        ]
+      },
+      "conformal_widened": false
+    },
+    {
+      "case": "HHG-018",
+      "verdict": "legitimate",
+      "tainted": null,
+      "severity": null,
+      "issues": [],
+      "record_ids": [],
+      "graph_check": {
+        "no_identity": [
+          "3491361"
+        ],
+        "empty_region": [],
+        "placeholder_email": []
+      },
+      "conformal_widened": false
+    },
+    {
+      "case": "HHG-019",
+      "verdict": "fraud",
+      "tainted": null,
+      "severity": null,
+      "issues": [],
+      "record_ids": [],
+      "graph_check": {
+        "no_identity": [],
+        "empty_region": [],
+        "placeholder_email": []
+      },
+      "conformal_widened": false
+    },
+    {
+      "case": "HHG-020",
+      "verdict": "legitimate",
+      "tainted": null,
+      "severity": null,
+      "issues": [],
+      "record_ids": [],
+      "graph_check": {
+        "no_identity": [],
+        "empty_region": [],
+        "placeholder_email": []
+      },
+      "conformal_widened": false
+    }
+  ]
+}

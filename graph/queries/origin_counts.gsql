@@ -1,0 +1,60 @@
+/* origin_counts — compromise-origin lift inputs (Innovation 2, C1).
+
+   For every entity the ring touched inside [since, until] — device profile,
+   billing region, purchaser email domain, and product x $25 amount band as a
+   merchant proxy (the schema has no merchant id) — count the ring cards that
+   touched it and the control cards that touched it. Controls are cards active
+   in the same window, outside the ring, with no confirmed-fraud closed case
+   opened by as_of. Lift and the hypergeometric p-value are computed by the
+   caller (core/containment.py).                                              */
+
+USE GRAPH FraudGraph
+
+CREATE OR REPLACE QUERY origin_counts(SET<STRING> ring_cards, DATETIME since,
+                                      DATETIME until, DATETIME as_of)
+FOR GRAPH FraudGraph SYNTAX v2 {
+  MapAccum<STRING, SetAccum<STRING>> @@ring_by;
+  MapAccum<STRING, SetAccum<STRING>> @@pop_by;
+  MapAccum<STRING, INT> @@pop_n;
+  SetAccum<STRING> @@control, @@fraud_cards;
+  SetAccum<STRING> @mkeys;
+
+  fr = SELECT c FROM ClosedCase:c
+       WHERE c.outcome == "confirmed_fraud" AND c.opened_at <= as_of
+       ACCUM @@fraud_cards += c.card_id;
+
+  win = SELECT t FROM Transaction:t WHERE t.ts >= since AND t.ts <= until;
+
+  rt = SELECT t FROM win:t WHERE ring_cards.contains(t.card_id)
+       ACCUM
+         CASE WHEN t.region != "" THEN @@ring_by += ("region\t" + t.region -> t.card_id) END,
+         @@ring_by += ("merchant_proxy\t" + t.product_cd + "|$"
+                       + to_string(float_to_int(t.amount / 25) * 25) -> t.card_id);
+  rd = SELECT d FROM rt:t -(FROM_DEVICE>:e)- DeviceProfile:d
+       ACCUM @@ring_by += ("device_profile\t" + d.device_profile -> t.card_id);
+  rm = SELECT m FROM rt:t -(PURCHASER_EMAIL>:e)- EmailDomain:m
+       WHERE m.domain != "anonymous.com" AND m.domain != ""
+       ACCUM @@ring_by += ("email_p\t" + m.domain -> t.card_id);
+
+  ct = SELECT t FROM win:t
+       WHERE NOT ring_cards.contains(t.card_id) AND NOT @@fraud_cards.contains(t.card_id)
+       ACCUM
+         @@control += t.card_id,
+         CASE WHEN t.region != "" AND @@ring_by.containsKey("region\t" + t.region)
+              THEN @@pop_by += ("region\t" + t.region -> t.card_id) END,
+         CASE WHEN @@ring_by.containsKey("merchant_proxy\t" + t.product_cd + "|$"
+                       + to_string(float_to_int(t.amount / 25) * 25))
+              THEN @@pop_by += ("merchant_proxy\t" + t.product_cd + "|$"
+                       + to_string(float_to_int(t.amount / 25) * 25) -> t.card_id) END;
+  cd = SELECT d FROM ct:t -(FROM_DEVICE>:e)- DeviceProfile:d
+       WHERE @@ring_by.containsKey("device_profile\t" + d.device_profile)
+       ACCUM @@pop_by += ("device_profile\t" + d.device_profile -> t.card_id);
+  cm = SELECT m FROM ct:t -(PURCHASER_EMAIL>:e)- EmailDomain:m
+       WHERE @@ring_by.containsKey("email_p\t" + m.domain)
+       ACCUM @@pop_by += ("email_p\t" + m.domain -> t.card_id);
+
+  FOREACH (k, v) IN @@pop_by DO
+    @@pop_n += (k -> v.size());
+  END;
+  PRINT @@ring_by AS ring_by, @@pop_n AS pop_n, @@control.size() AS n_control;
+}

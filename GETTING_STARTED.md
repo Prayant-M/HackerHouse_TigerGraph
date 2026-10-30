@@ -136,6 +136,35 @@ python benchmark/monitor.py    # ~5 min, proactive sweep → benchmark/autonomou
 
 ---
 
+## 6a. Publish a read-only console
+
+`python deploy/build_space.py` (with the live console running on :8080) snapshots
+graph health and the answer audit into `ui/snapshot/` and assembles
+`build/space/`: a 4.5 MB Docker app with the answer files, monitoring results,
+policy text and likelihood ratios. No `.env`, no credentials, no staged data.
+It runs with `CONSOLE_READONLY=1`: re-runs are refused and approvals are never
+written to a graph.
+
+Live copy: **https://prayant-fraudgraph-console.static.hf.space** (Space page: https://huggingface.co/spaces/Prayant/fraudgraph-console).
+
+Two shapes. **Static** (`--static`, what the live copy uses) pre-renders every
+API response to JSON beside the page: 0.8 MB, no server, free on Hugging Face
+static Spaces, GitHub Pages or Netlify. Approvals are kept in the browser.
+
+```powershell
+python deploy/build_space.py --static         # → build/static/
+huggingface-cli login                         # write token from huggingface.co/settings/tokens
+huggingface-cli repo create fraudgraph-console --type space --space_sdk static
+huggingface-cli upload <you>/fraudgraph-console build/static . --repo-type space
+```
+
+**Docker** (no flag, → `build/space/`) runs the FastAPI server itself and
+deploys unchanged to Render, Railway or Fly; it listens on `$PORT` (default
+7860). Hugging Face Docker Spaces need a PRO plan.
+
+To refresh the live copy after rerunning the cases, run the build and upload
+lines again.
+
 ## 7. Troubleshooting
 
 | Symptom | Cause and fix |

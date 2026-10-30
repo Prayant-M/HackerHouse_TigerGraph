@@ -1,0 +1,307 @@
+# Schema drift proposal DRIFT-f529d6d85136
+
+transactions_2017q1.csv: +0 -0 cols, 257 changed, 0 key overlaps; identity_2017q1.csv: +0 -0 cols, 7 changed, 0 key overlaps; closed_cases_history.csv: +0 -0 cols, 2 changed, 5565 key overlaps; case_pack_final.csv: +0 -0 cols, 6 changed, 0 key overlaps
+
+## transactions.csv → transactions_2017q1.csv
+
+- added: none
+- removed: none
+- renames proposed: none
+- key overlap on `TransactionID`: 0
+
+- `C13`: median 2.000 -> 3.000 — breaks: no known downstream consumer
+- `D10`: null rate 0.24 -> 0.17; median 12.000 -> 26.000 — breaks: no known downstream consumer
+- `D11`: median 22.000 -> 50.000 — breaks: no known downstream consumer
+- `D15`: null rate 0.25 -> 0.31; median 42.000 -> 82.000 — breaks: no known downstream consumer
+- `D2`: null rate 0.54 -> 0.48 — breaks: no known downstream consumer
+- `D3`: null rate 0.52 -> 0.46 — breaks: no known downstream consumer
+- `D4`: null rate 0.39 -> 0.45; median 19.000 -> 42.000 — breaks: no known downstream consumer
+- `M1`: null rate 0.65 -> 0.59 — breaks: no known downstream consumer
+- `M2`: null rate 0.65 -> 0.59 — breaks: no known downstream consumer
+- `M3`: null rate 0.65 -> 0.59 — breaks: no known downstream consumer
+- `M6`: null rate 0.39 -> 0.31 — breaks: no known downstream consumer
+- `R_emaildomain`: null rate 0.68 -> 0.79 — breaks: recipient fan-in detector
+- `TransactionDT`: range [141.00, 4555139.00] -> [15811220.00, 18489547.00]; median 2032612.500 -> 17153875.000 — breaks: no known downstream consumer
+- `V12`: null rate 0.24 -> 0.17; median 1.000 -> 0.000 — breaks: no known downstream consumer
+- `V13`: null rate 0.24 -> 0.17 — breaks: no known downstream consumer
+- `V138`: null rate 0.75 -> 0.82 — breaks: no known downstream consumer
+- `V139`: null rate 0.75 -> 0.82 — breaks: no known downstream consumer
+- `V14`: null rate 0.24 -> 0.17 — breaks: no known downstream consumer
+- `V140`: null rate 0.75 -> 0.82 — breaks: no known downstream consumer
+- `V141`: null rate 0.75 -> 0.82 — breaks: no known downstream consumer
+- `V142`: null rate 0.75 -> 0.82 — breaks: no known downstream consumer
+- `V143`: null rate 0.75 -> 0.82 — breaks: no known downstream consumer
+- `V144`: null rate 0.75 -> 0.82 — breaks: no known downstream consumer
+- `V145`: null rate 0.75 -> 0.82 — breaks: no known downstream consumer
+- `V146`: null rate 0.75 -> 0.82 — breaks: no known downstream consumer
+- `V147`: null rate 0.75 -> 0.82 — breaks: no known downstream consumer
+- `V148`: null rate 0.75 -> 0.82 — breaks: no known downstream consumer
+- `V149`: null rate 0.75 -> 0.82 — breaks: no known downstream consumer
+- `V15`: null rate 0.24 -> 0.17 — breaks: no known downstream consumer
+- `V150`: null rate 0.75 -> 0.82 — breaks: no known downstream consumer
+- `V151`: null rate 0.75 -> 0.82 — breaks: no known downstream consumer
+- `V152`: null rate 0.75 -> 0.82 — breaks: no known downstream consumer
+- `V153`: null rate 0.75 -> 0.82 — breaks: no known downstream consumer
+- `V154`: null rate 0.75 -> 0.82 — breaks: no known downstream consumer
+- `V155`: null rate 0.75 -> 0.82 — breaks: no known downstream consumer
+- `V156`: null rate 0.75 -> 0.82 — breaks: no known downstream consumer
+- `V157`: null rate 0.75 -> 0.82 — breaks: no known downstream consumer
+- `V158`: null rate 0.75 -> 0.82 — breaks: no known downstream consumer
+- `V159`: null rate 0.75 -> 0.82 — breaks: no known downstream consumer
+- `V16`: null rate 0.24 -> 0.17 — breaks: no known downstream consumer
+- `V160`: null rate 0.75 -> 0.82 — breaks: no known downstream consumer
+- `V161`: null rate 0.75 -> 0.82 — breaks: no known downstream consumer
+- `V162`: null rate 0.75 -> 0.82 — breaks: no known downstream consumer
+- `V163`: null rate 0.75 -> 0.82 — breaks: no known downstream consumer
+- `V164`: null rate 0.75 -> 0.82 — breaks: no known downstream consumer
+- `V165`: null rate 0.75 -> 0.82 — breaks: no known downstream consumer
+- `V166`: null rate 0.75 -> 0.82 — breaks: no known downstream consumer
+- `V167`: null rate 0.66 -> 0.77 — breaks: no known downstream consumer
+- `V168`: null rate 0.66 -> 0.77 — breaks: no known downstream consumer
+- `V169`: null rate 0.66 -> 0.77 — breaks: no known downstream consumer
+- `V17`: null rate 0.24 -> 0.17 — breaks: no known downstream consumer
+- `V170`: null rate 0.66 -> 0.77 — breaks: no known downstream consumer
+- `V171`: null rate 0.66 -> 0.77 — breaks: no known downstream consumer
+- `V172`: null rate 0.66 -> 0.77 — breaks: no known downstream consumer
+- `V173`: null rate 0.66 -> 0.77 — breaks: no known downstream consumer
+- `V174`: null rate 0.66 -> 0.77 — breaks: no known downstream consumer
+- `V175`: null rate 0.66 -> 0.77 — breaks: no known downstream consumer
+- `V176`: null rate 0.66 -> 0.77 — breaks: no known downstream consumer
+- `V177`: null rate 0.66 -> 0.77 — breaks: no known downstream consumer
+- `V178`: null rate 0.66 -> 0.77 — breaks: no known downstream consumer
+- `V179`: null rate 0.66 -> 0.77 — breaks: no known downstream consumer
+- `V18`: null rate 0.24 -> 0.17 — breaks: no known downstream consumer
+- `V180`: null rate 0.66 -> 0.77 — breaks: no known downstream consumer
+- `V181`: null rate 0.66 -> 0.77 — breaks: no known downstream consumer
+- `V182`: null rate 0.66 -> 0.77 — breaks: no known downstream consumer
+- `V183`: null rate 0.66 -> 0.77 — breaks: no known downstream consumer
+- `V184`: null rate 0.66 -> 0.77 — breaks: no known downstream consumer
+- `V185`: null rate 0.66 -> 0.77 — breaks: no known downstream consumer
+- `V186`: null rate 0.66 -> 0.77 — breaks: no known downstream consumer
+- `V187`: null rate 0.66 -> 0.77 — breaks: no known downstream consumer
+- `V188`: null rate 0.66 -> 0.77 — breaks: no known downstream consumer
+- `V189`: null rate 0.66 -> 0.77 — breaks: no known downstream consumer
+- `V19`: null rate 0.24 -> 0.17 — breaks: no known downstream consumer
+- `V190`: null rate 0.66 -> 0.77 — breaks: no known downstream consumer
+- `V191`: null rate 0.66 -> 0.77 — breaks: no known downstream consumer
+- `V192`: null rate 0.66 -> 0.77 — breaks: no known downstream consumer
+- `V193`: null rate 0.66 -> 0.77 — breaks: no known downstream consumer
+- `V194`: null rate 0.66 -> 0.77 — breaks: no known downstream consumer
+- `V195`: null rate 0.66 -> 0.77 — breaks: no known downstream consumer
+- `V196`: null rate 0.66 -> 0.77 — breaks: no known downstream consumer
+- `V197`: null rate 0.66 -> 0.77 — breaks: no known downstream consumer
+- `V198`: null rate 0.66 -> 0.77 — breaks: no known downstream consumer
+- `V199`: null rate 0.66 -> 0.77 — breaks: no known downstream consumer
+- `V20`: null rate 0.24 -> 0.17 — breaks: no known downstream consumer
+- `V200`: null rate 0.66 -> 0.77 — breaks: no known downstream consumer
+- `V201`: null rate 0.66 -> 0.77 — breaks: no known downstream consumer
+- `V202`: null rate 0.66 -> 0.77 — breaks: no known downstream consumer
+- `V203`: null rate 0.66 -> 0.77 — breaks: no known downstream consumer
+- `V204`: null rate 0.66 -> 0.77 — breaks: no known downstream consumer
+- `V205`: null rate 0.66 -> 0.77 — breaks: no known downstream consumer
+- `V206`: null rate 0.66 -> 0.77 — breaks: no known downstream consumer
+- `V207`: null rate 0.66 -> 0.77 — breaks: no known downstream consumer
+- `V208`: null rate 0.66 -> 0.77 — breaks: no known downstream consumer
+- `V209`: null rate 0.66 -> 0.77 — breaks: no known downstream consumer
+- `V21`: null rate 0.24 -> 0.17 — breaks: no known downstream consumer
+- `V210`: null rate 0.66 -> 0.77 — breaks: no known downstream consumer
+- `V211`: null rate 0.66 -> 0.77 — breaks: no known downstream consumer
+- `V212`: null rate 0.66 -> 0.77 — breaks: no known downstream consumer
+- `V213`: null rate 0.66 -> 0.77 — breaks: no known downstream consumer
+- `V214`: null rate 0.66 -> 0.77 — breaks: no known downstream consumer
+- `V215`: null rate 0.66 -> 0.77 — breaks: no known downstream consumer
+- `V216`: null rate 0.66 -> 0.77 — breaks: no known downstream consumer
+- `V217`: null rate 0.68 -> 0.77 — breaks: no known downstream consumer
+- `V218`: null rate 0.68 -> 0.77 — breaks: no known downstream consumer
+- `V219`: null rate 0.68 -> 0.77 — breaks: no known downstream consumer
+- `V22`: null rate 0.24 -> 0.17 — breaks: no known downstream consumer
+- `V220`: null rate 0.66 -> 0.77 — breaks: no known downstream consumer
+- `V221`: null rate 0.66 -> 0.77 — breaks: no known downstream consumer
+- `V222`: null rate 0.66 -> 0.77 — breaks: no known downstream consumer
+- `V223`: null rate 0.68 -> 0.77 — breaks: no known downstream consumer
+- `V224`: null rate 0.68 -> 0.77 — breaks: no known downstream consumer
+- `V225`: null rate 0.68 -> 0.77 — breaks: no known downstream consumer
+- `V226`: null rate 0.68 -> 0.77 — breaks: no known downstream consumer
+- `V227`: null rate 0.66 -> 0.77 — breaks: no known downstream consumer
+- `V228`: null rate 0.68 -> 0.77 — breaks: no known downstream consumer
+- `V229`: null rate 0.68 -> 0.77 — breaks: no known downstream consumer
+- `V23`: null rate 0.24 -> 0.17 — breaks: no known downstream consumer
+- `V230`: null rate 0.68 -> 0.77 — breaks: no known downstream consumer
+- `V231`: null rate 0.68 -> 0.77 — breaks: no known downstream consumer
+- `V232`: null rate 0.68 -> 0.77 — breaks: no known downstream consumer
+- `V233`: null rate 0.68 -> 0.77 — breaks: no known downstream consumer
+- `V234`: null rate 0.66 -> 0.77 — breaks: no known downstream consumer
+- `V235`: null rate 0.68 -> 0.77 — breaks: no known downstream consumer
+- `V236`: null rate 0.68 -> 0.77 — breaks: no known downstream consumer
+- `V237`: null rate 0.68 -> 0.77 — breaks: no known downstream consumer
+- `V238`: null rate 0.66 -> 0.77 — breaks: no known downstream consumer
+- `V239`: null rate 0.66 -> 0.77 — breaks: no known downstream consumer
+- `V24`: null rate 0.24 -> 0.17 — breaks: no known downstream consumer
+- `V240`: null rate 0.68 -> 0.77 — breaks: no known downstream consumer
+- `V241`: null rate 0.68 -> 0.77 — breaks: no known downstream consumer
+- `V242`: null rate 0.68 -> 0.77 — breaks: no known downstream consumer
+- `V243`: null rate 0.68 -> 0.77 — breaks: no known downstream consumer
+- `V244`: null rate 0.68 -> 0.77 — breaks: no known downstream consumer
+- `V245`: null rate 0.66 -> 0.77 — breaks: no known downstream consumer
+- `V246`: null rate 0.68 -> 0.77 — breaks: no known downstream consumer
+- `V247`: null rate 0.68 -> 0.77 — breaks: no known downstream consumer
+- `V248`: null rate 0.68 -> 0.77 — breaks: no known downstream consumer
+- `V249`: null rate 0.68 -> 0.77 — breaks: no known downstream consumer
+- `V25`: null rate 0.24 -> 0.17 — breaks: no known downstream consumer
+- `V250`: null rate 0.66 -> 0.77 — breaks: no known downstream consumer
+- `V251`: null rate 0.66 -> 0.77 — breaks: no known downstream consumer
+- `V252`: null rate 0.68 -> 0.77 — breaks: no known downstream consumer
+- `V253`: null rate 0.68 -> 0.77 — breaks: no known downstream consumer
+- `V254`: null rate 0.68 -> 0.77 — breaks: no known downstream consumer
+- `V255`: null rate 0.66 -> 0.77 — breaks: no known downstream consumer
+- `V256`: null rate 0.66 -> 0.77 — breaks: no known downstream consumer
+- `V257`: null rate 0.68 -> 0.77 — breaks: no known downstream consumer
+- `V258`: null rate 0.68 -> 0.77 — breaks: no known downstream consumer
+- `V259`: null rate 0.66 -> 0.77 — breaks: no known downstream consumer
+- `V26`: null rate 0.24 -> 0.17 — breaks: no known downstream consumer
+- `V260`: null rate 0.68 -> 0.77 — breaks: no known downstream consumer
+- `V261`: null rate 0.68 -> 0.77 — breaks: no known downstream consumer
+- `V262`: null rate 0.68 -> 0.77 — breaks: no known downstream consumer
+- `V263`: null rate 0.68 -> 0.77 — breaks: no known downstream consumer
+- `V264`: null rate 0.68 -> 0.77 — breaks: no known downstream consumer
+- `V265`: null rate 0.68 -> 0.77 — breaks: no known downstream consumer
+- `V266`: null rate 0.68 -> 0.77 — breaks: no known downstream consumer
+- `V267`: null rate 0.68 -> 0.77 — breaks: no known downstream consumer
+- `V268`: null rate 0.68 -> 0.77 — breaks: no known downstream consumer
+- `V269`: null rate 0.68 -> 0.77 — breaks: no known downstream consumer
+- `V27`: null rate 0.24 -> 0.17 — breaks: no known downstream consumer
+- `V270`: null rate 0.66 -> 0.77 — breaks: no known downstream consumer
+- `V271`: null rate 0.66 -> 0.77 — breaks: no known downstream consumer
+- `V272`: null rate 0.66 -> 0.77 — breaks: no known downstream consumer
+- `V273`: null rate 0.68 -> 0.77 — breaks: no known downstream consumer
+- `V274`: null rate 0.68 -> 0.77 — breaks: no known downstream consumer
+- `V275`: null rate 0.68 -> 0.77 — breaks: no known downstream consumer
+- `V276`: null rate 0.68 -> 0.77 — breaks: no known downstream consumer
+- `V277`: null rate 0.68 -> 0.77 — breaks: no known downstream consumer
+- `V278`: null rate 0.68 -> 0.77 — breaks: no known downstream consumer
+- `V28`: null rate 0.24 -> 0.17 — breaks: no known downstream consumer
+- `V29`: null rate 0.24 -> 0.17 — breaks: no known downstream consumer
+- `V30`: null rate 0.24 -> 0.17 — breaks: no known downstream consumer
+- `V31`: null rate 0.24 -> 0.17 — breaks: no known downstream consumer
+- `V32`: null rate 0.24 -> 0.17 — breaks: no known downstream consumer
+- `V322`: null rate 0.75 -> 0.82 — breaks: no known downstream consumer
+- `V323`: null rate 0.75 -> 0.82 — breaks: no known downstream consumer
+- `V324`: null rate 0.75 -> 0.82 — breaks: no known downstream consumer
+- `V325`: null rate 0.75 -> 0.82 — breaks: no known downstream consumer
+- `V326`: null rate 0.75 -> 0.82 — breaks: no known downstream consumer
+- `V327`: null rate 0.75 -> 0.82 — breaks: no known downstream consumer
+- `V328`: null rate 0.75 -> 0.82 — breaks: no known downstream consumer
+- `V329`: null rate 0.75 -> 0.82 — breaks: no known downstream consumer
+- `V33`: null rate 0.24 -> 0.17 — breaks: no known downstream consumer
+- `V330`: null rate 0.75 -> 0.82 — breaks: no known downstream consumer
+- `V331`: null rate 0.75 -> 0.82 — breaks: no known downstream consumer
+- `V332`: null rate 0.75 -> 0.82 — breaks: no known downstream consumer
+- `V333`: null rate 0.75 -> 0.82 — breaks: no known downstream consumer
+- `V334`: null rate 0.75 -> 0.82 — breaks: no known downstream consumer
+- `V335`: null rate 0.75 -> 0.82 — breaks: no known downstream consumer
+- `V336`: null rate 0.75 -> 0.82 — breaks: no known downstream consumer
+- `V337`: null rate 0.75 -> 0.82; range [0.00, 8250.00] -> [0.00, 21600.00] — breaks: no known downstream consumer
+- `V338`: null rate 0.75 -> 0.82; range [0.00, 8250.00] -> [0.00, 21600.00] — breaks: no known downstream consumer
+- `V339`: null rate 0.75 -> 0.82; range [0.00, 8250.00] -> [0.00, 21600.00] — breaks: no known downstream consumer
+- `V34`: null rate 0.24 -> 0.17 — breaks: no known downstream consumer
+- `V35`: null rate 0.39 -> 0.45 — breaks: no known downstream consumer
+- `V36`: null rate 0.39 -> 0.45 — breaks: no known downstream consumer
+- `V37`: null rate 0.39 -> 0.45 — breaks: no known downstream consumer
+- `V38`: null rate 0.39 -> 0.45 — breaks: no known downstream consumer
+- `V39`: null rate 0.39 -> 0.45 — breaks: no known downstream consumer
+- `V40`: null rate 0.39 -> 0.45 — breaks: no known downstream consumer
+- `V41`: null rate 0.39 -> 0.45 — breaks: no known downstream consumer
+- `V42`: null rate 0.39 -> 0.45 — breaks: no known downstream consumer
+- `V43`: null rate 0.39 -> 0.45 — breaks: no known downstream consumer
+- `V44`: null rate 0.39 -> 0.45 — breaks: no known downstream consumer
+- `V45`: null rate 0.39 -> 0.45 — breaks: no known downstream consumer
+- `V46`: null rate 0.39 -> 0.45 — breaks: no known downstream consumer
+- `V47`: null rate 0.39 -> 0.45 — breaks: no known downstream consumer
+- `V48`: null rate 0.39 -> 0.45 — breaks: no known downstream consumer
+- `V49`: null rate 0.39 -> 0.45 — breaks: no known downstream consumer
+- `V50`: null rate 0.39 -> 0.45 — breaks: no known downstream consumer
+- `V51`: null rate 0.39 -> 0.45 — breaks: no known downstream consumer
+- `V52`: null rate 0.39 -> 0.45 — breaks: no known downstream consumer
+- `V53`: null rate 0.24 -> 0.17; median 1.000 -> 0.000 — breaks: no known downstream consumer
+- `V54`: null rate 0.24 -> 0.17 — breaks: no known downstream consumer
+- `V55`: null rate 0.24 -> 0.17 — breaks: no known downstream consumer
+- `V56`: null rate 0.24 -> 0.17 — breaks: no known downstream consumer
+- `V57`: null rate 0.24 -> 0.17 — breaks: no known downstream consumer
+- `V58`: null rate 0.24 -> 0.17 — breaks: no known downstream consumer
+- `V59`: null rate 0.24 -> 0.17 — breaks: no known downstream consumer
+- `V60`: null rate 0.24 -> 0.17 — breaks: no known downstream consumer
+- `V61`: null rate 0.24 -> 0.17 — breaks: no known downstream consumer
+- `V62`: null rate 0.24 -> 0.17 — breaks: no known downstream consumer
+- `V63`: null rate 0.24 -> 0.17 — breaks: no known downstream consumer
+- `V64`: null rate 0.24 -> 0.17 — breaks: no known downstream consumer
+- `V65`: null rate 0.24 -> 0.17 — breaks: no known downstream consumer
+- `V66`: null rate 0.24 -> 0.17 — breaks: no known downstream consumer
+- `V67`: null rate 0.24 -> 0.17 — breaks: no known downstream consumer
+- `V68`: null rate 0.24 -> 0.17 — breaks: no known downstream consumer
+- `V69`: null rate 0.24 -> 0.17 — breaks: no known downstream consumer
+- `V70`: null rate 0.24 -> 0.17 — breaks: no known downstream consumer
+- `V71`: null rate 0.24 -> 0.17 — breaks: no known downstream consumer
+- `V72`: null rate 0.24 -> 0.17 — breaks: no known downstream consumer
+- `V73`: null rate 0.24 -> 0.17 — breaks: no known downstream consumer
+- `V74`: null rate 0.24 -> 0.17 — breaks: no known downstream consumer
+- `V75`: null rate 0.25 -> 0.31 — breaks: no known downstream consumer
+- `V76`: null rate 0.25 -> 0.31 — breaks: no known downstream consumer
+- `V77`: null rate 0.25 -> 0.31 — breaks: no known downstream consumer
+- `V78`: null rate 0.25 -> 0.31 — breaks: no known downstream consumer
+- `V79`: null rate 0.25 -> 0.31 — breaks: no known downstream consumer
+- `V80`: null rate 0.25 -> 0.31 — breaks: no known downstream consumer
+- `V81`: null rate 0.25 -> 0.31 — breaks: no known downstream consumer
+- `V82`: null rate 0.25 -> 0.31 — breaks: no known downstream consumer
+- `V83`: null rate 0.25 -> 0.31 — breaks: no known downstream consumer
+- `V84`: null rate 0.25 -> 0.31 — breaks: no known downstream consumer
+- `V85`: null rate 0.25 -> 0.31 — breaks: no known downstream consumer
+- `V86`: null rate 0.25 -> 0.31 — breaks: no known downstream consumer
+- `V87`: null rate 0.25 -> 0.31 — breaks: no known downstream consumer
+- `V88`: null rate 0.25 -> 0.31 — breaks: no known downstream consumer
+- `V89`: null rate 0.25 -> 0.31 — breaks: no known downstream consumer
+- `V90`: null rate 0.25 -> 0.31 — breaks: no known downstream consumer
+- `V91`: null rate 0.25 -> 0.31 — breaks: no known downstream consumer
+- `V92`: null rate 0.25 -> 0.31 — breaks: no known downstream consumer
+- `V93`: null rate 0.25 -> 0.31 — breaks: no known downstream consumer
+- `V94`: null rate 0.25 -> 0.31 — breaks: no known downstream consumer
+- `customer_id`: new frequent values ['C09582', 'C09471', 'C04105'] — breaks: card-id recovery (card_key) and OWNS edges
+- `ts`: new frequent values ['2017-01-05 09:44:38', '2017-01-01 06:13:58', '2017-01-09 06:35:09'] — breaks: every as_of-bounded query; the temporal wall
+
+## identity.csv → identity_2017q1.csv
+
+- added: none
+- removed: none
+- renames proposed: none
+- key overlap on `TransactionID`: 0
+
+- `id_13`: null rate 0.12 -> 0.20 — breaks: no known downstream consumer
+- `id_14`: null rate 0.44 -> 0.34 — breaks: no known downstream consumer
+- `id_30`: null rate 0.46 -> 0.35; new frequent values ['Mac OS X 10_12_6'] — breaks: no known downstream consumer
+- `id_31`: new frequent values ['chrome 62.0'] — breaks: no known downstream consumer
+- `id_32`: null rate 0.46 -> 0.35 — breaks: no known downstream consumer
+- `id_33`: null rate 0.49 -> 0.40 — breaks: no known downstream consumer
+- `id_34`: null rate 0.46 -> 0.36 — breaks: no known downstream consumer
+
+## closed_cases_history.csv → closed_cases_history.csv
+
+- added: none
+- removed: none
+- renames proposed: none
+- key overlap on `case_id`: 5565
+
+- `actions_taken`: new frequent values ['ALLOW_TRANSACTION|CLOSE_NO_FRAUD|MONITOR_CARD|VERIFY_WITH_CUSTOMER', 'BLOCK_CARD|CREATE_CASE'] — breaks: no known downstream consumer
+- `connected_card_ids`: new frequent values ['C00466-K1|C01890-K1|C02265-K1|C03633-K1|C05423-K1|C05766-K1|C05851-K1|C06881-K1|C10751-K1|C10990-K1|C12641-K2'] — breaks: no known downstream consumer
+
+## case_pack.csv → case_pack_final.csv
+
+- added: none
+- removed: none
+- renames proposed: none
+- key overlap on `case_id`: 0
+
+- `card_id`: new frequent values ['C05061-K1', 'C06220-K1', 'C11663-K1'] — breaks: no known downstream consumer
+- `case_id`: new frequent values ['HHF-001', 'HHF-002', 'HHF-003'] — breaks: no known downstream consumer
+- `customer_id`: new frequent values ['C05061', 'C06220', 'C11663'] — breaks: card-id recovery (card_key) and OWNS edges
+- `opened_at`: new frequent values ['2017-01-15 01:25:19', '2017-01-19 23:18:58', '2017-01-31 20:31:28'] — breaks: no known downstream consumer
+- `risk_score`: null rate 0.45 -> 0.39 — breaks: the trigger prior and the January neutralisation
+- `trigger_text`: new frequent values ['Analyst request: several cards this month show losses with no shared device. Review transaction 3660108 on card C05061-K1 and look for what the affected cards have in common.', 'Analyst request: several cards this month show losses with no shared device. Review transaction 3660127 on card C06220-K1 and look for what the affected cards have in common.', "Customer C11663 message: 'I did not make these charges on my card. Please look into it.' Refers to 3660153."] — breaks: no known downstream consumer

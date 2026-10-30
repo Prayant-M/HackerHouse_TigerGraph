@@ -1,0 +1,35 @@
+{
+  "feedback_records": 164,
+  "adjustments": {
+    "match_flag_anomaly": {
+      "factor": 0.6,
+      "caused_by": [
+        "FBR-00056",
+        "FBR-00060",
+        "FBR-00113"
+      ]
+    },
+    "amount_typical": {
+      "factor": 0.3999999999999999,
+      "caused_by": [
+        "FBR-00057",
+        "FBR-00061",
+        "FBR-00114",
+        "FBR-00140"
+      ]
+    }
+  },
+  "second_half": {
+    "before": {
+      "legit_acted_against": 46,
+      "frauds_acted_on": 80,
+      "frauds_missed": 531
+    },
+    "after": {
+      "legit_acted_against": 42,
+      "frauds_acted_on": 79,
+      "frauds_missed": 532
+    }
+  },
+  "n_second_half": 1019
+}

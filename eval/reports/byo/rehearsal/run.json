@@ -1,0 +1,14 @@
+{
+ "approved_by": "operator flag --accept-mapping (no token)",
+ "backend": "local",
+ "run_exit": 0,
+ "filled_columns": [
+  "dist2"
+ ],
+ "answers": [
+  "HHF-009.json",
+  "HHF-012.json",
+  "HHF-017.json"
+ ],
+ "seconds": 766.6
+}

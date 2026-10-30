@@ -186,3 +186,21 @@ def test_the_agent_does_not_block_everything():
     verdicts = [json.loads(p.read_text(encoding="utf-8"))["case"]["verdict"] for p in FILES]
     assert verdicts.count("fraud") <= 15, f"too many fraud verdicts: {verdicts}"
     assert verdicts.count("fraud") >= 4, f"too few fraud verdicts: {verdicts}"
+
+
+def _reject_constant(name: str):
+    raise ValueError(f"non-standard JSON constant {name}")
+
+
+@pytest.mark.parametrize("path", sorted((ROOT / "cases").glob("HHG-*.json")), ids=lambda p: p.stem)
+def test_answer_file_is_strict_json(path: Path) -> None:
+    """NaN / Infinity are Python-only; a strict JSON parser (or a browser) rejects them."""
+    json.loads(path.read_text(encoding="utf-8"), parse_constant=_reject_constant)
+
+
+def test_trigger_risk_score_nan_becomes_none() -> None:
+    from datetime import datetime
+    from fraudagent.agent.graph import trigger_from_row
+    row = {"risk_score": float("nan"), "opened_at": datetime(2016, 11, 1), "trigger_type": "customer_report",
+           "flagged_txn_id": "1", "card_id": "C1", "customer_id": "U1"}
+    assert trigger_from_row(row).risk_score is None

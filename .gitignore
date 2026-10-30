@@ -25,3 +25,20 @@ Thumbs.db
 .idea/
 .vscode/
 build/
+
+# Final-round runtime state (regenerated; never committed)
+logs/
+alerts/
+cases/failures/
+cases/ready/
+data/approvals/
+data/feedback/
+data/lifecycle/
+data/drift/*.approved
+eval/reports/*.parquet
+Datasets/byo/
+Datasets/round_2_dataset/*.csv
+Datasets/round_2_dataset/cases/*.csv
+data/staged_byo/
+data/staged_round1/
+cases_byo/

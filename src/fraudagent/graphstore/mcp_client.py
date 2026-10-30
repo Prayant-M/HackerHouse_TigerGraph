@@ -7,7 +7,10 @@ tigergraph-mcp) as a stdio subprocess and calls its tools:
     tigergraph__run_installed_query   every investigation query in graph/queries/
     tigergraph__get_node              transaction lookup by id
     tigergraph__get_node_edges        device and email-domain edges of a transaction
-    tigergraph__add_node / add_edge   writing the case subgraph back
+
+and nothing else: writes go through the installed `case_write` query (run via
+run_installed_query), and `add_node` / `add_edge` / schema tools are refused by
+the client-side allow-list (`TG_ALLOWED_TOOLS`).
 
 The method names mirror pyTigerGraph's, so `TigerGraphStore` can use this
 object and a direct `TigerGraphConnection` interchangeably, and fall back from
@@ -33,6 +36,15 @@ from typing import Any
 from ..config import TG
 
 _JSON_BLOCK = re.compile(r"```json\s*(\{.*?\})\s*```", re.S)
+
+
+DEFAULT_ALLOWED_TOOLS = ("tigergraph__run_installed_query", "tigergraph__get_node",
+                         "tigergraph__get_node_edges")
+
+
+def allowed_tools() -> frozenset[str]:
+    raw = os.environ.get("TG_ALLOWED_TOOLS", "").strip()
+    return frozenset(x.strip() for x in raw.split(",") if x.strip()) if raw         else frozenset(DEFAULT_ALLOWED_TOOLS)
 
 
 class MCPToolError(RuntimeError):
@@ -89,7 +101,15 @@ class TigerGraphMCPClient:
         return asyncio.run_coroutine_threadsafe(coro, self._loop).result(timeout)
 
     def call(self, tool: str, args: dict[str, Any], timeout: float = 120.0) -> Any:
-        """Call one MCP tool and return its `data` payload."""
+        """Call one MCP tool and return its `data` payload. Only allow-listed
+        tools: the server exposes add_node / add_edge / schema tools too, and
+        the agent must not be able to reach them."""
+        drill = os.environ.get("DRILL_MCP_FAIL_AFTER", "").strip()
+        if drill.isdigit() and self.calls >= int(drill):
+            raise MCPToolError(f"drill: MCP server killed after {drill} calls")
+        if tool not in allowed_tools():
+            raise PermissionError(f"MCP tool {tool!r} is not on the agent allow-list "
+                                  f"(TG_ALLOWED_TOOLS)")
         res = self._submit(self._session.call_tool(tool, args), timeout)
         self.calls += 1
         text = "".join(getattr(c, "text", "") for c in res.content)
@@ -122,7 +142,7 @@ class TigerGraphMCPClient:
             node = self.call("tigergraph__get_node",
                              {"vertex_type": vertex_type, "vertex_id": str(vertex_id)})
         except MCPToolError as exc:
-            if "not found" in str(exc).lower():
+            if "not found" in str(exc).lower() or "not a valid vertex id" in str(exc).lower():
                 return []
             raise
         if not node:
@@ -136,17 +156,3 @@ class TigerGraphMCPClient:
             args["edge_type"] = edge_type
         data = self.call("tigergraph__get_node_edges", args) or {}
         return data.get("edges", []) if isinstance(data, dict) else list(data)
-
-    def upsertVertex(self, vertex_type: str, vertex_id: str,
-                     attributes: dict[str, Any] | None = None) -> None:
-        self.call("tigergraph__add_node", {"vertex_type": vertex_type,
-                                            "vertex_id": str(vertex_id),
-                                            "attributes": attributes or {}})
-
-    def upsertEdge(self, source_type: str, source_id: str, edge_type: str,
-                   target_type: str, target_id: str,
-                   attributes: dict[str, Any] | None = None) -> None:
-        self.call("tigergraph__add_edge", {
-            "source_vertex_type": source_type, "source_vertex_id": str(source_id),
-            "edge_type": edge_type, "target_vertex_type": target_type,
-            "target_vertex_id": str(target_id), "attributes": attributes or {}})

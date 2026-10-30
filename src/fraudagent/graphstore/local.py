@@ -22,8 +22,8 @@ import pandas as pd
 
 from ..config import PATHS
 from ..memory.embeddings import Embedder, cosine_top_k
-from .matchers import recurrence_from_rows
-from .base import GraphStore, RecalledCase, TxnRow
+from .matchers import detect_threshold_structuring, recurrence_from_rows
+from .base import GraphStore, RecalledCase, TxnRow, case_write_doc
 
 ROUND_THRESHOLDS = (100.0, 200.0, 250.0, 500.0, 1000.0, 2000.0, 5000.0)
 
@@ -351,40 +351,16 @@ class LocalGraphStore(GraphStore):
         return {"card_id": card_id, **best}
 
     def threshold_structuring_probe(self, card_id: str, as_of: datetime,
-                                    window_minutes: float = 60.0) -> dict[str, Any]:
+                                    window_minutes: float | None = None) -> dict[str, Any]:
         """Undocumented typology U1, mined from closed cases CC-3748/3841/3907/
         4086/4124: a burst of online purchases each parked just below a round
-        authorisation ceiling."""
+        authorisation ceiling. Same matcher as the TigerGraph backend."""
         self._count()
         df = self._card_slice(card_id, as_of, as_of - timedelta(days=3))
         online = df[df["channel"].eq("online")].sort_values("ts")
-        best: dict[str, Any] = {"matched": False}
-        for i in range(len(online)):
-            start = online["ts"].iloc[i]
-            grp = online[(online["ts"] >= start)
-                         & (online["ts"] <= start + timedelta(minutes=window_minutes))]
-            if len(grp) < 3:
-                continue
-            amounts = grp["amount"].to_numpy(dtype=float)
-            for thr in ROUND_THRESHOLDS:
-                lo = thr * 0.90
-                under = (amounts >= lo) & (amounts < thr)
-                if under.sum() >= 3 and under.mean() >= 0.75:
-                    cand = {
-                        "matched": True,
-                        "threshold_usd": thr,
-                        "n_txns": int(under.sum()),
-                        "txn_ids": grp["txn_id"].to_numpy()[under].tolist(),
-                        "amounts": [round(float(a), 2) for a in amounts[under]],
-                        "total_usd": round(float(amounts[under].sum()), 2),
-                        "window_minutes": round(float(
-                            (grp["ts"].max() - grp["ts"].min()).total_seconds() / 60.0), 1),
-                        "headroom_pct": round(float(
-                            100.0 * (thr - amounts[under].mean()) / thr), 2),
-                    }
-                    if not best["matched"] or cand["total_usd"] > best.get("total_usd", 0):
-                        best = cand
-        return {"card_id": card_id, **best}
+        rows = [{"txn_id": t, "ts": ts.to_pydatetime(), "amount": float(a)}
+                for t, ts, a in zip(online["txn_id"], online["ts"], online["amount"])]
+        return {"card_id": card_id, **detect_threshold_structuring(rows, window_minutes)}
 
     def peer_purchases(self, device_profile: str, card_id: str, amount: float,
                        as_of: datetime, window_days: int = 7) -> dict[str, Any]:
@@ -705,6 +681,174 @@ class LocalGraphStore(GraphStore):
             "home_region": str(regions.index[0]) if len(regions) else "",
         }
 
+    # ------------------------------------------- containment (C7, C1) ----
+    def _window(self, since: datetime, until: datetime) -> pd.DataFrame:
+        ts = self.ds.ts_values
+        m = (ts >= np.datetime64(since)) & (ts <= np.datetime64(until))
+        return self.ds.tx[m]
+
+    def _fraud_cards_before(self, as_of: datetime) -> set[str]:
+        c = self.ds.closed
+        sub = c[(c["is_fraud"]) & (c["opened_at"] <= as_of)]
+        return set(sub["card_id"].astype(str))
+
+    def ring_at_asof(self, card_id: str, as_of: datetime, lookback_days: int = 45,
+                     max_cards: int = 60, rare_cards: int = 10) -> dict[str, Any]:
+        """Seeded connected component over card-device co-occurrence, cut at
+        `as_of`. A device links cards only if it is rare in the window (2..10
+        cards) or mostly reached through an anonymising proxy: popular browser
+        strings are not compromise points."""
+        self._count()
+        win = self._window(as_of - timedelta(days=lookback_days), as_of)
+        win = win[win["device_profile"] != ""]
+        by_dev = win.groupby("device_profile")
+        dev_cards = by_dev["card_id"].unique()
+        anon = by_dev["proxy"].apply(lambda s: float((s.astype(str).str.contains(
+            "ANONYMOUS")).mean()))
+        linking = {d for d, cards in dev_cards.items()
+                   if 2 <= len(cards) <= rare_cards or (len(cards) >= 2 and anon[d] >= 0.5)}
+        card_devs = win[win["device_profile"].isin(linking)].groupby("card_id")[
+            "device_profile"].unique()
+        # Same semantics as the GSQL: expand whole hops, check the size cap only
+        # between hops, at most three hops.
+        seen, frontier, edges, hops = {card_id}, [card_id], [], 0
+        while frontier and len(seen) - 1 < max_cards and hops < 3:
+            nxt = []
+            for c in frontier:
+                for d in card_devs.get(c, []):
+                    for o in dev_cards[d]:
+                        if o != c:
+                            edges.append([c, str(o), d])
+                        if o not in seen:
+                            seen.add(o)
+                            nxt.append(o)
+            frontier = nxt
+            hops += 1
+        return {"seed": card_id, "cards": sorted(seen - {card_id}), "size": len(seen),
+                "edges": edges[:200], "devices": sorted({e[2] for e in edges})[:20],
+                "as_of": str(as_of), "lookback_days": lookback_days,
+                "algorithm": "seeded WCC on the as_of-sliced card-device projection"}
+
+    @staticmethod
+    def _entity_frame(win: pd.DataFrame) -> pd.DataFrame:
+        band = (win["amount"].astype(float) // 25 * 25).astype(int).astype(str)
+        parts = [
+            pd.DataFrame({"entity_type": "device_profile", "entity": win["device_profile"],
+                          "card_id": win["card_id"], "ts": win["ts"]}),
+            pd.DataFrame({"entity_type": "region", "entity": win["region"].astype(str),
+                          "card_id": win["card_id"], "ts": win["ts"]}),
+            pd.DataFrame({"entity_type": "email_p", "entity": win["email_p"].astype(str),
+                          "card_id": win["card_id"], "ts": win["ts"]}),
+            pd.DataFrame({"entity_type": "merchant_proxy",
+                          "entity": win["product_cd"].astype(str) + "|$" + band,
+                          "card_id": win["card_id"], "ts": win["ts"]}),
+        ]
+        ent = pd.concat(parts, ignore_index=True)
+        bad = {"", "nan", "None", "anonymous.com"}
+        return ent[~ent["entity"].isin(bad)]
+
+    def origin_counts(self, ring_cards: Sequence[str], since: datetime, until: datetime,
+                      as_of: datetime) -> dict[str, Any]:
+        """Per entity: ring cards that touched it, and control cards (active in
+        the same window, not in the ring, no confirmed fraud before as_of)."""
+        self._count()
+        ring = set(ring_cards)
+        win = self._window(since, until)
+        ent = self._entity_frame(win)
+        fraud = self._fraud_cards_before(as_of)
+        control_cards = set(win["card_id"]) - ring - fraud
+        rr = ent[ent["card_id"].isin(ring)]
+        ring_by = rr.groupby(["entity_type", "entity"])["card_id"].unique()
+        keys = set(ring_by.index)
+        cc = ent[ent["card_id"].isin(control_cards)]
+        cc = cc[[k in keys for k in zip(cc["entity_type"], cc["entity"])]]
+        pop_by = cc.groupby(["entity_type", "entity"])["card_id"].nunique()
+        rows = [{"entity_type": t, "entity": e, "ring_cards": len(cards),
+                 "ring_card_ids": sorted(map(str, cards)),
+                 "pop_cards": int(pop_by.get((t, e), 0))}
+                for (t, e), cards in ring_by.items() if len(cards) >= 2]
+        return {"entities": rows, "n_control": len(control_cards), "n_ring": len(ring)}
+
+    def origin_touchers(self, entity_type: str, entity: str, since: datetime,
+                        until: datetime, as_of: datetime) -> list[dict[str, Any]]:
+        self._count()
+        ent = self._entity_frame(self._window(since, until))
+        hit = ent[(ent["entity_type"] == entity_type) & (ent["entity"] == entity)]
+        fraud = self._fraud_cards_before(as_of)
+        out = []
+        for card, g in hit.groupby("card_id"):
+            rows = self.ds.card_rows.get(card)
+            cust = self.ds.tx.at[rows[0], "customer_id"] if rows is not None else ""
+            out.append({"card_id": str(card), "customer_id": str(cust),
+                        "last_touch": str(g["ts"].max()), "n_touches": int(len(g)),
+                        "suspect": card in fraud})
+        return out
+
+    def ring_exposure(self, ring_cards: Sequence[str], as_of: datetime,
+                      lookback_days: int = 45, window_hours: float = 72.0) -> list[dict]:
+        """Attested exposure per ring card: its transactions in the suspect window
+        made from a device it shares with another ring card."""
+        self._count()
+        ring = set(ring_cards)
+        win = self._window(as_of - timedelta(hours=window_hours), as_of)
+        win = win[win["card_id"].isin(ring) & (win["device_profile"] != "")]
+        shared = win.groupby("device_profile")["card_id"].nunique()
+        shared = set(shared[shared >= 2].index)
+        out = []
+        for card, g in win[win["device_profile"].isin(shared)].groupby("card_id"):
+            out.append({"card_id": str(card), "customer_id": str(g["customer_id"].iloc[0]),
+                        "exposure_usd": round(float(g["amount"].sum()), 2),
+                        "txn_ids": sorted(g["txn_id"].astype(str).tolist())})
+        return out
+
+    def inject_rows(self, rows: list[dict[str, Any]]) -> None:
+        """Append transactions in memory and rebuild the indexes. Used by the
+        canary drill and the M3 metamorphic relation; never by the agent."""
+        ds = self.ds
+        add = pd.DataFrame(rows)
+        ds.tx = pd.concat([ds.tx, add], ignore_index=True).sort_values(
+            ["card_id", "ts"]).reset_index(drop=True)
+        ds.by_txn = {t: i for i, t in enumerate(ds.tx["txn_id"])}
+        ds.card_rows = {c: g.to_numpy() for c, g in ds.tx.groupby("card_id", sort=False)
+                        .groups.items()}
+        dev = ds.tx[ds.tx["device_profile"] != ""]
+        ds.device_rows = {d: g.to_numpy() for d, g in dev.groupby("device_profile", sort=False)
+                          .groups.items()}
+        ds.ts_values = ds.tx["ts"].to_numpy()
+        self._slice_cache.clear()
+        self._fanout_cache.clear()
+
+    def precedent_by_facts(self, fact_mask: int, as_of: datetime) -> dict[str, Any] | None:
+        """Mirror of the installed query, over the replayed fact table."""
+        self._count()
+        from ..core.proof import _precedent_table
+
+        df = _precedent_table()
+        if df is None:
+            return None
+        m = int(fact_mask)
+        sub = df[(df["opened_at"] < pd.Timestamp(as_of)) & ((df["fact_mask"] & m) == m)]
+        n_f = int(sub["is_fraud"].sum())
+        return {"n": int(len(sub)), "confirmed": n_f, "cleared": int(len(sub) - n_f),
+                "case_ids": sorted(sub["case_id"].astype(str).tolist())}
+
+    def behaviour_vector(self, txn_id: str) -> list[float] | None:
+        self._count()
+        i = self.ds.behaviour_index.get(str(txn_id)) if self.ds.behaviour is not None else None
+        return None if i is None else [float(x) for x in self.ds.behaviour[i]]
+
+    def data_gaps(self, txn_ids: Sequence[str]) -> dict[str, Any]:
+        """C11: identity, region and placeholder gaps over a set of transactions."""
+        self._count()
+        idx = [self.ds.by_txn[t] for t in map(str, txn_ids) if t in self.ds.by_txn]
+        df = self.ds.tx.iloc[idx]
+        return {"n": int(len(df)),
+                "no_identity": df.loc[~df["has_identity"].astype(bool), "txn_id"].tolist(),
+                "empty_region": df.loc[df["region"].astype(str).isin(["", "nan"]),
+                                       "txn_id"].tolist(),
+                "placeholder_email": df.loc[df["email_p"].astype(str).isin(
+                    ["", "anonymous.com"]), "txn_id"].tolist()}
+
     def fraud_proximity(self, entity_ids: Sequence[str], as_of: datetime,
                         max_hops: int = 2) -> dict[str, Any]:
         """Distance-decayed count of confirmed-fraud closed cases around the
@@ -898,6 +1042,9 @@ class LocalGraphStore(GraphStore):
         that `TigerGraphStore` performs."""
         self._count()
         graph_case_id = case_doc.get("graph_case_id") or f"CASE-{case_doc['case_id']}"
+        # Same document contract as TigerGraph's installed case_write query, so a
+        # payload the graph would reject is rejected here too.
+        case_write_doc(graph_case_id, case_doc)
         case_doc = dict(case_doc)
         case_doc["graph_case_id"] = graph_case_id
         self.ds.agent_cases.append(case_doc)
@@ -909,6 +1056,19 @@ class LocalGraphStore(GraphStore):
         with PATHS.agent_cases_jsonl.open("a", encoding="utf-8") as fh:
             fh.write(json.dumps(case_doc, ensure_ascii=False, default=str) + "\n")
         return graph_case_id
+
+    def compromise_watch(self, entity_ids: Sequence[str], as_of: datetime) -> list[dict]:
+        """Read back COMPROMISE_POINT write-backs from earlier agent cases."""
+        self._count()
+        ents = {str(e) for e in entity_ids if e}
+        out = []
+        for c in self.ds.agent_cases:
+            o = c.get("origin") or {}
+            if o and o.get("to") in ents and str(c.get("as_of", "")) < str(as_of):
+                out.append({"graph_case_id": c["graph_case_id"], "entity": o["to"],
+                            "lift": float(o.get("lift", 0)),
+                            "p_value": float(o.get("p_value", 1))})
+        return out
 
     def case_chain(self, graph_case_id: str) -> dict[str, Any]:
         self._count()
