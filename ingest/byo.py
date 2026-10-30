@@ -460,7 +460,7 @@ def main() -> int:
                BENCHMARK_OUTPUT_DIR=str(cases), CASE_PACK=str(out / "case_pack.csv"),
                # isolate every side effect from the main dataset's records
                RECORDINGS_DIR=str(staged / "recordings"), LIFECYCLE_DIR=str(staged / "lifecycle"),
-               LOGS_DIR=str(staged / "logs"),
+               LOGS_DIR=str(staged / "logs"), EVAL_OUTPUT_DIR=str(rep_dir),
                GRAPH_BACKEND="tigergraph" if args.graph else "local", AGENT_USE_LLM=os.environ.get(
                    "AGENT_USE_LLM", "0"))
     py = sys.executable

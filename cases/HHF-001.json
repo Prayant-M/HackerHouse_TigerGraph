@@ -9,7 +9,7 @@
       "executed": true,
       "simulated": true,
       "reference": "SIM-B6C31417F3",
-      "executed_at": "2026-10-30T05:12:54Z",
+      "executed_at": "2026-10-30T07:56:16Z",
       "effect": "Fraud case opened and written to the graph.",
       "customer_impact": "none"
     }
@@ -112,7 +112,7 @@
       "CC-4210",
       "CC-3123"
     ],
-    "summary": "An analyst asked for a review of transaction 3660108 ($447.95, online, billing region 492.0). The investigation found: 2 online transactions inside 48 hours, the burst shape the bank's card-not-present typology describes; transaction came from device profile 'RCT6303W87M7 Build/MRA58K | Windows 7 | ie 11.0 for desktop' which the identity record marks 'New' for this account and which has no prior use on this card; 3 confirmed-fraud closed cases sit within two hops of this card, device or customer (distance-decayed proximity 1.5). The activity is assessed as card-not-present fraud from a device new to the account at probability 0.91, covering 2 transaction(s) worth $1,338.74. Closed case CC-2420 (confirmed fraud, card not present new device) is the closest prior investigation.",
+    "summary": "Card C05061-K1 sustained a two-transaction online velocity burst across 2017-01-13 and 2017-01-14 totaling $1,338.74 in total exposure, including flagged transaction 3660108 for $447.95. The evidence rests on the first-time use of device profile \"RCT6303W87M7 Build/MRA58K | Windows 7 | ie 11.0 for desktop\", connection via \"IP_PROXY:ANONYMOUS\", a 48-hour burst pattern, and graph proximity within two hops to three confirmed fraud cases. The case outcome is concluded as fraud under the card_not_present_new_device pattern with a fraud probability of 0.91. It remains uncertain whether the new device profile represents a legitimate device change by the customer, though the anonymous proxy usage and proximity to prior confirmed fraud indicate unauthorized access.",
     "written_to_graph": true,
     "graph_case_id": "CASE-HHF-001"
   },
@@ -157,7 +157,7 @@
   "sar": {
     "file": true,
     "reason": "§3a: exposure $1,338.74 exceeds the $1,000 threshold.",
-    "narrative": "Customer C05061, holder of card C05061-K1, is the subject of this report. Between 2017-01-13 and 2017-01-14, 2 transaction(s) totalling $1,338.74 were identified as unauthorised on that card, the earliest being transaction 3660107 and the transaction that triggered review being 3660108 for $447.95. The activity was conducted through the online channel in billing region 492.0. The transactions originated from device profile 'RCT6303W87M7 Build/MRA58K | Windows 7 | ie 11.0 for desktop', which the issuer's identity record marks 'New' for this account, reached through an anonymous proxy. The purchases were made without the physical card, from a device with no prior history on the account. Closed investigation CC-2420 recorded confirmed fraud on comparable activity. The issuer assesses the probability of fraud at 0.91 on the evidence set out above. Total suspicious amount: $1,338.74.",
+    "narrative": "This filing concerns customer C05061, holder of payment card C05061-K1, associated with transactions conducted using device profile RCT6303W87M7 Build/MRA58K | Windows 7 | ie 11.0 for desktop. The account experienced suspicious card-not-present activity involving two online transactions, identified as transaction 3660107 and transaction 3660108, resulting in a total exposure of $1,338.74. The activity dates spanned 2017-01-13 and 2017-01-14, with flagged transaction 3660108 occurring on 2017-01-14 at 20:25:19, leading to an investigation review trigger as of 2017-01-15 01:25:19. All affected transactions occurred through the online channel under billing region 492.0, which differs from customer C05061's baseline home region of 181.0. The activity was carried out via online card-not-present purchases from device profile RCT6303W87M7 Build/MRA58K | Windows 7 | ie 11.0 for desktop, which is marked New for this account, while routing through an anonymous proxy classification IP_PROXY:ANONYMOUS. The activity is suspicious because it represents a velocity burst of 2 online transactions inside 48 hours on a new device profile with no prior use history on card C05061-K1. Suspicion is further supported by the connection carrying IP_PROXY:ANONYMOUS, out-of-region usage in billing region 492.0 relative to home region 181.0, and graph network proximity within two hops to three confirmed fraud closed cases (CC-2420, CC-2674, and CC-4210). Based on these indicators, the assessed fraud probability is 0.91, and the total exposure of $1,338.74 exceeds the $1,000 filing threshold.",
     "subjects": [
       "C05061",
       "C05061-K1",
@@ -171,8 +171,8 @@
   },
   "stop_reason": "Fraud probability 0.91 is at or above the 0.85 ceiling in policy §6, supported by 4 independent pieces of evidence, with card_not_present_new_device leading card_not_present_fraud by 0.51.",
   "tool_calls": 51,
-  "tokens": 0,
-  "latency_s": 396.56,
+  "tokens": 6067,
+  "latency_s": 15.75,
   "agent_record": {
     "trigger": {
       "type": "analyst_request",
@@ -563,7 +563,7 @@
         "executed": true,
         "simulated": true,
         "reference": "SIM-B6C31417F3",
-        "executed_at": "2026-10-30T05:12:54Z",
+        "executed_at": "2026-10-30T07:56:16Z",
         "effect": "Fraud case opened and written to the graph.",
         "customer_impact": "none"
       }
@@ -590,19 +590,15 @@
       "available": true,
       "provider": "google",
       "model": "gemini-3.6-flash",
-      "calls": 0,
-      "input_tokens": 0,
-      "output_tokens": 0,
-      "tokens": 0,
-      "cached": 0,
-      "errors": [
-        "google: 429 You exceeded your current quota, please check your plan and billing details. For more information on this error, head to: https://ai.google.dev/gemini-api/docs/rate-limits. To monitor your current usage, head to: https://ai.dev/rate-limit. \n* Quota exceeded for metric: generativelanguage.googleapis.com/generate_content_free_tier_requests, limit: 20, model: gemini-3.6-flash, description: Generate content requests per day limit exceeded on Free Tier. See https://ai.google.dev/gemini-api/docs/rate-limits.\nPlease retry in 1h47m48.250058832s. [links {\n  description: \"Learn more about Gemini API quotas\"\n  url: \"https://ai.google.dev/gemini-api/docs/rate-limits\"\n}\n, violations {\n  description: \"Generate content requests per day limit exceeded on Free Tier. See https://ai.google.dev/gemini-api/docs/rate-limits.\"\n  quota_metric: \"generativelanguage.googleapis.com/generate_content_free_tier_requests\"\n  quota_id: \"GenerateRequestsPerDayPerProjectPerModel-FreeTier\"\n  quota_dimensions {\n    key: \"model\"\n    value: \"gemini-3.6-flash\"\n  }\n  quota_dimensions {\n    key: \"location\"\n    value: \"global\"\n  }\n  quota_value: 20\n}\n, retry_delay {\n  seconds: 6468\n}\n]",
-        "google: 429 You exceeded your current quota, please check your plan and billing details. For more information on this error, head to: https://ai.google.dev/gemini-api/docs/rate-limits. To monitor your current usage, head to: https://ai.dev/rate-limit. \n* Quota exceeded for metric: generativelanguage.googleapis.com/generate_content_free_tier_requests, limit: 20, model: gemini-3.6-flash, description: Generate content requests per day limit exceeded on Free Tier. See https://ai.google.dev/gemini-api/docs/rate-limits.\nPlease retry in 1h45m12.260146652s. [links {\n  description: \"Learn more about Gemini API quotas\"\n  url: \"https://ai.google.dev/gemini-api/docs/rate-limits\"\n}\n, violations {\n  description: \"Generate content requests per day limit exceeded on Free Tier. See https://ai.google.dev/gemini-api/docs/rate-limits.\"\n  quota_metric: \"generativelanguage.googleapis.com/generate_content_free_tier_requests\"\n  quota_id: \"GenerateRequestsPerDayPerProjectPerModel-FreeTier\"\n  quota_dimensions {\n    key: \"model\"\n    value: \"gemini-3.6-flash\"\n  }\n  quota_dimensions {\n    key: \"location\"\n    value: \"global\"\n  }\n  quota_value: 20\n}\n, retry_delay {\n  seconds: 6312\n}\n]",
-        "google: 429 You exceeded your current quota, please check your plan and billing details. For more information on this error, head to: https://ai.google.dev/gemini-api/docs/rate-limits. To monitor your current usage, head to: https://ai.dev/rate-limit. \n* Quota exceeded for metric: generativelanguage.googleapis.com/generate_content_free_tier_requests, limit: 20, model: gemini-3.6-flash, description: Generate content requests per day limit exceeded on Free Tier. See https://ai.google.dev/gemini-api/docs/rate-limits.\nPlease retry in 1h43m5.454028157s. [links {\n  description: \"Learn more about Gemini API quotas\"\n  url: \"https://ai.google.dev/gemini-api/docs/rate-limits\"\n}\n, violations {\n  description: \"Generate content requests per day limit exceeded on Free Tier. See https://ai.google.dev/gemini-api/docs/rate-limits.\"\n  quota_metric: \"generativelanguage.googleapis.com/generate_content_free_tier_requests\"\n  quota_id: \"GenerateRequestsPerDayPerProjectPerModel-FreeTier\"\n  quota_dimensions {\n    key: \"model\"\n    value: \"gemini-3.6-flash\"\n  }\n  quota_dimensions {\n    key: \"location\"\n    value: \"global\"\n  }\n  quota_value: 20\n}\n, retry_delay {\n  seconds: 6185\n}\n]"
-      ],
-      "template_fallbacks": 3
+      "calls": 3,
+      "input_tokens": 5277,
+      "output_tokens": 790,
+      "tokens": 6067,
+      "cached": 3,
+      "errors": [],
+      "template_fallbacks": 0
     },
-    "prose_source": "template",
+    "prose_source": "llm",
     "transport_degraded": false,
     "january_regime": true,
     "text_facts": {
@@ -803,7 +799,7 @@
     "trace": [
       {
         "node": "trigger_intake",
-        "at": 0.01,
+        "at": 0.004,
         "trigger_type": "analyst_request",
         "flagged_txn_id": "3660108",
         "as_of": "2017-01-15 01:25:19",
@@ -813,38 +809,24 @@
       },
       {
         "node": "case_opener",
-        "at": 0.012,
+        "at": 0.005,
         "graph_case_id": "CASE-HHF-001",
         "prior_fraud": 0.65
       },
       {
         "node": "evidence_planner",
-        "at": 113.86,
+        "at": 0.005,
         "planned_tools": [
-          "card_baseline",
           "episode_window",
-          "velocity_burst",
-          "device_first_use",
-          "device_fanout",
-          "region_profile",
-          "out_of_region_probe",
-          "card_testing_probe",
-          "threshold_structuring_probe",
-          "mixed_channel_probe",
-          "recurring_charge_probe",
-          "email_mismatch_profile",
-          "shared_entity_ring",
-          "fraud_proximity",
-          "behavioural_neighbours",
-          "hybrid_case_recall",
-          "policy_retrieve"
+          "card_baseline",
+          "shared_entity_ring"
         ],
-        "rationale": "",
-        "llm_used": false
+        "rationale": "Examine transaction 3660108's immediate context, establish the baseline behavior for card C05061-K1, and search for non-device shared entities linking the affected cards.",
+        "llm_used": true
       },
       {
         "node": "graph_retrieval",
-        "at": 124.829,
+        "at": 12.802,
         "signals_fired": [
           "device_new_on_account",
           "anonymising_proxy",
@@ -856,7 +838,7 @@
       },
       {
         "node": "memory_recall",
-        "at": 151.949,
+        "at": 14.786,
         "recalled": [
           "CC-2420",
           "CC-2674",
@@ -870,7 +852,7 @@
       },
       {
         "node": "policy_grounding",
-        "at": 152.361,
+        "at": 15.232,
         "retrieved": [
           "PATTERN-out_of_region_use",
           "PATTERN-card_not_present_new_device",
@@ -882,7 +864,7 @@
       },
       {
         "node": "ledger_update",
-        "at": 152.362,
+        "at": 15.233,
         "folded": 24,
         "p_fraud": 0.9088,
         "posterior": {
@@ -920,7 +902,7 @@
       },
       {
         "node": "uncertainty_assessor",
-        "at": 152.364,
+        "at": 15.233,
         "p_fraud": 0.9088,
         "margin": 0.5051,
         "entropy": 0.8224,
@@ -980,7 +962,7 @@
       },
       {
         "node": "action_recommender",
-        "at": 155.725,
+        "at": 15.741,
         "verdict": "fraud",
         "pattern": "card_not_present_new_device",
         "exposure": 1338.74,
@@ -1018,7 +1000,7 @@
       },
       {
         "node": "permission_gate",
-        "at": 155.732,
+        "at": 15.743,
         "executed": [
           "CREATE_CASE"
         ],
@@ -1037,20 +1019,20 @@
       },
       {
         "node": "explainer",
-        "at": 269.765,
-        "summary_chars": 785,
+        "at": 15.745,
+        "summary_chars": 766,
         "llm_used": true
       },
       {
         "node": "case_writer",
-        "at": 397.447,
+        "at": 16.486,
         "graph_case_id": "CASE-HHF-001",
         "affected_txns": 2,
         "sar_filed": true
       },
       {
         "node": "memory_consolidator",
-        "at": 397.448,
+        "at": 16.487,
         "audit_chain_intact": true,
         "decisions": 3
       }
@@ -1134,7 +1116,7 @@
             "digest": "291e08c299ca8c4b1f03bbd6882f8ec98808dcda4974c97530f338d7a1873fdc"
           }
         ],
-        "ran_at": "2026-10-30T05:16:54Z",
+        "ran_at": "2026-10-30T07:56:16Z",
         "data_snapshot": "bc3011b15aff8ad88490fd4e127bf3de",
         "kind": "derived_inference"
       },
@@ -1188,7 +1170,7 @@
             "digest": "ede77fb9c5dd1ca8e9913246e94104bdf68599046582d597ee0ae1a2d2b0240d"
           }
         ],
-        "ran_at": "2026-10-30T05:16:54Z",
+        "ran_at": "2026-10-30T07:56:16Z",
         "data_snapshot": "bc3011b15aff8ad88490fd4e127bf3de",
         "kind": "derived_inference"
       },
@@ -1206,7 +1188,7 @@
           "max_hops": "2"
         },
         "tool_calls": [],
-        "ran_at": "2026-10-30T05:16:54Z",
+        "ran_at": "2026-10-30T07:56:16Z",
         "data_snapshot": "bc3011b15aff8ad88490fd4e127bf3de",
         "kind": "derived_inference"
       },
@@ -1258,7 +1240,7 @@
             "digest": "291e08c299ca8c4b1f03bbd6882f8ec98808dcda4974c97530f338d7a1873fdc"
           }
         ],
-        "ran_at": "2026-10-30T05:16:54Z",
+        "ran_at": "2026-10-30T07:56:16Z",
         "data_snapshot": "bc3011b15aff8ad88490fd4e127bf3de",
         "kind": "derived_inference"
       },
@@ -1278,7 +1260,7 @@
           "as_of": "2017-01-15 01:25:19"
         },
         "tool_calls": [],
-        "ran_at": "2026-10-30T05:16:54Z",
+        "ran_at": "2026-10-30T07:56:16Z",
         "data_snapshot": "bc3011b15aff8ad88490fd4e127bf3de",
         "kind": "observed_fact"
       },
@@ -1289,7 +1271,7 @@
         "query": "policy:PATTERN-out_of_region_use",
         "params": {},
         "tool_calls": [],
-        "ran_at": "2026-10-30T05:16:54Z",
+        "ran_at": "2026-10-30T07:56:16Z",
         "data_snapshot": "bc3011b15aff8ad88490fd4e127bf3de",
         "kind": "policy_text"
       },
@@ -1300,7 +1282,7 @@
         "query": "policy:PATTERN-card_not_present_new_device",
         "params": {},
         "tool_calls": [],
-        "ran_at": "2026-10-30T05:16:54Z",
+        "ran_at": "2026-10-30T07:56:16Z",
         "data_snapshot": "bc3011b15aff8ad88490fd4e127bf3de",
         "kind": "policy_text"
       },
@@ -1360,7 +1342,7 @@
             "digest": "c27588d3e6137f38673f1869536c841af736c9767d0cf95dc58de273a077dd5d"
           }
         ],
-        "ran_at": "2026-10-30T05:16:54Z",
+        "ran_at": "2026-10-30T07:56:16Z",
         "data_snapshot": "bc3011b15aff8ad88490fd4e127bf3de",
         "kind": "exposure"
       },
@@ -1418,7 +1400,7 @@
             "digest": "291e08c299ca8c4b1f03bbd6882f8ec98808dcda4974c97530f338d7a1873fdc"
           }
         ],
-        "ran_at": "2026-10-30T05:16:54Z",
+        "ran_at": "2026-10-30T07:56:16Z",
         "data_snapshot": "bc3011b15aff8ad88490fd4e127bf3de",
         "kind": "proof"
       },
@@ -1452,13 +1434,13 @@
             "digest": "40c31ab5237892d867c953e67c2fe64df3da0758ad34532f948bd956509f857b"
           }
         ],
-        "ran_at": "2026-10-30T05:16:54Z",
+        "ran_at": "2026-10-30T07:56:16Z",
         "data_snapshot": "bc3011b15aff8ad88490fd4e127bf3de",
         "kind": "precedent"
       },
       {
         "id": "HHF-001-A011",
-        "what": "Customer C05061, holder of card C05061-K1, is the subject of this report.",
+        "what": "This filing concerns customer C05061, holder of payment card C05061-K1, associated with transactions conducted using device profile RCT6303W87M7 Build/MRA58K | Windows 7 | ie 11.0 for desktop.",
         "evidence_ids": [
           "C05061",
           "C05061-K1"
@@ -1503,13 +1485,13 @@
             "digest": "eb39f7b8f31f1e6ad9ee1d03ce1d0e6b1a1563f7cc8ab8e1af4af6eab2f9e3a8"
           }
         ],
-        "ran_at": "2026-10-30T05:16:54Z",
+        "ran_at": "2026-10-30T07:56:16Z",
         "data_snapshot": "bc3011b15aff8ad88490fd4e127bf3de",
         "kind": "sar_sentence"
       },
       {
         "id": "HHF-001-A012",
-        "what": "Between 2017-01-13 and 2017-01-14, 2 transaction(s) totalling $1,338.74 were identified as unauthorised on that card, the earliest being transaction 3660107 and the transaction that triggered review being 3660108 for $447.95.",
+        "what": "The account experienced suspicious card-not-present activity involving two online transactions, identified as transaction 3660107 and transaction 3660108, resulting in a total exposure of $1,338.74.",
         "evidence_ids": [
           "3660107",
           "3660108"
@@ -1554,27 +1536,179 @@
             "digest": "291e08c299ca8c4b1f03bbd6882f8ec98808dcda4974c97530f338d7a1873fdc"
           }
         ],
-        "ran_at": "2026-10-30T05:16:54Z",
+        "ran_at": "2026-10-30T07:56:16Z",
         "data_snapshot": "bc3011b15aff8ad88490fd4e127bf3de",
         "kind": "sar_sentence"
       },
       {
         "id": "HHF-001-A013",
-        "what": "Closed investigation CC-2420 recorded confirmed fraud on comparable activity.",
+        "what": "The activity dates spanned 2017-01-13 and 2017-01-14, with flagged transaction 3660108 occurring on 2017-01-14 at 20:25:19, leading to an investigation review trigger as of 2017-01-15 01:25:19.",
         "evidence_ids": [
-          "CC-2420"
+          "3660108"
+        ],
+        "query": "sar_sentence",
+        "params": {},
+        "tool_calls": [
+          {
+            "seq": 1,
+            "method": "get_transaction",
+            "key": "ce9a0cb73a80946c0b3a8d7e",
+            "digest": "8cf1a0e298ece5002982101286873e9337fd925072d9a8e8e91b0c486d168a76"
+          },
+          {
+            "seq": 13,
+            "method": "email_mismatch_profile",
+            "key": "2f36f3f1e6777fef34adc8dc",
+            "digest": "fad82a7258f6c90a854cc71884474bc8a02d07fc06004e6dfa33599a8d2e579a"
+          },
+          {
+            "seq": 16,
+            "method": "fraud_proximity",
+            "key": "0775d55741c3e01205a71c47",
+            "digest": "ede77fb9c5dd1ca8e9913246e94104bdf68599046582d597ee0ae1a2d2b0240d"
+          },
+          {
+            "seq": 17,
+            "method": "behavioural_neighbours",
+            "key": "f35a1b2c3a28365fb3f795db",
+            "digest": "9c9729d235cfd4897778afaf5651db6b7e91ca68f8c5d052d66de5e09734d668"
+          },
+          {
+            "seq": 19,
+            "method": "hybrid_case_recall",
+            "key": "a12c81d7ac54a4a806ed9bb6",
+            "digest": "ff07e818ae7ef734e7f9fd8a8f5c3d9b8185b17a7ba32f51959b0fadbfa170b1"
+          },
+          {
+            "seq": 22,
+            "method": "behaviour_vector",
+            "key": "ac6c75a4d8d4aa5c3a1a2efc",
+            "digest": "291e08c299ca8c4b1f03bbd6882f8ec98808dcda4974c97530f338d7a1873fdc"
+          }
+        ],
+        "ran_at": "2026-10-30T07:56:16Z",
+        "data_snapshot": "bc3011b15aff8ad88490fd4e127bf3de",
+        "kind": "sar_sentence"
+      },
+      {
+        "id": "HHF-001-A014",
+        "what": "All affected transactions occurred through the online channel under billing region 492.0, which differs from customer C05061's baseline home region of 181.0.",
+        "evidence_ids": [
+          "C05061"
+        ],
+        "query": "sar_sentence",
+        "params": {},
+        "tool_calls": [
+          {
+            "seq": 2,
+            "method": "episode_window",
+            "key": "19e6e8cc8fc61078fe097af3",
+            "digest": "c27588d3e6137f38673f1869536c841af736c9767d0cf95dc58de273a077dd5d"
+          },
+          {
+            "seq": 3,
+            "method": "card_baseline",
+            "key": "1a12189a461863267e7266c2",
+            "digest": "1c5556409158596abe4b2f882c8bda7756c413799997cadaab2f73d174304ce2"
+          },
+          {
+            "seq": 4,
+            "method": "device_first_use",
+            "key": "5710cabf63a0ff3d76895f25",
+            "digest": "907588b898ca4c37554a1ff18c6808ef1a5e8b52054b7941628f8e64eea65b55"
+          },
+          {
+            "seq": 6,
+            "method": "peer_purchases",
+            "key": "49f3281027b68b74dd130385",
+            "digest": "37639f5caafc802533741fe8a78636af4bb794c425553325078c4a3a067934df"
+          },
+          {
+            "seq": 7,
+            "method": "region_profile",
+            "key": "aae67843381f0b9af1641ce3",
+            "digest": "d72006da604f5a76c87e654006a4c8e4514b2159cfaf700bd47bc863fdec4203"
+          },
+          {
+            "seq": 8,
+            "method": "out_of_region_probe",
+            "key": "82c0251ff6b67f2cffed18e5",
+            "digest": "eb39f7b8f31f1e6ad9ee1d03ce1d0e6b1a1563f7cc8ab8e1af4af6eab2f9e3a8"
+          }
+        ],
+        "ran_at": "2026-10-30T07:56:16Z",
+        "data_snapshot": "bc3011b15aff8ad88490fd4e127bf3de",
+        "kind": "sar_sentence"
+      },
+      {
+        "id": "HHF-001-A015",
+        "what": "The activity is suspicious because it represents a velocity burst of 2 online transactions inside 48 hours on a new device profile with no prior use history on card C05061-K1.",
+        "evidence_ids": [
+          "C05061-K1"
+        ],
+        "query": "sar_sentence",
+        "params": {},
+        "tool_calls": [
+          {
+            "seq": 2,
+            "method": "episode_window",
+            "key": "19e6e8cc8fc61078fe097af3",
+            "digest": "c27588d3e6137f38673f1869536c841af736c9767d0cf95dc58de273a077dd5d"
+          },
+          {
+            "seq": 3,
+            "method": "card_baseline",
+            "key": "1a12189a461863267e7266c2",
+            "digest": "1c5556409158596abe4b2f882c8bda7756c413799997cadaab2f73d174304ce2"
+          },
+          {
+            "seq": 4,
+            "method": "device_first_use",
+            "key": "5710cabf63a0ff3d76895f25",
+            "digest": "907588b898ca4c37554a1ff18c6808ef1a5e8b52054b7941628f8e64eea65b55"
+          },
+          {
+            "seq": 6,
+            "method": "peer_purchases",
+            "key": "49f3281027b68b74dd130385",
+            "digest": "37639f5caafc802533741fe8a78636af4bb794c425553325078c4a3a067934df"
+          },
+          {
+            "seq": 7,
+            "method": "region_profile",
+            "key": "aae67843381f0b9af1641ce3",
+            "digest": "d72006da604f5a76c87e654006a4c8e4514b2159cfaf700bd47bc863fdec4203"
+          },
+          {
+            "seq": 8,
+            "method": "out_of_region_probe",
+            "key": "82c0251ff6b67f2cffed18e5",
+            "digest": "eb39f7b8f31f1e6ad9ee1d03ce1d0e6b1a1563f7cc8ab8e1af4af6eab2f9e3a8"
+          }
+        ],
+        "ran_at": "2026-10-30T07:56:16Z",
+        "data_snapshot": "bc3011b15aff8ad88490fd4e127bf3de",
+        "kind": "sar_sentence"
+      },
+      {
+        "id": "HHF-001-A016",
+        "what": "Suspicion is further supported by the connection carrying IP_PROXY:ANONYMOUS, out-of-region usage in billing region 492.0 relative to home region 181.0, and graph network proximity within two hops to three confirmed fraud closed cases (CC-2420, CC-2674, and CC-4210).",
+        "evidence_ids": [
+          "CC-2420",
+          "CC-2674",
+          "CC-4210"
         ],
         "query": "sar_sentence",
         "params": {},
         "tool_calls": [],
-        "ran_at": "2026-10-30T05:16:54Z",
+        "ran_at": "2026-10-30T07:56:16Z",
         "data_snapshot": "bc3011b15aff8ad88490fd4e127bf3de",
         "kind": "sar_sentence"
       }
     ],
     "sar_citations": [
       {
-        "sentence": "Customer C05061, holder of card C05061-K1, is the subject of this report.",
+        "sentence": "This filing concerns customer C05061, holder of payment card C05061-K1, associated with transactions conducted using device profile RCT6303W87M7 Build/MRA58K | Windows 7 | ie 11.0 for desktop.",
         "attestations": [
           "HHF-001-A011"
         ],
@@ -1584,7 +1718,7 @@
         ]
       },
       {
-        "sentence": "Between 2017-01-13 and 2017-01-14, 2 transaction(s) totalling $1,338.74 were identified as unauthorised on that card, the earliest being transaction 3660107 and the transaction that triggered review being 3660108 for $447.95.",
+        "sentence": "The account experienced suspicious card-not-present activity involving two online transactions, identified as transaction 3660107 and transaction 3660108, resulting in a total exposure of $1,338.74.",
         "attestations": [
           "HHF-001-A012"
         ],
@@ -1594,44 +1728,52 @@
         ]
       },
       {
-        "sentence": "The activity was conducted through the online channel in billing region 492.0.",
-        "attestations": [
-          "HHF-001-A008"
-        ],
-        "ids": []
-      },
-      {
-        "sentence": "The transactions originated from device profile 'RCT6303W87M7 Build/MRA58K | Windows 7 | ie 11.0 for desktop', which the issuer's identity record marks 'New' for this account, reached through an anonymous proxy.",
-        "attestations": [
-          "HHF-001-A008"
-        ],
-        "ids": []
-      },
-      {
-        "sentence": "The purchases were made without the physical card, from a device with no prior history on the account.",
-        "attestations": [
-          "HHF-001-A008"
-        ],
-        "ids": []
-      },
-      {
-        "sentence": "Closed investigation CC-2420 recorded confirmed fraud on comparable activity.",
+        "sentence": "The activity dates spanned 2017-01-13 and 2017-01-14, with flagged transaction 3660108 occurring on 2017-01-14 at 20:25:19, leading to an investigation review trigger as of 2017-01-15 01:25:19.",
         "attestations": [
           "HHF-001-A013"
         ],
         "ids": [
-          "CC-2420"
+          "3660108"
         ]
       },
       {
-        "sentence": "The issuer assesses the probability of fraud at 0.91 on the evidence set out above.",
+        "sentence": "All affected transactions occurred through the online channel under billing region 492.0, which differs from customer C05061's baseline home region of 181.0.",
+        "attestations": [
+          "HHF-001-A014"
+        ],
+        "ids": [
+          "C05061"
+        ]
+      },
+      {
+        "sentence": "The activity was carried out via online card-not-present purchases from device profile RCT6303W87M7 Build/MRA58K | Windows 7 | ie 11.0 for desktop, which is marked New for this account, while routing through an anonymous proxy classification IP_PROXY:ANONYMOUS.",
         "attestations": [
           "HHF-001-A008"
         ],
         "ids": []
       },
       {
-        "sentence": "Total suspicious amount: $1,338.74.",
+        "sentence": "The activity is suspicious because it represents a velocity burst of 2 online transactions inside 48 hours on a new device profile with no prior use history on card C05061-K1.",
+        "attestations": [
+          "HHF-001-A015"
+        ],
+        "ids": [
+          "C05061-K1"
+        ]
+      },
+      {
+        "sentence": "Suspicion is further supported by the connection carrying IP_PROXY:ANONYMOUS, out-of-region usage in billing region 492.0 relative to home region 181.0, and graph network proximity within two hops to three confirmed fraud closed cases (CC-2420, CC-2674, and CC-4210).",
+        "attestations": [
+          "HHF-001-A016"
+        ],
+        "ids": [
+          "CC-2420",
+          "CC-2674",
+          "CC-4210"
+        ]
+      },
+      {
+        "sentence": "Based on these indicators, the assessed fraud probability is 0.91, and the total exposure of $1,338.74 exceeds the $1,000 filing threshold.",
         "attestations": [
           "HHF-001-A008"
         ],
@@ -1640,7 +1782,7 @@
     ],
     "unattested": [],
     "data_snapshot": "bc3011b15aff8ad88490fd4e127bf3de",
-    "n_attestations": 13,
+    "n_attestations": 16,
     "handover": {
       "state": "closed_fraud",
       "waiting_on": [
@@ -1681,13 +1823,13 @@
     },
     "framework": "langgraph",
     "telemetry": {
-      "wall_s": 397.45,
+      "wall_s": 16.49,
       "graph_calls": 27,
       "graph_errors": 0,
-      "llm_calls": 0,
-      "tokens": 0,
-      "llm_cost_usd": 0.0,
-      "template_fallbacks": 3,
+      "llm_calls": 3,
+      "tokens": 6067,
+      "llm_cost_usd": 0.02768,
+      "template_fallbacks": 0,
       "backend": "tigergraph",
       "unattested_claims": 0
     }

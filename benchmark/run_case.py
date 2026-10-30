@@ -108,7 +108,8 @@ def failed_dependency(case_id: str, exc: BaseException, store=None) -> int:
     rec = {
         "case_id": case_id, "status": "FAILED_DEPENDENCY", "verdict": None,
         "dependency": getattr(exc, "dependency", "temporal_wall" if isinstance(
-            exc, TemporalWallBreach) else "graph" if any(
+            exc, TemporalWallBreach) else "tigergraph-mcp" if "MCP" in str(exc) or
+            "MCPToolError" in type(exc).__name__ else "graph" if any(
             k in str(exc) for k in ("HTTPSConnectionPool", "ConnectionError", "TigerGraph"))
             else "agent"),
         "step": getattr(exc, "step", ""), "error": str(exc)[:500],
@@ -127,7 +128,11 @@ def failed_dependency(case_id: str, exc: BaseException, store=None) -> int:
                                               ("case_id", "dependency", "step", "error")}})
     log(f"FAILED_DEPENDENCY  {case_id}: {rec['dependency']} at {rec['step'] or '?'} — "
         f"{rec['error'][:200]}")
-    log(f"  no verdict produced; record written to {path.relative_to(PATHS.repo)}; "
+    try:
+        shown = path.relative_to(PATHS.repo)
+    except ValueError:
+        shown = path
+    log(f"  no verdict produced; record written to {shown}; "
         f"previous answer file left untouched")
     return EXIT_DEPENDENCY
 

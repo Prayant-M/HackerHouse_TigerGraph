@@ -1,0 +1,27 @@
+%%{init: {"theme": "base", "themeVariables": {
+  "fontFamily": "Arial", "fontSize": "15px",
+  "primaryColor": "#FFF4EC", "primaryBorderColor": "#F58220", "primaryTextColor": "#1F2430",
+  "lineColor": "#5B6475", "secondaryColor": "#EEF4FF", "tertiaryColor": "#F6F7F9",
+  "clusterBkg": "#FBFBFC", "clusterBorder": "#C9CED6"},
+  "flowchart": {"htmlLabels": false, "padding": 18, "nodeSpacing": 45, "rankSpacing": 55}}}%%
+flowchart LR
+  S0["0:00 Open the named case live<br/>trigger type · as_of<br/>Console → Re-run live (SSE)"]:::data
+  S1["0:30 The trace<br/>tools · provisional action + route<br/>question asked · revised action · what changed"]:::core
+  S2["1:30 THE PROOF<br/>minimal facts · margin k · precedent<br/>flip one fact live"]:::core
+  S3{"3:00 Case shape?"}:::core
+  R["Ring: origin · lift · at-risk step-ups<br/>block set + customers touched<br/>ring replay slider"]:::tg
+  L["Legit / ambiguous: conformal set + why<br/>harm avoided"]:::ok
+  H["Hostile text: spans flagged<br/>720 fuzz → 0 changes · tip-off diff 0 bytes"]:::guard
+  S4["4:00 One drill live<br/>kill graph → signed FAILED_DEPENDENCY<br/>or replayed approval → 409"]:::guard
+  S0 --> S1 --> S2 --> S3
+  S3 --> R & L & H
+  R & L & H --> S4
+
+classDef tg fill:#FFE8D6,stroke:#F58220,stroke-width:2px,color:#1F2430;
+classDef core fill:#E8F1FF,stroke:#2F6FEB,stroke-width:2px,color:#10233F;
+classDef llm fill:#F3E8FF,stroke:#8B5CF6,stroke-width:1.5px,color:#2A1450,stroke-dasharray:4 3;
+classDef guard fill:#FFECEC,stroke:#D64545,stroke-width:2px,color:#4A1010;
+classDef ok fill:#E9F8EF,stroke:#1E9E5A,stroke-width:2px,color:#0D3B22;
+classDef human fill:#FFF8DB,stroke:#C79A00,stroke-width:2px,color:#3A2E00;
+classDef data fill:#F1F3F6,stroke:#7A8394,stroke-width:1.5px,color:#1F2430;
+classDef eval fill:#E6FAF8,stroke:#0F9D8F,stroke-width:1.5px,color:#08332F;

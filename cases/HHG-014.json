@@ -9,7 +9,7 @@
       "executed": true,
       "simulated": true,
       "reference": "SIM-E3DF5D87F2",
-      "executed_at": "2026-10-29T11:19:32Z",
+      "executed_at": "2026-10-30T07:08:48Z",
       "effect": "Fraud case opened and written to the graph.",
       "customer_impact": "none"
     },
@@ -22,7 +22,7 @@
       "executed": true,
       "simulated": true,
       "reference": "SIM-2C72BCF1EE",
-      "executed_at": "2026-10-29T11:19:32Z",
+      "executed_at": "2026-10-30T07:08:48Z",
       "effect": "Connected cards added to the heightened-monitoring list.",
       "customer_impact": "none"
     },
@@ -35,7 +35,7 @@
       "executed": true,
       "simulated": true,
       "reference": "SIM-E6AC2551C7",
-      "executed_at": "2026-10-29T11:19:32Z",
+      "executed_at": "2026-10-30T07:08:48Z",
       "effect": "Case handed to the analyst queue with the full evidence chain.",
       "customer_impact": "none"
     }
@@ -154,8 +154,8 @@
         "ref": "query:velocity_burst(card_id=C13487-K1, window_hours=48)",
         "entity_ids": [
           "3477218",
-          "3478886",
-          "3478561"
+          "3478561",
+          "3478886"
         ]
       },
       {
@@ -196,16 +196,16 @@
         "source": "graph",
         "ref": "query:fraud_proximity(entity_ids=..., max_hops=2)",
         "entity_ids": [
-          "CC-4358",
-          "CC-0640",
-          "CC-2528",
-          "CC-0544",
-          "CC-1726",
-          "CC-3577",
-          "CC-3248",
           "CC-0084",
-          "CC-0911",
-          "CC-2840"
+          "CC-0089",
+          "CC-0240",
+          "CC-0280",
+          "CC-0411",
+          "CC-0417",
+          "CC-0447",
+          "CC-0544",
+          "CC-0640",
+          "CC-0688"
         ]
       },
       {
@@ -228,7 +228,7 @@
       "CC-2971",
       "CC-3470"
     ],
-    "summary": "Card C13487-K1 processed flagged online transaction 3478561 for $74.96 on 2016-11-22 16:11:00 as part of a 3-transaction, $142.00 velocity burst over 48 hours. The investigation concluded with a verdict of fraud at a fraud probability of 0.97. The evidence rests on graph analysis showing 20 distinct cards reaching a new device profile via an anonymous proxy (IP_PROXY:ANONYMOUS) within 30 days, placing the card inside a 54-card connected component alongside 5 similar closed cases of confirmed fraud. The precise mechanism remains uncertain, as the coordinated abuse follows an undocumented pattern matching no known typology, and the $74.96 transaction amount itself falls within the card's historical spending range.",
+    "summary": "On 2016-11-22, card C13487-K1 processed an online transaction of $74.96 (txn_id 3478561) using a new device profile connected through an anonymising proxy (IP_PROXY:ANONYMOUS). The evidence rests on graph analysis showing 20 distinct cards accessed this device profile via an anonymising proxy within 30 days, alongside a 48-hour burst of 3 transactions totaling $142.00 and 5 matching prior cases that were all confirmed fraud. The case conclusion is fraud with a fraud probability of 0.97. The precise underlying typology remains uncertain and is categorized as an undocumented pattern representing coordinated abuse that matches no known pattern.",
     "written_to_graph": true,
     "graph_case_id": "CASE-HHG-014"
   },
@@ -293,7 +293,7 @@
   "sar": {
     "file": true,
     "reason": "§3a: the activity connects to a shared device profile or another card's fraud; the pattern is coordinated or undocumented (R9).",
-    "narrative": "This investigation concerns customer C13487 operating payment card C13487-K1, along with 19 connected cards including C01289-K2, C01996-K2, and C13291-K1, sharing device profile SM-G935F Build/NRD90M | Android 7.0 | chrome 62.0 for android | 1920x1080. The reported suspicious activity comprises flagged online transaction 3478561 for product code C, representing a total exposure amount of $74.96. The flagged transaction occurred on 2016-11-22 at 16:11:00 during activity on 2016-11-22, generating an analyst request alert as of 2016-11-22 20:11:00. The transaction was processed through the online channel under billing region 191.0, which matches the cardholder home region 191.0. The activity was carried out using a new device profile for this account, routed through an anonymising proxy classified as IP_PROXY:ANONYMOUS, with a purchaser email domain of yahoo.com differing from the recipient domain of gmail.com. The activity is suspicious because 20 distinct cards accessed this device profile through an anonymising proxy within a 30-day window, with 100 percent of cards touching the profile arriving via proxy. In addition, card C13487-K1 is linked to a 54-card connected component of anonymous-proxy device sharing ranked second by PageRank, and demonstrated a velocity burst of 3 transactions totaling $142.00 within 48 hours prior to the alert. Finally, five similar prior confirmed fraud cases—CC-2985, CC-2649, CC-3035, CC-2971, and CC-3470—exhibit narrative and entity overlap with this undocumented coordinated pattern, resulting in an evaluated fraud probability of 0.97.",
+    "narrative": "This report concerns customer C13487 and card C13487-K1, operating on a new device profile identified as SM-G935F Build/NRD90M | Android 7.0 | chrome 62.0 for android | 1920x1080, which connects to 19 other cards including C01289-K2, C01996-K2, and C02910-K1. The suspicious activity involves unauthorized online transaction activity, specifically flagged online transaction 3478561 for product code C, representing a total exposure amount of $74.96. The flagged transaction occurred on 2016-11-22 at 16:11:00, triggering an analyst review on 2016-11-22 at 20:11:00 covering activity on 2016-11-22. This transaction was conducted through the online channel in billing region 191.0, which aligns with the customer's recorded home region of 191.0. The purchase was executed using a device profile marked as new for this account, routed through an anonymising proxy classified as IP_PROXY:ANONYMOUS, and contained a mismatch between the purchaser email domain yahoo.com and recipient email domain gmail.com. Additional transaction behavior shows a burst of 3 transactions totaling $142.00 in the 48 hours prior to the alert, shifting the card's baseline online share by 0.30 over 72 hours. This activity is suspicious due to an undocumented coordinated abuse typology evaluated at a 0.97 fraud probability, where the device profile serves as a central hub reached by 20 distinct cards through anonymising proxies within 30 days. Network analysis places card C13487-K1 inside a 54-card connected component ranked second by PageRank, with 55 confirmed-fraud cases residing within two hops of the customer, card, or device. Furthermore, the activity directly mirrors 5 closely matching prior confirmed-fraud investigations including CC-2985, CC-2649, and CC-3035, even though the flagged $74.96 transaction on its own sits within the card's normal baseline median of $55.95 across 70 prior transactions.",
     "subjects": [
       "C13487",
       "C13487-K1",
@@ -316,9 +316,9 @@
     ]
   },
   "stop_reason": "Fraud probability 0.97 is at or above the 0.85 ceiling in policy §6, supported by 5 independent pieces of evidence, with undocumented leading none by 0.91.",
-  "tool_calls": 41,
-  "tokens": 10574,
-  "latency_s": 79.8,
+  "tool_calls": 42,
+  "tokens": 10607,
+  "latency_s": 62.09,
   "agent_record": {
     "trigger": {
       "type": "analyst_request",
@@ -451,8 +451,8 @@
         "ref": "query:velocity_burst(card_id=C13487-K1, window_hours=48)",
         "entity_ids": [
           "3477218",
-          "3478886",
-          "3478561"
+          "3478561",
+          "3478886"
         ],
         "delta_fraud_probability": 0.0205,
         "reliability": 1.0,
@@ -513,16 +513,16 @@
         "source": "graph",
         "ref": "query:fraud_proximity(entity_ids=..., max_hops=2)",
         "entity_ids": [
-          "CC-4358",
-          "CC-0640",
-          "CC-2528",
-          "CC-0544",
-          "CC-1726",
-          "CC-3577",
-          "CC-3248",
           "CC-0084",
-          "CC-0911",
-          "CC-2840"
+          "CC-0089",
+          "CC-0240",
+          "CC-0280",
+          "CC-0411",
+          "CC-0417",
+          "CC-0447",
+          "CC-0544",
+          "CC-0640",
+          "CC-0688"
         ],
         "delta_fraud_probability": 0.0,
         "reliability": 1.0,
@@ -822,7 +822,7 @@
         "executed": true,
         "simulated": true,
         "reference": "SIM-E3DF5D87F2",
-        "executed_at": "2026-10-29T11:19:32Z",
+        "executed_at": "2026-10-30T07:08:48Z",
         "effect": "Fraud case opened and written to the graph.",
         "customer_impact": "none"
       },
@@ -835,7 +835,7 @@
         "executed": true,
         "simulated": true,
         "reference": "SIM-2C72BCF1EE",
-        "executed_at": "2026-10-29T11:19:32Z",
+        "executed_at": "2026-10-30T07:08:48Z",
         "effect": "Connected cards added to the heightened-monitoring list.",
         "customer_impact": "none"
       },
@@ -848,7 +848,7 @@
         "executed": true,
         "simulated": true,
         "reference": "SIM-E6AC2551C7",
-        "executed_at": "2026-10-29T11:19:32Z",
+        "executed_at": "2026-10-30T07:08:48Z",
         "effect": "Case handed to the analyst queue with the full evidence chain.",
         "customer_impact": "none"
       }
@@ -877,9 +877,9 @@
       "model": "gemini-3.6-flash",
       "calls": 4,
       "input_tokens": 9626,
-      "output_tokens": 948,
-      "tokens": 10574,
-      "cached": 0,
+      "output_tokens": 981,
+      "tokens": 10607,
+      "cached": 2,
       "errors": [],
       "template_fallbacks": 0
     },
@@ -909,8 +909,27 @@
       "issues": []
     },
     "conformal": {
-      "available": false,
-      "note": "conformal calibration not built (eval/conformal_calibrate.py)",
+      "available": true,
+      "alpha": 0.1,
+      "p_fraud_graph_only": 0.97,
+      "quantiles": {
+        "fraud": 0.91292,
+        "legit": 0.742317
+      },
+      "base_set": [
+        "fraud"
+      ],
+      "calibrated_on": "2016-08-01..2016-09-30",
+      "widened_by": [],
+      "support_distance": 0.5215,
+      "support_threshold": 0.8105,
+      "outside_support": false,
+      "set": [
+        "fraud"
+      ],
+      "uncertain": false,
+      "customer_settled": false,
+      "applies": true,
       "verdict_before": "fraud",
       "verdict_after": "fraud",
       "reason": ""
@@ -1061,24 +1080,32 @@
       ],
       "precedent": {
         "available": true,
-        "n": 2,
-        "confirmed": 2,
-        "cleared": 0,
-        "cleared_share": 0.0,
+        "n": 10,
+        "confirmed": 9,
+        "cleared": 1,
+        "cleared_share": 0.1,
         "matched_facts": [
           "device_proxy_hub"
         ],
         "unmatched_facts": [],
         "case_ids": [
+          "CC-1227",
+          "CC-1289",
+          "CC-1349",
+          "CC-2649",
           "CC-2971",
-          "CC-2985"
+          "CC-2985",
+          "CC-3035",
+          "CC-4056",
+          "CC-4107",
+          "CC-4122"
         ],
         "query": "precedent_by_facts",
         "params": {
           "fact_mask": 32768,
           "as_of": "2016-11-22 20:11:00"
         },
-        "source": "local:closed_case_facts"
+        "source": "tigergraph:precedent_by_facts"
       },
       "core_calls": 46
     },
@@ -1094,8 +1121,8 @@
       "exempt": "",
       "config": {
         "min_margin": 2,
-        "min_precedents": 10,
-        "max_cleared_share": 0.7
+        "min_precedents": 5,
+        "max_cleared_share": 0.5
       },
       "removed": [],
       "added": [],
@@ -1360,9 +1387,9 @@
           "ring_cards_touching": 16,
           "control_cards_touching": 0,
           "n_ring": 20,
-          "n_control": 6184,
-          "lift": 4947.2,
-          "p_value": 2.15e-44,
+          "n_control": 6182,
+          "lift": 4945.6,
+          "p_value": 2.16e-44,
           "ring_card_ids": [
             "C01289-K2",
             "C01996-K2",
@@ -1388,8 +1415,8 @@
           "ring_cards_touching": 2,
           "control_cards_touching": 3,
           "n_ring": 20,
-          "n_control": 6184,
-          "lift": 206.13,
+          "n_control": 6182,
+          "lift": 206.07,
           "p_value": 9.82e-05,
           "ring_card_ids": [
             "C04108-K2",
@@ -1402,9 +1429,9 @@
           "ring_cards_touching": 5,
           "control_cards_touching": 18,
           "n_ring": 20,
-          "n_control": 6184,
-          "lift": 85.89,
-          "p_value": 6.58e-09,
+          "n_control": 6182,
+          "lift": 85.86,
+          "p_value": 6.59e-09,
           "ring_card_ids": [
             "C04108-K2",
             "C10193-K2",
@@ -1419,8 +1446,8 @@
           "ring_cards_touching": 2,
           "control_cards_touching": 11,
           "n_ring": 20,
-          "n_control": 6184,
-          "lift": 56.22,
+          "n_control": 6182,
+          "lift": 56.2,
           "p_value": 0.000754,
           "ring_card_ids": [
             "C04108-K2",
@@ -1433,9 +1460,9 @@
           "ring_cards_touching": 2,
           "control_cards_touching": 15,
           "n_ring": 20,
-          "n_control": 6184,
-          "lift": 41.23,
-          "p_value": 0.0013,
+          "n_control": 6182,
+          "lift": 41.21,
+          "p_value": 0.00131,
           "ring_card_ids": [
             "C04108-K2",
             "C10193-K2"
@@ -1447,9 +1474,9 @@
           "ring_cards_touching": 4,
           "control_cards_touching": 32,
           "n_ring": 20,
-          "n_control": 6184,
-          "lift": 38.65,
-          "p_value": 4.33e-06,
+          "n_control": 6182,
+          "lift": 38.64,
+          "p_value": 4.34e-06,
           "ring_card_ids": [
             "C03676-K2",
             "C04108-K2",
@@ -1463,9 +1490,9 @@
           "ring_cards_touching": 2,
           "control_cards_touching": 16,
           "n_ring": 20,
-          "n_control": 6184,
-          "lift": 38.65,
-          "p_value": 0.00146,
+          "n_control": 6182,
+          "lift": 38.64,
+          "p_value": 0.00147,
           "ring_card_ids": [
             "C01996-K2",
             "C04108-K2"
@@ -1477,8 +1504,8 @@
           "ring_cards_touching": 2,
           "control_cards_touching": 19,
           "n_ring": 20,
-          "n_control": 6184,
-          "lift": 32.55,
+          "n_control": 6182,
+          "lift": 32.54,
           "p_value": 0.002,
           "ring_card_ids": [
             "C04108-K2",
@@ -1492,9 +1519,9 @@
         "ring_cards_touching": 16,
         "control_cards_touching": 0,
         "n_ring": 20,
-        "n_control": 6184,
-        "lift": 4947.2,
-        "p_value": 2.15e-44,
+        "n_control": 6182,
+        "lift": 4945.6,
+        "p_value": 2.16e-44,
         "ring_card_ids": [
           "C01289-K2",
           "C01996-K2",
@@ -1514,7 +1541,2687 @@
           "C13487-K1"
         ]
       },
-      "at_risk": [],
+      "at_risk": [
+        {
+          "card_id": "C00060-K1",
+          "customer_id": "",
+          "last_touch": "",
+          "n_touches": 0,
+          "suspect": false,
+          "reason": "time-sliced ring component (rare shared device)",
+          "actions": [
+            {
+              "action": "MONITOR_CARD",
+              "route": "auto"
+            },
+            {
+              "action": "STEP_UP_AUTH",
+              "route": "auto",
+              "when": "next card-not-present purchase"
+            }
+          ]
+        },
+        {
+          "card_id": "C00750-K2",
+          "customer_id": "",
+          "last_touch": "",
+          "n_touches": 0,
+          "suspect": false,
+          "reason": "time-sliced ring component (rare shared device)",
+          "actions": [
+            {
+              "action": "MONITOR_CARD",
+              "route": "auto"
+            },
+            {
+              "action": "STEP_UP_AUTH",
+              "route": "auto",
+              "when": "next card-not-present purchase"
+            }
+          ]
+        },
+        {
+          "card_id": "C00779-K1",
+          "customer_id": "",
+          "last_touch": "",
+          "n_touches": 0,
+          "suspect": false,
+          "reason": "time-sliced ring component (rare shared device)",
+          "actions": [
+            {
+              "action": "MONITOR_CARD",
+              "route": "auto"
+            },
+            {
+              "action": "STEP_UP_AUTH",
+              "route": "auto",
+              "when": "next card-not-present purchase"
+            }
+          ]
+        },
+        {
+          "card_id": "C00854-K2",
+          "customer_id": "",
+          "last_touch": "",
+          "n_touches": 0,
+          "suspect": false,
+          "reason": "time-sliced ring component (rare shared device)",
+          "actions": [
+            {
+              "action": "MONITOR_CARD",
+              "route": "auto"
+            },
+            {
+              "action": "STEP_UP_AUTH",
+              "route": "auto",
+              "when": "next card-not-present purchase"
+            }
+          ]
+        },
+        {
+          "card_id": "C00989-K1",
+          "customer_id": "",
+          "last_touch": "",
+          "n_touches": 0,
+          "suspect": false,
+          "reason": "time-sliced ring component (rare shared device)",
+          "actions": [
+            {
+              "action": "MONITOR_CARD",
+              "route": "auto"
+            },
+            {
+              "action": "STEP_UP_AUTH",
+              "route": "auto",
+              "when": "next card-not-present purchase"
+            }
+          ]
+        },
+        {
+          "card_id": "C01053-K1",
+          "customer_id": "",
+          "last_touch": "",
+          "n_touches": 0,
+          "suspect": false,
+          "reason": "time-sliced ring component (rare shared device)",
+          "actions": [
+            {
+              "action": "MONITOR_CARD",
+              "route": "auto"
+            },
+            {
+              "action": "STEP_UP_AUTH",
+              "route": "auto",
+              "when": "next card-not-present purchase"
+            }
+          ]
+        },
+        {
+          "card_id": "C01104-K2",
+          "customer_id": "",
+          "last_touch": "",
+          "n_touches": 0,
+          "suspect": false,
+          "reason": "time-sliced ring component (rare shared device)",
+          "actions": [
+            {
+              "action": "MONITOR_CARD",
+              "route": "auto"
+            },
+            {
+              "action": "STEP_UP_AUTH",
+              "route": "auto",
+              "when": "next card-not-present purchase"
+            }
+          ]
+        },
+        {
+          "card_id": "C01109-K2",
+          "customer_id": "",
+          "last_touch": "",
+          "n_touches": 0,
+          "suspect": false,
+          "reason": "time-sliced ring component (rare shared device)",
+          "actions": [
+            {
+              "action": "MONITOR_CARD",
+              "route": "auto"
+            },
+            {
+              "action": "STEP_UP_AUTH",
+              "route": "auto",
+              "when": "next card-not-present purchase"
+            }
+          ]
+        },
+        {
+          "card_id": "C01154-K1",
+          "customer_id": "",
+          "last_touch": "",
+          "n_touches": 0,
+          "suspect": false,
+          "reason": "time-sliced ring component (rare shared device)",
+          "actions": [
+            {
+              "action": "MONITOR_CARD",
+              "route": "auto"
+            },
+            {
+              "action": "STEP_UP_AUTH",
+              "route": "auto",
+              "when": "next card-not-present purchase"
+            }
+          ]
+        },
+        {
+          "card_id": "C01155-K2",
+          "customer_id": "",
+          "last_touch": "",
+          "n_touches": 0,
+          "suspect": false,
+          "reason": "time-sliced ring component (rare shared device)",
+          "actions": [
+            {
+              "action": "MONITOR_CARD",
+              "route": "auto"
+            },
+            {
+              "action": "STEP_UP_AUTH",
+              "route": "auto",
+              "when": "next card-not-present purchase"
+            }
+          ]
+        },
+        {
+          "card_id": "C01315-K2",
+          "customer_id": "",
+          "last_touch": "",
+          "n_touches": 0,
+          "suspect": false,
+          "reason": "time-sliced ring component (rare shared device)",
+          "actions": [
+            {
+              "action": "MONITOR_CARD",
+              "route": "auto"
+            },
+            {
+              "action": "STEP_UP_AUTH",
+              "route": "auto",
+              "when": "next card-not-present purchase"
+            }
+          ]
+        },
+        {
+          "card_id": "C01349-K2",
+          "customer_id": "",
+          "last_touch": "",
+          "n_touches": 0,
+          "suspect": false,
+          "reason": "time-sliced ring component (rare shared device)",
+          "actions": [
+            {
+              "action": "MONITOR_CARD",
+              "route": "auto"
+            },
+            {
+              "action": "STEP_UP_AUTH",
+              "route": "auto",
+              "when": "next card-not-present purchase"
+            }
+          ]
+        },
+        {
+          "card_id": "C01426-K1",
+          "customer_id": "",
+          "last_touch": "",
+          "n_touches": 0,
+          "suspect": false,
+          "reason": "time-sliced ring component (rare shared device)",
+          "actions": [
+            {
+              "action": "MONITOR_CARD",
+              "route": "auto"
+            },
+            {
+              "action": "STEP_UP_AUTH",
+              "route": "auto",
+              "when": "next card-not-present purchase"
+            }
+          ]
+        },
+        {
+          "card_id": "C01489-K1",
+          "customer_id": "",
+          "last_touch": "",
+          "n_touches": 0,
+          "suspect": false,
+          "reason": "time-sliced ring component (rare shared device)",
+          "actions": [
+            {
+              "action": "MONITOR_CARD",
+              "route": "auto"
+            },
+            {
+              "action": "STEP_UP_AUTH",
+              "route": "auto",
+              "when": "next card-not-present purchase"
+            }
+          ]
+        },
+        {
+          "card_id": "C01492-K1",
+          "customer_id": "",
+          "last_touch": "",
+          "n_touches": 0,
+          "suspect": false,
+          "reason": "time-sliced ring component (rare shared device)",
+          "actions": [
+            {
+              "action": "MONITOR_CARD",
+              "route": "auto"
+            },
+            {
+              "action": "STEP_UP_AUTH",
+              "route": "auto",
+              "when": "next card-not-present purchase"
+            }
+          ]
+        },
+        {
+          "card_id": "C01615-K1",
+          "customer_id": "",
+          "last_touch": "",
+          "n_touches": 0,
+          "suspect": false,
+          "reason": "time-sliced ring component (rare shared device)",
+          "actions": [
+            {
+              "action": "MONITOR_CARD",
+              "route": "auto"
+            },
+            {
+              "action": "STEP_UP_AUTH",
+              "route": "auto",
+              "when": "next card-not-present purchase"
+            }
+          ]
+        },
+        {
+          "card_id": "C01688-K1",
+          "customer_id": "",
+          "last_touch": "",
+          "n_touches": 0,
+          "suspect": false,
+          "reason": "time-sliced ring component (rare shared device)",
+          "actions": [
+            {
+              "action": "MONITOR_CARD",
+              "route": "auto"
+            },
+            {
+              "action": "STEP_UP_AUTH",
+              "route": "auto",
+              "when": "next card-not-present purchase"
+            }
+          ]
+        },
+        {
+          "card_id": "C01812-K1",
+          "customer_id": "",
+          "last_touch": "",
+          "n_touches": 0,
+          "suspect": false,
+          "reason": "time-sliced ring component (rare shared device)",
+          "actions": [
+            {
+              "action": "MONITOR_CARD",
+              "route": "auto"
+            },
+            {
+              "action": "STEP_UP_AUTH",
+              "route": "auto",
+              "when": "next card-not-present purchase"
+            }
+          ]
+        },
+        {
+          "card_id": "C01828-K2",
+          "customer_id": "",
+          "last_touch": "",
+          "n_touches": 0,
+          "suspect": false,
+          "reason": "time-sliced ring component (rare shared device)",
+          "actions": [
+            {
+              "action": "MONITOR_CARD",
+              "route": "auto"
+            },
+            {
+              "action": "STEP_UP_AUTH",
+              "route": "auto",
+              "when": "next card-not-present purchase"
+            }
+          ]
+        },
+        {
+          "card_id": "C02033-K1",
+          "customer_id": "",
+          "last_touch": "",
+          "n_touches": 0,
+          "suspect": false,
+          "reason": "time-sliced ring component (rare shared device)",
+          "actions": [
+            {
+              "action": "MONITOR_CARD",
+              "route": "auto"
+            },
+            {
+              "action": "STEP_UP_AUTH",
+              "route": "auto",
+              "when": "next card-not-present purchase"
+            }
+          ]
+        },
+        {
+          "card_id": "C02231-K1",
+          "customer_id": "",
+          "last_touch": "",
+          "n_touches": 0,
+          "suspect": false,
+          "reason": "time-sliced ring component (rare shared device)",
+          "actions": [
+            {
+              "action": "MONITOR_CARD",
+              "route": "auto"
+            },
+            {
+              "action": "STEP_UP_AUTH",
+              "route": "auto",
+              "when": "next card-not-present purchase"
+            }
+          ]
+        },
+        {
+          "card_id": "C02250-K2",
+          "customer_id": "",
+          "last_touch": "",
+          "n_touches": 0,
+          "suspect": false,
+          "reason": "time-sliced ring component (rare shared device)",
+          "actions": [
+            {
+              "action": "MONITOR_CARD",
+              "route": "auto"
+            },
+            {
+              "action": "STEP_UP_AUTH",
+              "route": "auto",
+              "when": "next card-not-present purchase"
+            }
+          ]
+        },
+        {
+          "card_id": "C02608-K1",
+          "customer_id": "",
+          "last_touch": "",
+          "n_touches": 0,
+          "suspect": false,
+          "reason": "time-sliced ring component (rare shared device)",
+          "actions": [
+            {
+              "action": "MONITOR_CARD",
+              "route": "auto"
+            },
+            {
+              "action": "STEP_UP_AUTH",
+              "route": "auto",
+              "when": "next card-not-present purchase"
+            }
+          ]
+        },
+        {
+          "card_id": "C02667-K1",
+          "customer_id": "",
+          "last_touch": "",
+          "n_touches": 0,
+          "suspect": false,
+          "reason": "time-sliced ring component (rare shared device)",
+          "actions": [
+            {
+              "action": "MONITOR_CARD",
+              "route": "auto"
+            },
+            {
+              "action": "STEP_UP_AUTH",
+              "route": "auto",
+              "when": "next card-not-present purchase"
+            }
+          ]
+        },
+        {
+          "card_id": "C02695-K1",
+          "customer_id": "",
+          "last_touch": "",
+          "n_touches": 0,
+          "suspect": false,
+          "reason": "time-sliced ring component (rare shared device)",
+          "actions": [
+            {
+              "action": "MONITOR_CARD",
+              "route": "auto"
+            },
+            {
+              "action": "STEP_UP_AUTH",
+              "route": "auto",
+              "when": "next card-not-present purchase"
+            }
+          ]
+        },
+        {
+          "card_id": "C02716-K2",
+          "customer_id": "",
+          "last_touch": "",
+          "n_touches": 0,
+          "suspect": false,
+          "reason": "time-sliced ring component (rare shared device)",
+          "actions": [
+            {
+              "action": "MONITOR_CARD",
+              "route": "auto"
+            },
+            {
+              "action": "STEP_UP_AUTH",
+              "route": "auto",
+              "when": "next card-not-present purchase"
+            }
+          ]
+        },
+        {
+          "card_id": "C02881-K1",
+          "customer_id": "",
+          "last_touch": "",
+          "n_touches": 0,
+          "suspect": false,
+          "reason": "time-sliced ring component (rare shared device)",
+          "actions": [
+            {
+              "action": "MONITOR_CARD",
+              "route": "auto"
+            },
+            {
+              "action": "STEP_UP_AUTH",
+              "route": "auto",
+              "when": "next card-not-present purchase"
+            }
+          ]
+        },
+        {
+          "card_id": "C03019-K2",
+          "customer_id": "",
+          "last_touch": "",
+          "n_touches": 0,
+          "suspect": false,
+          "reason": "time-sliced ring component (rare shared device)",
+          "actions": [
+            {
+              "action": "MONITOR_CARD",
+              "route": "auto"
+            },
+            {
+              "action": "STEP_UP_AUTH",
+              "route": "auto",
+              "when": "next card-not-present purchase"
+            }
+          ]
+        },
+        {
+          "card_id": "C03019-K3",
+          "customer_id": "",
+          "last_touch": "",
+          "n_touches": 0,
+          "suspect": false,
+          "reason": "time-sliced ring component (rare shared device)",
+          "actions": [
+            {
+              "action": "MONITOR_CARD",
+              "route": "auto"
+            },
+            {
+              "action": "STEP_UP_AUTH",
+              "route": "auto",
+              "when": "next card-not-present purchase"
+            }
+          ]
+        },
+        {
+          "card_id": "C03047-K2",
+          "customer_id": "",
+          "last_touch": "",
+          "n_touches": 0,
+          "suspect": false,
+          "reason": "time-sliced ring component (rare shared device)",
+          "actions": [
+            {
+              "action": "MONITOR_CARD",
+              "route": "auto"
+            },
+            {
+              "action": "STEP_UP_AUTH",
+              "route": "auto",
+              "when": "next card-not-present purchase"
+            }
+          ]
+        },
+        {
+          "card_id": "C03066-K1",
+          "customer_id": "",
+          "last_touch": "",
+          "n_touches": 0,
+          "suspect": false,
+          "reason": "time-sliced ring component (rare shared device)",
+          "actions": [
+            {
+              "action": "MONITOR_CARD",
+              "route": "auto"
+            },
+            {
+              "action": "STEP_UP_AUTH",
+              "route": "auto",
+              "when": "next card-not-present purchase"
+            }
+          ]
+        },
+        {
+          "card_id": "C03185-K1",
+          "customer_id": "",
+          "last_touch": "",
+          "n_touches": 0,
+          "suspect": false,
+          "reason": "time-sliced ring component (rare shared device)",
+          "actions": [
+            {
+              "action": "MONITOR_CARD",
+              "route": "auto"
+            },
+            {
+              "action": "STEP_UP_AUTH",
+              "route": "auto",
+              "when": "next card-not-present purchase"
+            }
+          ]
+        },
+        {
+          "card_id": "C03218-K2",
+          "customer_id": "",
+          "last_touch": "",
+          "n_touches": 0,
+          "suspect": false,
+          "reason": "time-sliced ring component (rare shared device)",
+          "actions": [
+            {
+              "action": "MONITOR_CARD",
+              "route": "auto"
+            },
+            {
+              "action": "STEP_UP_AUTH",
+              "route": "auto",
+              "when": "next card-not-present purchase"
+            }
+          ]
+        },
+        {
+          "card_id": "C03302-K1",
+          "customer_id": "",
+          "last_touch": "",
+          "n_touches": 0,
+          "suspect": false,
+          "reason": "time-sliced ring component (rare shared device)",
+          "actions": [
+            {
+              "action": "MONITOR_CARD",
+              "route": "auto"
+            },
+            {
+              "action": "STEP_UP_AUTH",
+              "route": "auto",
+              "when": "next card-not-present purchase"
+            }
+          ]
+        },
+        {
+          "card_id": "C03341-K2",
+          "customer_id": "",
+          "last_touch": "",
+          "n_touches": 0,
+          "suspect": false,
+          "reason": "time-sliced ring component (rare shared device)",
+          "actions": [
+            {
+              "action": "MONITOR_CARD",
+              "route": "auto"
+            },
+            {
+              "action": "STEP_UP_AUTH",
+              "route": "auto",
+              "when": "next card-not-present purchase"
+            }
+          ]
+        },
+        {
+          "card_id": "C03405-K2",
+          "customer_id": "",
+          "last_touch": "",
+          "n_touches": 0,
+          "suspect": false,
+          "reason": "time-sliced ring component (rare shared device)",
+          "actions": [
+            {
+              "action": "MONITOR_CARD",
+              "route": "auto"
+            },
+            {
+              "action": "STEP_UP_AUTH",
+              "route": "auto",
+              "when": "next card-not-present purchase"
+            }
+          ]
+        },
+        {
+          "card_id": "C03467-K1",
+          "customer_id": "",
+          "last_touch": "",
+          "n_touches": 0,
+          "suspect": false,
+          "reason": "time-sliced ring component (rare shared device)",
+          "actions": [
+            {
+              "action": "MONITOR_CARD",
+              "route": "auto"
+            },
+            {
+              "action": "STEP_UP_AUTH",
+              "route": "auto",
+              "when": "next card-not-present purchase"
+            }
+          ]
+        },
+        {
+          "card_id": "C03738-K2",
+          "customer_id": "",
+          "last_touch": "",
+          "n_touches": 0,
+          "suspect": false,
+          "reason": "time-sliced ring component (rare shared device)",
+          "actions": [
+            {
+              "action": "MONITOR_CARD",
+              "route": "auto"
+            },
+            {
+              "action": "STEP_UP_AUTH",
+              "route": "auto",
+              "when": "next card-not-present purchase"
+            }
+          ]
+        },
+        {
+          "card_id": "C03992-K2",
+          "customer_id": "",
+          "last_touch": "",
+          "n_touches": 0,
+          "suspect": false,
+          "reason": "time-sliced ring component (rare shared device)",
+          "actions": [
+            {
+              "action": "MONITOR_CARD",
+              "route": "auto"
+            },
+            {
+              "action": "STEP_UP_AUTH",
+              "route": "auto",
+              "when": "next card-not-present purchase"
+            }
+          ]
+        },
+        {
+          "card_id": "C04046-K2",
+          "customer_id": "",
+          "last_touch": "",
+          "n_touches": 0,
+          "suspect": false,
+          "reason": "time-sliced ring component (rare shared device)",
+          "actions": [
+            {
+              "action": "MONITOR_CARD",
+              "route": "auto"
+            },
+            {
+              "action": "STEP_UP_AUTH",
+              "route": "auto",
+              "when": "next card-not-present purchase"
+            }
+          ]
+        },
+        {
+          "card_id": "C04059-K1",
+          "customer_id": "",
+          "last_touch": "",
+          "n_touches": 0,
+          "suspect": false,
+          "reason": "time-sliced ring component (rare shared device)",
+          "actions": [
+            {
+              "action": "MONITOR_CARD",
+              "route": "auto"
+            },
+            {
+              "action": "STEP_UP_AUTH",
+              "route": "auto",
+              "when": "next card-not-present purchase"
+            }
+          ]
+        },
+        {
+          "card_id": "C04105-K2",
+          "customer_id": "",
+          "last_touch": "",
+          "n_touches": 0,
+          "suspect": false,
+          "reason": "time-sliced ring component (rare shared device)",
+          "actions": [
+            {
+              "action": "MONITOR_CARD",
+              "route": "auto"
+            },
+            {
+              "action": "STEP_UP_AUTH",
+              "route": "auto",
+              "when": "next card-not-present purchase"
+            }
+          ]
+        },
+        {
+          "card_id": "C04124-K1",
+          "customer_id": "",
+          "last_touch": "",
+          "n_touches": 0,
+          "suspect": false,
+          "reason": "time-sliced ring component (rare shared device)",
+          "actions": [
+            {
+              "action": "MONITOR_CARD",
+              "route": "auto"
+            },
+            {
+              "action": "STEP_UP_AUTH",
+              "route": "auto",
+              "when": "next card-not-present purchase"
+            }
+          ]
+        },
+        {
+          "card_id": "C04125-K2",
+          "customer_id": "",
+          "last_touch": "",
+          "n_touches": 0,
+          "suspect": false,
+          "reason": "time-sliced ring component (rare shared device)",
+          "actions": [
+            {
+              "action": "MONITOR_CARD",
+              "route": "auto"
+            },
+            {
+              "action": "STEP_UP_AUTH",
+              "route": "auto",
+              "when": "next card-not-present purchase"
+            }
+          ]
+        },
+        {
+          "card_id": "C04196-K2",
+          "customer_id": "",
+          "last_touch": "",
+          "n_touches": 0,
+          "suspect": false,
+          "reason": "time-sliced ring component (rare shared device)",
+          "actions": [
+            {
+              "action": "MONITOR_CARD",
+              "route": "auto"
+            },
+            {
+              "action": "STEP_UP_AUTH",
+              "route": "auto",
+              "when": "next card-not-present purchase"
+            }
+          ]
+        },
+        {
+          "card_id": "C04285-K1",
+          "customer_id": "",
+          "last_touch": "",
+          "n_touches": 0,
+          "suspect": false,
+          "reason": "time-sliced ring component (rare shared device)",
+          "actions": [
+            {
+              "action": "MONITOR_CARD",
+              "route": "auto"
+            },
+            {
+              "action": "STEP_UP_AUTH",
+              "route": "auto",
+              "when": "next card-not-present purchase"
+            }
+          ]
+        },
+        {
+          "card_id": "C04391-K1",
+          "customer_id": "",
+          "last_touch": "",
+          "n_touches": 0,
+          "suspect": false,
+          "reason": "time-sliced ring component (rare shared device)",
+          "actions": [
+            {
+              "action": "MONITOR_CARD",
+              "route": "auto"
+            },
+            {
+              "action": "STEP_UP_AUTH",
+              "route": "auto",
+              "when": "next card-not-present purchase"
+            }
+          ]
+        },
+        {
+          "card_id": "C04576-K1",
+          "customer_id": "",
+          "last_touch": "",
+          "n_touches": 0,
+          "suspect": false,
+          "reason": "time-sliced ring component (rare shared device)",
+          "actions": [
+            {
+              "action": "MONITOR_CARD",
+              "route": "auto"
+            },
+            {
+              "action": "STEP_UP_AUTH",
+              "route": "auto",
+              "when": "next card-not-present purchase"
+            }
+          ]
+        },
+        {
+          "card_id": "C04660-K1",
+          "customer_id": "",
+          "last_touch": "",
+          "n_touches": 0,
+          "suspect": false,
+          "reason": "time-sliced ring component (rare shared device)",
+          "actions": [
+            {
+              "action": "MONITOR_CARD",
+              "route": "auto"
+            },
+            {
+              "action": "STEP_UP_AUTH",
+              "route": "auto",
+              "when": "next card-not-present purchase"
+            }
+          ]
+        },
+        {
+          "card_id": "C04840-K1",
+          "customer_id": "",
+          "last_touch": "",
+          "n_touches": 0,
+          "suspect": false,
+          "reason": "time-sliced ring component (rare shared device)",
+          "actions": [
+            {
+              "action": "MONITOR_CARD",
+              "route": "auto"
+            },
+            {
+              "action": "STEP_UP_AUTH",
+              "route": "auto",
+              "when": "next card-not-present purchase"
+            }
+          ]
+        },
+        {
+          "card_id": "C04844-K1",
+          "customer_id": "",
+          "last_touch": "",
+          "n_touches": 0,
+          "suspect": false,
+          "reason": "time-sliced ring component (rare shared device)",
+          "actions": [
+            {
+              "action": "MONITOR_CARD",
+              "route": "auto"
+            },
+            {
+              "action": "STEP_UP_AUTH",
+              "route": "auto",
+              "when": "next card-not-present purchase"
+            }
+          ]
+        },
+        {
+          "card_id": "C05047-K1",
+          "customer_id": "",
+          "last_touch": "",
+          "n_touches": 0,
+          "suspect": false,
+          "reason": "time-sliced ring component (rare shared device)",
+          "actions": [
+            {
+              "action": "MONITOR_CARD",
+              "route": "auto"
+            },
+            {
+              "action": "STEP_UP_AUTH",
+              "route": "auto",
+              "when": "next card-not-present purchase"
+            }
+          ]
+        },
+        {
+          "card_id": "C05245-K2",
+          "customer_id": "",
+          "last_touch": "",
+          "n_touches": 0,
+          "suspect": false,
+          "reason": "time-sliced ring component (rare shared device)",
+          "actions": [
+            {
+              "action": "MONITOR_CARD",
+              "route": "auto"
+            },
+            {
+              "action": "STEP_UP_AUTH",
+              "route": "auto",
+              "when": "next card-not-present purchase"
+            }
+          ]
+        },
+        {
+          "card_id": "C05530-K2",
+          "customer_id": "",
+          "last_touch": "",
+          "n_touches": 0,
+          "suspect": false,
+          "reason": "time-sliced ring component (rare shared device)",
+          "actions": [
+            {
+              "action": "MONITOR_CARD",
+              "route": "auto"
+            },
+            {
+              "action": "STEP_UP_AUTH",
+              "route": "auto",
+              "when": "next card-not-present purchase"
+            }
+          ]
+        },
+        {
+          "card_id": "C05560-K2",
+          "customer_id": "",
+          "last_touch": "",
+          "n_touches": 0,
+          "suspect": false,
+          "reason": "time-sliced ring component (rare shared device)",
+          "actions": [
+            {
+              "action": "MONITOR_CARD",
+              "route": "auto"
+            },
+            {
+              "action": "STEP_UP_AUTH",
+              "route": "auto",
+              "when": "next card-not-present purchase"
+            }
+          ]
+        },
+        {
+          "card_id": "C05704-K2",
+          "customer_id": "",
+          "last_touch": "",
+          "n_touches": 0,
+          "suspect": false,
+          "reason": "time-sliced ring component (rare shared device)",
+          "actions": [
+            {
+              "action": "MONITOR_CARD",
+              "route": "auto"
+            },
+            {
+              "action": "STEP_UP_AUTH",
+              "route": "auto",
+              "when": "next card-not-present purchase"
+            }
+          ]
+        },
+        {
+          "card_id": "C05786-K2",
+          "customer_id": "",
+          "last_touch": "",
+          "n_touches": 0,
+          "suspect": false,
+          "reason": "time-sliced ring component (rare shared device)",
+          "actions": [
+            {
+              "action": "MONITOR_CARD",
+              "route": "auto"
+            },
+            {
+              "action": "STEP_UP_AUTH",
+              "route": "auto",
+              "when": "next card-not-present purchase"
+            }
+          ]
+        },
+        {
+          "card_id": "C06067-K2",
+          "customer_id": "",
+          "last_touch": "",
+          "n_touches": 0,
+          "suspect": false,
+          "reason": "time-sliced ring component (rare shared device)",
+          "actions": [
+            {
+              "action": "MONITOR_CARD",
+              "route": "auto"
+            },
+            {
+              "action": "STEP_UP_AUTH",
+              "route": "auto",
+              "when": "next card-not-present purchase"
+            }
+          ]
+        },
+        {
+          "card_id": "C06168-K1",
+          "customer_id": "",
+          "last_touch": "",
+          "n_touches": 0,
+          "suspect": false,
+          "reason": "time-sliced ring component (rare shared device)",
+          "actions": [
+            {
+              "action": "MONITOR_CARD",
+              "route": "auto"
+            },
+            {
+              "action": "STEP_UP_AUTH",
+              "route": "auto",
+              "when": "next card-not-present purchase"
+            }
+          ]
+        },
+        {
+          "card_id": "C06190-K1",
+          "customer_id": "",
+          "last_touch": "",
+          "n_touches": 0,
+          "suspect": false,
+          "reason": "time-sliced ring component (rare shared device)",
+          "actions": [
+            {
+              "action": "MONITOR_CARD",
+              "route": "auto"
+            },
+            {
+              "action": "STEP_UP_AUTH",
+              "route": "auto",
+              "when": "next card-not-present purchase"
+            }
+          ]
+        },
+        {
+          "card_id": "C06224-K2",
+          "customer_id": "",
+          "last_touch": "",
+          "n_touches": 0,
+          "suspect": false,
+          "reason": "time-sliced ring component (rare shared device)",
+          "actions": [
+            {
+              "action": "MONITOR_CARD",
+              "route": "auto"
+            },
+            {
+              "action": "STEP_UP_AUTH",
+              "route": "auto",
+              "when": "next card-not-present purchase"
+            }
+          ]
+        },
+        {
+          "card_id": "C06391-K1",
+          "customer_id": "",
+          "last_touch": "",
+          "n_touches": 0,
+          "suspect": false,
+          "reason": "time-sliced ring component (rare shared device)",
+          "actions": [
+            {
+              "action": "MONITOR_CARD",
+              "route": "auto"
+            },
+            {
+              "action": "STEP_UP_AUTH",
+              "route": "auto",
+              "when": "next card-not-present purchase"
+            }
+          ]
+        },
+        {
+          "card_id": "C06399-K2",
+          "customer_id": "",
+          "last_touch": "",
+          "n_touches": 0,
+          "suspect": false,
+          "reason": "time-sliced ring component (rare shared device)",
+          "actions": [
+            {
+              "action": "MONITOR_CARD",
+              "route": "auto"
+            },
+            {
+              "action": "STEP_UP_AUTH",
+              "route": "auto",
+              "when": "next card-not-present purchase"
+            }
+          ]
+        },
+        {
+          "card_id": "C06403-K3",
+          "customer_id": "",
+          "last_touch": "",
+          "n_touches": 0,
+          "suspect": false,
+          "reason": "time-sliced ring component (rare shared device)",
+          "actions": [
+            {
+              "action": "MONITOR_CARD",
+              "route": "auto"
+            },
+            {
+              "action": "STEP_UP_AUTH",
+              "route": "auto",
+              "when": "next card-not-present purchase"
+            }
+          ]
+        },
+        {
+          "card_id": "C06571-K1",
+          "customer_id": "",
+          "last_touch": "",
+          "n_touches": 0,
+          "suspect": false,
+          "reason": "time-sliced ring component (rare shared device)",
+          "actions": [
+            {
+              "action": "MONITOR_CARD",
+              "route": "auto"
+            },
+            {
+              "action": "STEP_UP_AUTH",
+              "route": "auto",
+              "when": "next card-not-present purchase"
+            }
+          ]
+        },
+        {
+          "card_id": "C06947-K2",
+          "customer_id": "",
+          "last_touch": "",
+          "n_touches": 0,
+          "suspect": false,
+          "reason": "time-sliced ring component (rare shared device)",
+          "actions": [
+            {
+              "action": "MONITOR_CARD",
+              "route": "auto"
+            },
+            {
+              "action": "STEP_UP_AUTH",
+              "route": "auto",
+              "when": "next card-not-present purchase"
+            }
+          ]
+        },
+        {
+          "card_id": "C07033-K1",
+          "customer_id": "",
+          "last_touch": "",
+          "n_touches": 0,
+          "suspect": false,
+          "reason": "time-sliced ring component (rare shared device)",
+          "actions": [
+            {
+              "action": "MONITOR_CARD",
+              "route": "auto"
+            },
+            {
+              "action": "STEP_UP_AUTH",
+              "route": "auto",
+              "when": "next card-not-present purchase"
+            }
+          ]
+        },
+        {
+          "card_id": "C07102-K1",
+          "customer_id": "",
+          "last_touch": "",
+          "n_touches": 0,
+          "suspect": false,
+          "reason": "time-sliced ring component (rare shared device)",
+          "actions": [
+            {
+              "action": "MONITOR_CARD",
+              "route": "auto"
+            },
+            {
+              "action": "STEP_UP_AUTH",
+              "route": "auto",
+              "when": "next card-not-present purchase"
+            }
+          ]
+        },
+        {
+          "card_id": "C07212-K2",
+          "customer_id": "",
+          "last_touch": "",
+          "n_touches": 0,
+          "suspect": false,
+          "reason": "time-sliced ring component (rare shared device)",
+          "actions": [
+            {
+              "action": "MONITOR_CARD",
+              "route": "auto"
+            },
+            {
+              "action": "STEP_UP_AUTH",
+              "route": "auto",
+              "when": "next card-not-present purchase"
+            }
+          ]
+        },
+        {
+          "card_id": "C07311-K1",
+          "customer_id": "",
+          "last_touch": "",
+          "n_touches": 0,
+          "suspect": false,
+          "reason": "time-sliced ring component (rare shared device)",
+          "actions": [
+            {
+              "action": "MONITOR_CARD",
+              "route": "auto"
+            },
+            {
+              "action": "STEP_UP_AUTH",
+              "route": "auto",
+              "when": "next card-not-present purchase"
+            }
+          ]
+        },
+        {
+          "card_id": "C07496-K1",
+          "customer_id": "",
+          "last_touch": "",
+          "n_touches": 0,
+          "suspect": false,
+          "reason": "time-sliced ring component (rare shared device)",
+          "actions": [
+            {
+              "action": "MONITOR_CARD",
+              "route": "auto"
+            },
+            {
+              "action": "STEP_UP_AUTH",
+              "route": "auto",
+              "when": "next card-not-present purchase"
+            }
+          ]
+        },
+        {
+          "card_id": "C07518-K2",
+          "customer_id": "",
+          "last_touch": "",
+          "n_touches": 0,
+          "suspect": false,
+          "reason": "time-sliced ring component (rare shared device)",
+          "actions": [
+            {
+              "action": "MONITOR_CARD",
+              "route": "auto"
+            },
+            {
+              "action": "STEP_UP_AUTH",
+              "route": "auto",
+              "when": "next card-not-present purchase"
+            }
+          ]
+        },
+        {
+          "card_id": "C07523-K1",
+          "customer_id": "",
+          "last_touch": "",
+          "n_touches": 0,
+          "suspect": false,
+          "reason": "time-sliced ring component (rare shared device)",
+          "actions": [
+            {
+              "action": "MONITOR_CARD",
+              "route": "auto"
+            },
+            {
+              "action": "STEP_UP_AUTH",
+              "route": "auto",
+              "when": "next card-not-present purchase"
+            }
+          ]
+        },
+        {
+          "card_id": "C07648-K2",
+          "customer_id": "",
+          "last_touch": "",
+          "n_touches": 0,
+          "suspect": false,
+          "reason": "time-sliced ring component (rare shared device)",
+          "actions": [
+            {
+              "action": "MONITOR_CARD",
+              "route": "auto"
+            },
+            {
+              "action": "STEP_UP_AUTH",
+              "route": "auto",
+              "when": "next card-not-present purchase"
+            }
+          ]
+        },
+        {
+          "card_id": "C07668-K1",
+          "customer_id": "",
+          "last_touch": "",
+          "n_touches": 0,
+          "suspect": false,
+          "reason": "time-sliced ring component (rare shared device)",
+          "actions": [
+            {
+              "action": "MONITOR_CARD",
+              "route": "auto"
+            },
+            {
+              "action": "STEP_UP_AUTH",
+              "route": "auto",
+              "when": "next card-not-present purchase"
+            }
+          ]
+        },
+        {
+          "card_id": "C07741-K2",
+          "customer_id": "",
+          "last_touch": "",
+          "n_touches": 0,
+          "suspect": false,
+          "reason": "time-sliced ring component (rare shared device)",
+          "actions": [
+            {
+              "action": "MONITOR_CARD",
+              "route": "auto"
+            },
+            {
+              "action": "STEP_UP_AUTH",
+              "route": "auto",
+              "when": "next card-not-present purchase"
+            }
+          ]
+        },
+        {
+          "card_id": "C07867-K2",
+          "customer_id": "",
+          "last_touch": "",
+          "n_touches": 0,
+          "suspect": false,
+          "reason": "time-sliced ring component (rare shared device)",
+          "actions": [
+            {
+              "action": "MONITOR_CARD",
+              "route": "auto"
+            },
+            {
+              "action": "STEP_UP_AUTH",
+              "route": "auto",
+              "when": "next card-not-present purchase"
+            }
+          ]
+        },
+        {
+          "card_id": "C07872-K2",
+          "customer_id": "",
+          "last_touch": "",
+          "n_touches": 0,
+          "suspect": false,
+          "reason": "time-sliced ring component (rare shared device)",
+          "actions": [
+            {
+              "action": "MONITOR_CARD",
+              "route": "auto"
+            },
+            {
+              "action": "STEP_UP_AUTH",
+              "route": "auto",
+              "when": "next card-not-present purchase"
+            }
+          ]
+        },
+        {
+          "card_id": "C07901-K1",
+          "customer_id": "",
+          "last_touch": "",
+          "n_touches": 0,
+          "suspect": false,
+          "reason": "time-sliced ring component (rare shared device)",
+          "actions": [
+            {
+              "action": "MONITOR_CARD",
+              "route": "auto"
+            },
+            {
+              "action": "STEP_UP_AUTH",
+              "route": "auto",
+              "when": "next card-not-present purchase"
+            }
+          ]
+        },
+        {
+          "card_id": "C07913-K2",
+          "customer_id": "",
+          "last_touch": "",
+          "n_touches": 0,
+          "suspect": false,
+          "reason": "time-sliced ring component (rare shared device)",
+          "actions": [
+            {
+              "action": "MONITOR_CARD",
+              "route": "auto"
+            },
+            {
+              "action": "STEP_UP_AUTH",
+              "route": "auto",
+              "when": "next card-not-present purchase"
+            }
+          ]
+        },
+        {
+          "card_id": "C07925-K1",
+          "customer_id": "",
+          "last_touch": "",
+          "n_touches": 0,
+          "suspect": false,
+          "reason": "time-sliced ring component (rare shared device)",
+          "actions": [
+            {
+              "action": "MONITOR_CARD",
+              "route": "auto"
+            },
+            {
+              "action": "STEP_UP_AUTH",
+              "route": "auto",
+              "when": "next card-not-present purchase"
+            }
+          ]
+        },
+        {
+          "card_id": "C07936-K2",
+          "customer_id": "",
+          "last_touch": "",
+          "n_touches": 0,
+          "suspect": false,
+          "reason": "time-sliced ring component (rare shared device)",
+          "actions": [
+            {
+              "action": "MONITOR_CARD",
+              "route": "auto"
+            },
+            {
+              "action": "STEP_UP_AUTH",
+              "route": "auto",
+              "when": "next card-not-present purchase"
+            }
+          ]
+        },
+        {
+          "card_id": "C08193-K1",
+          "customer_id": "",
+          "last_touch": "",
+          "n_touches": 0,
+          "suspect": false,
+          "reason": "time-sliced ring component (rare shared device)",
+          "actions": [
+            {
+              "action": "MONITOR_CARD",
+              "route": "auto"
+            },
+            {
+              "action": "STEP_UP_AUTH",
+              "route": "auto",
+              "when": "next card-not-present purchase"
+            }
+          ]
+        },
+        {
+          "card_id": "C08207-K1",
+          "customer_id": "",
+          "last_touch": "",
+          "n_touches": 0,
+          "suspect": false,
+          "reason": "time-sliced ring component (rare shared device)",
+          "actions": [
+            {
+              "action": "MONITOR_CARD",
+              "route": "auto"
+            },
+            {
+              "action": "STEP_UP_AUTH",
+              "route": "auto",
+              "when": "next card-not-present purchase"
+            }
+          ]
+        },
+        {
+          "card_id": "C08294-K1",
+          "customer_id": "",
+          "last_touch": "",
+          "n_touches": 0,
+          "suspect": false,
+          "reason": "time-sliced ring component (rare shared device)",
+          "actions": [
+            {
+              "action": "MONITOR_CARD",
+              "route": "auto"
+            },
+            {
+              "action": "STEP_UP_AUTH",
+              "route": "auto",
+              "when": "next card-not-present purchase"
+            }
+          ]
+        },
+        {
+          "card_id": "C08450-K2",
+          "customer_id": "",
+          "last_touch": "",
+          "n_touches": 0,
+          "suspect": false,
+          "reason": "time-sliced ring component (rare shared device)",
+          "actions": [
+            {
+              "action": "MONITOR_CARD",
+              "route": "auto"
+            },
+            {
+              "action": "STEP_UP_AUTH",
+              "route": "auto",
+              "when": "next card-not-present purchase"
+            }
+          ]
+        },
+        {
+          "card_id": "C08489-K2",
+          "customer_id": "",
+          "last_touch": "",
+          "n_touches": 0,
+          "suspect": false,
+          "reason": "time-sliced ring component (rare shared device)",
+          "actions": [
+            {
+              "action": "MONITOR_CARD",
+              "route": "auto"
+            },
+            {
+              "action": "STEP_UP_AUTH",
+              "route": "auto",
+              "when": "next card-not-present purchase"
+            }
+          ]
+        },
+        {
+          "card_id": "C08528-K1",
+          "customer_id": "",
+          "last_touch": "",
+          "n_touches": 0,
+          "suspect": false,
+          "reason": "time-sliced ring component (rare shared device)",
+          "actions": [
+            {
+              "action": "MONITOR_CARD",
+              "route": "auto"
+            },
+            {
+              "action": "STEP_UP_AUTH",
+              "route": "auto",
+              "when": "next card-not-present purchase"
+            }
+          ]
+        },
+        {
+          "card_id": "C08637-K2",
+          "customer_id": "",
+          "last_touch": "",
+          "n_touches": 0,
+          "suspect": false,
+          "reason": "time-sliced ring component (rare shared device)",
+          "actions": [
+            {
+              "action": "MONITOR_CARD",
+              "route": "auto"
+            },
+            {
+              "action": "STEP_UP_AUTH",
+              "route": "auto",
+              "when": "next card-not-present purchase"
+            }
+          ]
+        },
+        {
+          "card_id": "C08826-K1",
+          "customer_id": "",
+          "last_touch": "",
+          "n_touches": 0,
+          "suspect": false,
+          "reason": "time-sliced ring component (rare shared device)",
+          "actions": [
+            {
+              "action": "MONITOR_CARD",
+              "route": "auto"
+            },
+            {
+              "action": "STEP_UP_AUTH",
+              "route": "auto",
+              "when": "next card-not-present purchase"
+            }
+          ]
+        },
+        {
+          "card_id": "C08833-K1",
+          "customer_id": "",
+          "last_touch": "",
+          "n_touches": 0,
+          "suspect": false,
+          "reason": "time-sliced ring component (rare shared device)",
+          "actions": [
+            {
+              "action": "MONITOR_CARD",
+              "route": "auto"
+            },
+            {
+              "action": "STEP_UP_AUTH",
+              "route": "auto",
+              "when": "next card-not-present purchase"
+            }
+          ]
+        },
+        {
+          "card_id": "C08851-K1",
+          "customer_id": "",
+          "last_touch": "",
+          "n_touches": 0,
+          "suspect": false,
+          "reason": "time-sliced ring component (rare shared device)",
+          "actions": [
+            {
+              "action": "MONITOR_CARD",
+              "route": "auto"
+            },
+            {
+              "action": "STEP_UP_AUTH",
+              "route": "auto",
+              "when": "next card-not-present purchase"
+            }
+          ]
+        },
+        {
+          "card_id": "C08918-K2",
+          "customer_id": "",
+          "last_touch": "",
+          "n_touches": 0,
+          "suspect": false,
+          "reason": "time-sliced ring component (rare shared device)",
+          "actions": [
+            {
+              "action": "MONITOR_CARD",
+              "route": "auto"
+            },
+            {
+              "action": "STEP_UP_AUTH",
+              "route": "auto",
+              "when": "next card-not-present purchase"
+            }
+          ]
+        },
+        {
+          "card_id": "C08925-K1",
+          "customer_id": "",
+          "last_touch": "",
+          "n_touches": 0,
+          "suspect": false,
+          "reason": "time-sliced ring component (rare shared device)",
+          "actions": [
+            {
+              "action": "MONITOR_CARD",
+              "route": "auto"
+            },
+            {
+              "action": "STEP_UP_AUTH",
+              "route": "auto",
+              "when": "next card-not-present purchase"
+            }
+          ]
+        },
+        {
+          "card_id": "C08943-K2",
+          "customer_id": "",
+          "last_touch": "",
+          "n_touches": 0,
+          "suspect": false,
+          "reason": "time-sliced ring component (rare shared device)",
+          "actions": [
+            {
+              "action": "MONITOR_CARD",
+              "route": "auto"
+            },
+            {
+              "action": "STEP_UP_AUTH",
+              "route": "auto",
+              "when": "next card-not-present purchase"
+            }
+          ]
+        },
+        {
+          "card_id": "C08945-K2",
+          "customer_id": "",
+          "last_touch": "",
+          "n_touches": 0,
+          "suspect": false,
+          "reason": "time-sliced ring component (rare shared device)",
+          "actions": [
+            {
+              "action": "MONITOR_CARD",
+              "route": "auto"
+            },
+            {
+              "action": "STEP_UP_AUTH",
+              "route": "auto",
+              "when": "next card-not-present purchase"
+            }
+          ]
+        },
+        {
+          "card_id": "C09159-K1",
+          "customer_id": "",
+          "last_touch": "",
+          "n_touches": 0,
+          "suspect": false,
+          "reason": "time-sliced ring component (rare shared device)",
+          "actions": [
+            {
+              "action": "MONITOR_CARD",
+              "route": "auto"
+            },
+            {
+              "action": "STEP_UP_AUTH",
+              "route": "auto",
+              "when": "next card-not-present purchase"
+            }
+          ]
+        },
+        {
+          "card_id": "C09187-K1",
+          "customer_id": "",
+          "last_touch": "",
+          "n_touches": 0,
+          "suspect": false,
+          "reason": "time-sliced ring component (rare shared device)",
+          "actions": [
+            {
+              "action": "MONITOR_CARD",
+              "route": "auto"
+            },
+            {
+              "action": "STEP_UP_AUTH",
+              "route": "auto",
+              "when": "next card-not-present purchase"
+            }
+          ]
+        },
+        {
+          "card_id": "C09206-K2",
+          "customer_id": "",
+          "last_touch": "",
+          "n_touches": 0,
+          "suspect": false,
+          "reason": "time-sliced ring component (rare shared device)",
+          "actions": [
+            {
+              "action": "MONITOR_CARD",
+              "route": "auto"
+            },
+            {
+              "action": "STEP_UP_AUTH",
+              "route": "auto",
+              "when": "next card-not-present purchase"
+            }
+          ]
+        },
+        {
+          "card_id": "C09231-K1",
+          "customer_id": "",
+          "last_touch": "",
+          "n_touches": 0,
+          "suspect": false,
+          "reason": "time-sliced ring component (rare shared device)",
+          "actions": [
+            {
+              "action": "MONITOR_CARD",
+              "route": "auto"
+            },
+            {
+              "action": "STEP_UP_AUTH",
+              "route": "auto",
+              "when": "next card-not-present purchase"
+            }
+          ]
+        },
+        {
+          "card_id": "C09241-K2",
+          "customer_id": "",
+          "last_touch": "",
+          "n_touches": 0,
+          "suspect": false,
+          "reason": "time-sliced ring component (rare shared device)",
+          "actions": [
+            {
+              "action": "MONITOR_CARD",
+              "route": "auto"
+            },
+            {
+              "action": "STEP_UP_AUTH",
+              "route": "auto",
+              "when": "next card-not-present purchase"
+            }
+          ]
+        },
+        {
+          "card_id": "C09323-K1",
+          "customer_id": "",
+          "last_touch": "",
+          "n_touches": 0,
+          "suspect": false,
+          "reason": "time-sliced ring component (rare shared device)",
+          "actions": [
+            {
+              "action": "MONITOR_CARD",
+              "route": "auto"
+            },
+            {
+              "action": "STEP_UP_AUTH",
+              "route": "auto",
+              "when": "next card-not-present purchase"
+            }
+          ]
+        },
+        {
+          "card_id": "C09343-K1",
+          "customer_id": "",
+          "last_touch": "",
+          "n_touches": 0,
+          "suspect": false,
+          "reason": "time-sliced ring component (rare shared device)",
+          "actions": [
+            {
+              "action": "MONITOR_CARD",
+              "route": "auto"
+            },
+            {
+              "action": "STEP_UP_AUTH",
+              "route": "auto",
+              "when": "next card-not-present purchase"
+            }
+          ]
+        },
+        {
+          "card_id": "C09350-K1",
+          "customer_id": "",
+          "last_touch": "",
+          "n_touches": 0,
+          "suspect": false,
+          "reason": "time-sliced ring component (rare shared device)",
+          "actions": [
+            {
+              "action": "MONITOR_CARD",
+              "route": "auto"
+            },
+            {
+              "action": "STEP_UP_AUTH",
+              "route": "auto",
+              "when": "next card-not-present purchase"
+            }
+          ]
+        },
+        {
+          "card_id": "C09459-K1",
+          "customer_id": "",
+          "last_touch": "",
+          "n_touches": 0,
+          "suspect": false,
+          "reason": "time-sliced ring component (rare shared device)",
+          "actions": [
+            {
+              "action": "MONITOR_CARD",
+              "route": "auto"
+            },
+            {
+              "action": "STEP_UP_AUTH",
+              "route": "auto",
+              "when": "next card-not-present purchase"
+            }
+          ]
+        },
+        {
+          "card_id": "C09568-K1",
+          "customer_id": "",
+          "last_touch": "",
+          "n_touches": 0,
+          "suspect": false,
+          "reason": "time-sliced ring component (rare shared device)",
+          "actions": [
+            {
+              "action": "MONITOR_CARD",
+              "route": "auto"
+            },
+            {
+              "action": "STEP_UP_AUTH",
+              "route": "auto",
+              "when": "next card-not-present purchase"
+            }
+          ]
+        },
+        {
+          "card_id": "C09601-K1",
+          "customer_id": "",
+          "last_touch": "",
+          "n_touches": 0,
+          "suspect": false,
+          "reason": "time-sliced ring component (rare shared device)",
+          "actions": [
+            {
+              "action": "MONITOR_CARD",
+              "route": "auto"
+            },
+            {
+              "action": "STEP_UP_AUTH",
+              "route": "auto",
+              "when": "next card-not-present purchase"
+            }
+          ]
+        },
+        {
+          "card_id": "C09663-K1",
+          "customer_id": "",
+          "last_touch": "",
+          "n_touches": 0,
+          "suspect": false,
+          "reason": "time-sliced ring component (rare shared device)",
+          "actions": [
+            {
+              "action": "MONITOR_CARD",
+              "route": "auto"
+            },
+            {
+              "action": "STEP_UP_AUTH",
+              "route": "auto",
+              "when": "next card-not-present purchase"
+            }
+          ]
+        },
+        {
+          "card_id": "C09683-K1",
+          "customer_id": "",
+          "last_touch": "",
+          "n_touches": 0,
+          "suspect": false,
+          "reason": "time-sliced ring component (rare shared device)",
+          "actions": [
+            {
+              "action": "MONITOR_CARD",
+              "route": "auto"
+            },
+            {
+              "action": "STEP_UP_AUTH",
+              "route": "auto",
+              "when": "next card-not-present purchase"
+            }
+          ]
+        },
+        {
+          "card_id": "C09719-K1",
+          "customer_id": "",
+          "last_touch": "",
+          "n_touches": 0,
+          "suspect": false,
+          "reason": "time-sliced ring component (rare shared device)",
+          "actions": [
+            {
+              "action": "MONITOR_CARD",
+              "route": "auto"
+            },
+            {
+              "action": "STEP_UP_AUTH",
+              "route": "auto",
+              "when": "next card-not-present purchase"
+            }
+          ]
+        },
+        {
+          "card_id": "C09820-K2",
+          "customer_id": "",
+          "last_touch": "",
+          "n_touches": 0,
+          "suspect": false,
+          "reason": "time-sliced ring component (rare shared device)",
+          "actions": [
+            {
+              "action": "MONITOR_CARD",
+              "route": "auto"
+            },
+            {
+              "action": "STEP_UP_AUTH",
+              "route": "auto",
+              "when": "next card-not-present purchase"
+            }
+          ]
+        },
+        {
+          "card_id": "C10016-K2",
+          "customer_id": "",
+          "last_touch": "",
+          "n_touches": 0,
+          "suspect": false,
+          "reason": "time-sliced ring component (rare shared device)",
+          "actions": [
+            {
+              "action": "MONITOR_CARD",
+              "route": "auto"
+            },
+            {
+              "action": "STEP_UP_AUTH",
+              "route": "auto",
+              "when": "next card-not-present purchase"
+            }
+          ]
+        },
+        {
+          "card_id": "C10045-K1",
+          "customer_id": "",
+          "last_touch": "",
+          "n_touches": 0,
+          "suspect": false,
+          "reason": "time-sliced ring component (rare shared device)",
+          "actions": [
+            {
+              "action": "MONITOR_CARD",
+              "route": "auto"
+            },
+            {
+              "action": "STEP_UP_AUTH",
+              "route": "auto",
+              "when": "next card-not-present purchase"
+            }
+          ]
+        },
+        {
+          "card_id": "C10219-K1",
+          "customer_id": "",
+          "last_touch": "",
+          "n_touches": 0,
+          "suspect": false,
+          "reason": "time-sliced ring component (rare shared device)",
+          "actions": [
+            {
+              "action": "MONITOR_CARD",
+              "route": "auto"
+            },
+            {
+              "action": "STEP_UP_AUTH",
+              "route": "auto",
+              "when": "next card-not-present purchase"
+            }
+          ]
+        },
+        {
+          "card_id": "C10245-K1",
+          "customer_id": "",
+          "last_touch": "",
+          "n_touches": 0,
+          "suspect": false,
+          "reason": "time-sliced ring component (rare shared device)",
+          "actions": [
+            {
+              "action": "MONITOR_CARD",
+              "route": "auto"
+            },
+            {
+              "action": "STEP_UP_AUTH",
+              "route": "auto",
+              "when": "next card-not-present purchase"
+            }
+          ]
+        },
+        {
+          "card_id": "C10349-K1",
+          "customer_id": "",
+          "last_touch": "",
+          "n_touches": 0,
+          "suspect": false,
+          "reason": "time-sliced ring component (rare shared device)",
+          "actions": [
+            {
+              "action": "MONITOR_CARD",
+              "route": "auto"
+            },
+            {
+              "action": "STEP_UP_AUTH",
+              "route": "auto",
+              "when": "next card-not-present purchase"
+            }
+          ]
+        },
+        {
+          "card_id": "C10654-K1",
+          "customer_id": "",
+          "last_touch": "",
+          "n_touches": 0,
+          "suspect": false,
+          "reason": "time-sliced ring component (rare shared device)",
+          "actions": [
+            {
+              "action": "MONITOR_CARD",
+              "route": "auto"
+            },
+            {
+              "action": "STEP_UP_AUTH",
+              "route": "auto",
+              "when": "next card-not-present purchase"
+            }
+          ]
+        },
+        {
+          "card_id": "C10981-K1",
+          "customer_id": "",
+          "last_touch": "",
+          "n_touches": 0,
+          "suspect": false,
+          "reason": "time-sliced ring component (rare shared device)",
+          "actions": [
+            {
+              "action": "MONITOR_CARD",
+              "route": "auto"
+            },
+            {
+              "action": "STEP_UP_AUTH",
+              "route": "auto",
+              "when": "next card-not-present purchase"
+            }
+          ]
+        },
+        {
+          "card_id": "C11000-K2",
+          "customer_id": "",
+          "last_touch": "",
+          "n_touches": 0,
+          "suspect": false,
+          "reason": "time-sliced ring component (rare shared device)",
+          "actions": [
+            {
+              "action": "MONITOR_CARD",
+              "route": "auto"
+            },
+            {
+              "action": "STEP_UP_AUTH",
+              "route": "auto",
+              "when": "next card-not-present purchase"
+            }
+          ]
+        },
+        {
+          "card_id": "C11005-K1",
+          "customer_id": "",
+          "last_touch": "",
+          "n_touches": 0,
+          "suspect": false,
+          "reason": "time-sliced ring component (rare shared device)",
+          "actions": [
+            {
+              "action": "MONITOR_CARD",
+              "route": "auto"
+            },
+            {
+              "action": "STEP_UP_AUTH",
+              "route": "auto",
+              "when": "next card-not-present purchase"
+            }
+          ]
+        },
+        {
+          "card_id": "C11010-K1",
+          "customer_id": "",
+          "last_touch": "",
+          "n_touches": 0,
+          "suspect": false,
+          "reason": "time-sliced ring component (rare shared device)",
+          "actions": [
+            {
+              "action": "MONITOR_CARD",
+              "route": "auto"
+            },
+            {
+              "action": "STEP_UP_AUTH",
+              "route": "auto",
+              "when": "next card-not-present purchase"
+            }
+          ]
+        },
+        {
+          "card_id": "C11309-K1",
+          "customer_id": "",
+          "last_touch": "",
+          "n_touches": 0,
+          "suspect": false,
+          "reason": "time-sliced ring component (rare shared device)",
+          "actions": [
+            {
+              "action": "MONITOR_CARD",
+              "route": "auto"
+            },
+            {
+              "action": "STEP_UP_AUTH",
+              "route": "auto",
+              "when": "next card-not-present purchase"
+            }
+          ]
+        },
+        {
+          "card_id": "C11373-K1",
+          "customer_id": "",
+          "last_touch": "",
+          "n_touches": 0,
+          "suspect": false,
+          "reason": "time-sliced ring component (rare shared device)",
+          "actions": [
+            {
+              "action": "MONITOR_CARD",
+              "route": "auto"
+            },
+            {
+              "action": "STEP_UP_AUTH",
+              "route": "auto",
+              "when": "next card-not-present purchase"
+            }
+          ]
+        },
+        {
+          "card_id": "C11464-K2",
+          "customer_id": "",
+          "last_touch": "",
+          "n_touches": 0,
+          "suspect": false,
+          "reason": "time-sliced ring component (rare shared device)",
+          "actions": [
+            {
+              "action": "MONITOR_CARD",
+              "route": "auto"
+            },
+            {
+              "action": "STEP_UP_AUTH",
+              "route": "auto",
+              "when": "next card-not-present purchase"
+            }
+          ]
+        },
+        {
+          "card_id": "C11679-K1",
+          "customer_id": "",
+          "last_touch": "",
+          "n_touches": 0,
+          "suspect": false,
+          "reason": "time-sliced ring component (rare shared device)",
+          "actions": [
+            {
+              "action": "MONITOR_CARD",
+              "route": "auto"
+            },
+            {
+              "action": "STEP_UP_AUTH",
+              "route": "auto",
+              "when": "next card-not-present purchase"
+            }
+          ]
+        },
+        {
+          "card_id": "C11686-K1",
+          "customer_id": "",
+          "last_touch": "",
+          "n_touches": 0,
+          "suspect": false,
+          "reason": "time-sliced ring component (rare shared device)",
+          "actions": [
+            {
+              "action": "MONITOR_CARD",
+              "route": "auto"
+            },
+            {
+              "action": "STEP_UP_AUTH",
+              "route": "auto",
+              "when": "next card-not-present purchase"
+            }
+          ]
+        },
+        {
+          "card_id": "C11704-K1",
+          "customer_id": "",
+          "last_touch": "",
+          "n_touches": 0,
+          "suspect": false,
+          "reason": "time-sliced ring component (rare shared device)",
+          "actions": [
+            {
+              "action": "MONITOR_CARD",
+              "route": "auto"
+            },
+            {
+              "action": "STEP_UP_AUTH",
+              "route": "auto",
+              "when": "next card-not-present purchase"
+            }
+          ]
+        },
+        {
+          "card_id": "C11743-K2",
+          "customer_id": "",
+          "last_touch": "",
+          "n_touches": 0,
+          "suspect": false,
+          "reason": "time-sliced ring component (rare shared device)",
+          "actions": [
+            {
+              "action": "MONITOR_CARD",
+              "route": "auto"
+            },
+            {
+              "action": "STEP_UP_AUTH",
+              "route": "auto",
+              "when": "next card-not-present purchase"
+            }
+          ]
+        },
+        {
+          "card_id": "C11754-K1",
+          "customer_id": "",
+          "last_touch": "",
+          "n_touches": 0,
+          "suspect": false,
+          "reason": "time-sliced ring component (rare shared device)",
+          "actions": [
+            {
+              "action": "MONITOR_CARD",
+              "route": "auto"
+            },
+            {
+              "action": "STEP_UP_AUTH",
+              "route": "auto",
+              "when": "next card-not-present purchase"
+            }
+          ]
+        },
+        {
+          "card_id": "C11965-K1",
+          "customer_id": "",
+          "last_touch": "",
+          "n_touches": 0,
+          "suspect": false,
+          "reason": "time-sliced ring component (rare shared device)",
+          "actions": [
+            {
+              "action": "MONITOR_CARD",
+              "route": "auto"
+            },
+            {
+              "action": "STEP_UP_AUTH",
+              "route": "auto",
+              "when": "next card-not-present purchase"
+            }
+          ]
+        },
+        {
+          "card_id": "C11970-K1",
+          "customer_id": "",
+          "last_touch": "",
+          "n_touches": 0,
+          "suspect": false,
+          "reason": "time-sliced ring component (rare shared device)",
+          "actions": [
+            {
+              "action": "MONITOR_CARD",
+              "route": "auto"
+            },
+            {
+              "action": "STEP_UP_AUTH",
+              "route": "auto",
+              "when": "next card-not-present purchase"
+            }
+          ]
+        },
+        {
+          "card_id": "C12033-K1",
+          "customer_id": "",
+          "last_touch": "",
+          "n_touches": 0,
+          "suspect": false,
+          "reason": "time-sliced ring component (rare shared device)",
+          "actions": [
+            {
+              "action": "MONITOR_CARD",
+              "route": "auto"
+            },
+            {
+              "action": "STEP_UP_AUTH",
+              "route": "auto",
+              "when": "next card-not-present purchase"
+            }
+          ]
+        },
+        {
+          "card_id": "C12166-K2",
+          "customer_id": "",
+          "last_touch": "",
+          "n_touches": 0,
+          "suspect": false,
+          "reason": "time-sliced ring component (rare shared device)",
+          "actions": [
+            {
+              "action": "MONITOR_CARD",
+              "route": "auto"
+            },
+            {
+              "action": "STEP_UP_AUTH",
+              "route": "auto",
+              "when": "next card-not-present purchase"
+            }
+          ]
+        },
+        {
+          "card_id": "C12208-K1",
+          "customer_id": "",
+          "last_touch": "",
+          "n_touches": 0,
+          "suspect": false,
+          "reason": "time-sliced ring component (rare shared device)",
+          "actions": [
+            {
+              "action": "MONITOR_CARD",
+              "route": "auto"
+            },
+            {
+              "action": "STEP_UP_AUTH",
+              "route": "auto",
+              "when": "next card-not-present purchase"
+            }
+          ]
+        },
+        {
+          "card_id": "C12690-K2",
+          "customer_id": "",
+          "last_touch": "",
+          "n_touches": 0,
+          "suspect": false,
+          "reason": "time-sliced ring component (rare shared device)",
+          "actions": [
+            {
+              "action": "MONITOR_CARD",
+              "route": "auto"
+            },
+            {
+              "action": "STEP_UP_AUTH",
+              "route": "auto",
+              "when": "next card-not-present purchase"
+            }
+          ]
+        },
+        {
+          "card_id": "C12757-K1",
+          "customer_id": "",
+          "last_touch": "",
+          "n_touches": 0,
+          "suspect": false,
+          "reason": "time-sliced ring component (rare shared device)",
+          "actions": [
+            {
+              "action": "MONITOR_CARD",
+              "route": "auto"
+            },
+            {
+              "action": "STEP_UP_AUTH",
+              "route": "auto",
+              "when": "next card-not-present purchase"
+            }
+          ]
+        },
+        {
+          "card_id": "C12897-K1",
+          "customer_id": "",
+          "last_touch": "",
+          "n_touches": 0,
+          "suspect": false,
+          "reason": "time-sliced ring component (rare shared device)",
+          "actions": [
+            {
+              "action": "MONITOR_CARD",
+              "route": "auto"
+            },
+            {
+              "action": "STEP_UP_AUTH",
+              "route": "auto",
+              "when": "next card-not-present purchase"
+            }
+          ]
+        },
+        {
+          "card_id": "C12925-K1",
+          "customer_id": "",
+          "last_touch": "",
+          "n_touches": 0,
+          "suspect": false,
+          "reason": "time-sliced ring component (rare shared device)",
+          "actions": [
+            {
+              "action": "MONITOR_CARD",
+              "route": "auto"
+            },
+            {
+              "action": "STEP_UP_AUTH",
+              "route": "auto",
+              "when": "next card-not-present purchase"
+            }
+          ]
+        },
+        {
+          "card_id": "C12942-K2",
+          "customer_id": "",
+          "last_touch": "",
+          "n_touches": 0,
+          "suspect": false,
+          "reason": "time-sliced ring component (rare shared device)",
+          "actions": [
+            {
+              "action": "MONITOR_CARD",
+              "route": "auto"
+            },
+            {
+              "action": "STEP_UP_AUTH",
+              "route": "auto",
+              "when": "next card-not-present purchase"
+            }
+          ]
+        },
+        {
+          "card_id": "C13153-K1",
+          "customer_id": "",
+          "last_touch": "",
+          "n_touches": 0,
+          "suspect": false,
+          "reason": "time-sliced ring component (rare shared device)",
+          "actions": [
+            {
+              "action": "MONITOR_CARD",
+              "route": "auto"
+            },
+            {
+              "action": "STEP_UP_AUTH",
+              "route": "auto",
+              "when": "next card-not-present purchase"
+            }
+          ]
+        },
+        {
+          "card_id": "C13393-K2",
+          "customer_id": "",
+          "last_touch": "",
+          "n_touches": 0,
+          "suspect": false,
+          "reason": "time-sliced ring component (rare shared device)",
+          "actions": [
+            {
+              "action": "MONITOR_CARD",
+              "route": "auto"
+            },
+            {
+              "action": "STEP_UP_AUTH",
+              "route": "auto",
+              "when": "next card-not-present purchase"
+            }
+          ]
+        }
+      ],
       "write_back": {
         "edge": "COMPROMISE_POINT",
         "to_type": "device_profile",
@@ -1523,8 +4230,8 @@
           "2016-10-08 20:11:00",
           "2016-11-19 20:11:00"
         ],
-        "lift": 4947.2,
-        "p_value": 2.145714981484017e-44
+        "lift": 4945.6,
+        "p_value": 2.1568263602483899e-44
       },
       "blocks": {
         "plan": [
@@ -1639,17 +4346,18 @@
       },
       "innocent_cost": {
         "blocks_on_at_risk_cards": 0,
-        "step_ups_requested": 0,
+        "step_ups_requested": 141,
         "note": "forward actions are monitor and step-up only"
       }
     },
     "compromise_watch": [],
     "feedback_applied": [],
+    "typology_detections": [],
     "customer_messages": [],
     "trace": [
       {
         "node": "trigger_intake",
-        "at": 0.032,
+        "at": 0.006,
         "trigger_type": "analyst_request",
         "flagged_txn_id": "3478561",
         "as_of": "2016-11-22 20:11:00",
@@ -1659,13 +4367,13 @@
       },
       {
         "node": "case_opener",
-        "at": 0.037,
+        "at": 0.007,
         "graph_case_id": "CASE-HHG-014",
         "prior_fraud": 0.65
       },
       {
         "node": "evidence_planner",
-        "at": 9.339,
+        "at": 0.022,
         "planned_tools": [
           "episode_window",
           "device_first_use",
@@ -1677,7 +4385,7 @@
       },
       {
         "node": "graph_retrieval",
-        "at": 12.487,
+        "at": 6.812,
         "signals_fired": [
           "device_new_on_account",
           "device_proxy_hub",
@@ -1694,7 +4402,7 @@
       },
       {
         "node": "memory_recall",
-        "at": 34.843,
+        "at": 25.971,
         "recalled": [
           "CC-2985",
           "CC-2649",
@@ -1708,7 +4416,7 @@
       },
       {
         "node": "policy_grounding",
-        "at": 34.973,
+        "at": 26.368,
         "retrieved": [
           "PATTERN-out_of_region_use",
           "PATTERN-card_not_present_fraud",
@@ -1720,7 +4428,7 @@
       },
       {
         "node": "ledger_update",
-        "at": 34.976,
+        "at": 26.369,
         "folded": 25,
         "p_fraud": 0.97,
         "posterior": {
@@ -1758,7 +4466,7 @@
       },
       {
         "node": "uncertainty_assessor",
-        "at": 34.978,
+        "at": 26.37,
         "p_fraud": 0.97,
         "margin": 0.9493,
         "entropy": 0.1351,
@@ -1818,7 +4526,7 @@
       },
       {
         "node": "action_recommender",
-        "at": 39.152,
+        "at": 29.712,
         "verdict": "fraud",
         "pattern": "undocumented",
         "exposure": 74.96,
@@ -1855,8 +4563,10 @@
           "3a",
           "R2"
         ],
-        "conformal_set": null,
-        "conformal_widened": null,
+        "conformal_set": [
+          "fraud"
+        ],
+        "conformal_widened": [],
         "proof_margin": 2,
         "minimal_facts": [
           "device_proxy_hub"
@@ -1868,9 +4578,9 @@
           "ring_cards_touching": 16,
           "control_cards_touching": 0,
           "n_ring": 20,
-          "n_control": 6184,
-          "lift": 4947.2,
-          "p_value": 2.15e-44,
+          "n_control": 6182,
+          "lift": 4945.6,
+          "p_value": 2.16e-44,
           "ring_card_ids": [
             "C01289-K2",
             "C01996-K2",
@@ -1893,7 +4603,7 @@
       },
       {
         "node": "permission_gate",
-        "at": 39.165,
+        "at": 29.714,
         "executed": [
           "CREATE_CASE",
           "MONITOR_CONNECTED_CARDS",
@@ -1914,20 +4624,20 @@
       },
       {
         "node": "explainer",
-        "at": 58.136,
-        "summary_chars": 721,
+        "at": 42.814,
+        "summary_chars": 649,
         "llm_used": true
       },
       {
         "node": "case_writer",
-        "at": 80.586,
+        "at": 67.265,
         "graph_case_id": "CASE-HHG-014",
         "affected_txns": 1,
         "sar_filed": true
       },
       {
         "node": "memory_consolidator",
-        "at": 80.589,
+        "at": 67.265,
         "audit_chain_intact": true,
         "decisions": 3
       }
@@ -2009,7 +4719,7 @@
             "seq": 16,
             "method": "fraud_proximity",
             "key": "302d2222c539f7be051588a8",
-            "digest": "4247c1e5cc72e21a01175e9adde16a6d1373cfbc9f1883410f4f7f9687e2f0cd"
+            "digest": "bec596a366dce87350b3a3c8c43f12bf842a4b83bb2d3f6d035e501f034dc60b"
           },
           {
             "seq": 19,
@@ -2024,8 +4734,8 @@
             "digest": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
           }
         ],
-        "ran_at": "2026-10-29T11:20:13Z",
-        "data_snapshot": "597035c02ee4cdcb7c3cf7fd7a13f809",
+        "ran_at": "2026-10-30T07:09:21Z",
+        "data_snapshot": "bc3011b15aff8ad88490fd4e127bf3de",
         "kind": "derived_inference"
       },
       {
@@ -2044,8 +4754,8 @@
           "as_of": "2016-11-22 20:11:00"
         },
         "tool_calls": [],
-        "ran_at": "2026-10-29T11:20:13Z",
-        "data_snapshot": "597035c02ee4cdcb7c3cf7fd7a13f809",
+        "ran_at": "2026-10-30T07:09:21Z",
+        "data_snapshot": "bc3011b15aff8ad88490fd4e127bf3de",
         "kind": "observed_fact"
       },
       {
@@ -2095,11 +4805,11 @@
             "seq": 16,
             "method": "fraud_proximity",
             "key": "302d2222c539f7be051588a8",
-            "digest": "4247c1e5cc72e21a01175e9adde16a6d1373cfbc9f1883410f4f7f9687e2f0cd"
+            "digest": "bec596a366dce87350b3a3c8c43f12bf842a4b83bb2d3f6d035e501f034dc60b"
           }
         ],
-        "ran_at": "2026-10-29T11:20:13Z",
-        "data_snapshot": "597035c02ee4cdcb7c3cf7fd7a13f809",
+        "ran_at": "2026-10-30T07:09:21Z",
+        "data_snapshot": "bc3011b15aff8ad88490fd4e127bf3de",
         "kind": "derived_inference"
       },
       {
@@ -2129,7 +4839,7 @@
             "seq": 26,
             "method": "origin_counts",
             "key": "15a106545219be824b6f3687",
-            "digest": "69eaea611fc29fa1e7a0c9d2a7dcca27dddd80a2564ac120727f62e4f23fc0bf"
+            "digest": "429e5c9be740b3fdcccd1f1ad9cdd107a9c2535242f1ff936efcf913358dabba"
           },
           {
             "seq": 28,
@@ -2138,8 +4848,8 @@
             "digest": "10c00e13872f70ba1f1be286e0aa6fa38de9527a3c22d538f85d7bdaea200aa3"
           }
         ],
-        "ran_at": "2026-10-29T11:20:13Z",
-        "data_snapshot": "597035c02ee4cdcb7c3cf7fd7a13f809",
+        "ran_at": "2026-10-30T07:09:21Z",
+        "data_snapshot": "bc3011b15aff8ad88490fd4e127bf3de",
         "kind": "derived_inference"
       },
       {
@@ -2147,8 +4857,8 @@
         "what": "3 transactions worth $142.00 in the 48 hours before the alert against a baseline of 0.99 — a 3.02x burst",
         "evidence_ids": [
           "3477218",
-          "3478886",
-          "3478561"
+          "3478561",
+          "3478886"
         ],
         "query": "velocity_burst",
         "params": {
@@ -2172,7 +4882,7 @@
             "seq": 16,
             "method": "fraud_proximity",
             "key": "302d2222c539f7be051588a8",
-            "digest": "4247c1e5cc72e21a01175e9adde16a6d1373cfbc9f1883410f4f7f9687e2f0cd"
+            "digest": "bec596a366dce87350b3a3c8c43f12bf842a4b83bb2d3f6d035e501f034dc60b"
           },
           {
             "seq": 17,
@@ -2193,8 +4903,8 @@
             "digest": "f3b0791892d567895a8d77d1ea22faf9ac6449d946984202bc9a61dc3640c1ec"
           }
         ],
-        "ran_at": "2026-10-29T11:20:13Z",
-        "data_snapshot": "597035c02ee4cdcb7c3cf7fd7a13f809",
+        "ran_at": "2026-10-30T07:09:21Z",
+        "data_snapshot": "bc3011b15aff8ad88490fd4e127bf3de",
         "kind": "derived_inference"
       },
       {
@@ -2224,7 +4934,7 @@
             "seq": 16,
             "method": "fraud_proximity",
             "key": "302d2222c539f7be051588a8",
-            "digest": "4247c1e5cc72e21a01175e9adde16a6d1373cfbc9f1883410f4f7f9687e2f0cd"
+            "digest": "bec596a366dce87350b3a3c8c43f12bf842a4b83bb2d3f6d035e501f034dc60b"
           },
           {
             "seq": 17,
@@ -2245,8 +4955,8 @@
             "digest": "f3b0791892d567895a8d77d1ea22faf9ac6449d946984202bc9a61dc3640c1ec"
           }
         ],
-        "ran_at": "2026-10-29T11:20:13Z",
-        "data_snapshot": "597035c02ee4cdcb7c3cf7fd7a13f809",
+        "ran_at": "2026-10-30T07:09:21Z",
+        "data_snapshot": "bc3011b15aff8ad88490fd4e127bf3de",
         "kind": "derived_inference"
       },
       {
@@ -2265,7 +4975,7 @@
             "seq": 2,
             "method": "episode_window",
             "key": "39746695e68be5a76148531e",
-            "digest": "e74e7a6e58ad02da12cbd251c62da61c7091fe022715eadb02424d3041798c10"
+            "digest": "e1aceec4d8827f6f1aa4320e0d2ba7fbba72844eebee6e4fd33e8fa95e4d5560"
           },
           {
             "seq": 3,
@@ -2298,8 +5008,8 @@
             "digest": "3eeb69f69116e91eb489e75233e13e3abb022ae1fbf761b9079f0bb4069cee92"
           }
         ],
-        "ran_at": "2026-10-29T11:20:13Z",
-        "data_snapshot": "597035c02ee4cdcb7c3cf7fd7a13f809",
+        "ran_at": "2026-10-30T07:09:21Z",
+        "data_snapshot": "bc3011b15aff8ad88490fd4e127bf3de",
         "kind": "derived_inference"
       },
       {
@@ -2329,7 +5039,7 @@
             "seq": 16,
             "method": "fraud_proximity",
             "key": "302d2222c539f7be051588a8",
-            "digest": "4247c1e5cc72e21a01175e9adde16a6d1373cfbc9f1883410f4f7f9687e2f0cd"
+            "digest": "bec596a366dce87350b3a3c8c43f12bf842a4b83bb2d3f6d035e501f034dc60b"
           },
           {
             "seq": 17,
@@ -2350,8 +5060,8 @@
             "digest": "f3b0791892d567895a8d77d1ea22faf9ac6449d946984202bc9a61dc3640c1ec"
           }
         ],
-        "ran_at": "2026-10-29T11:20:13Z",
-        "data_snapshot": "597035c02ee4cdcb7c3cf7fd7a13f809",
+        "ran_at": "2026-10-30T07:09:21Z",
+        "data_snapshot": "bc3011b15aff8ad88490fd4e127bf3de",
         "kind": "derived_inference"
       },
       {
@@ -2376,7 +5086,7 @@
             "seq": 2,
             "method": "episode_window",
             "key": "39746695e68be5a76148531e",
-            "digest": "e74e7a6e58ad02da12cbd251c62da61c7091fe022715eadb02424d3041798c10"
+            "digest": "e1aceec4d8827f6f1aa4320e0d2ba7fbba72844eebee6e4fd33e8fa95e4d5560"
           },
           {
             "seq": 3,
@@ -2403,24 +5113,24 @@
             "digest": "810541400f9b5fe45a80f6561ddf7af1b56097836579093ca75a2d5a189285e1"
           }
         ],
-        "ran_at": "2026-10-29T11:20:13Z",
-        "data_snapshot": "597035c02ee4cdcb7c3cf7fd7a13f809",
+        "ran_at": "2026-10-30T07:09:21Z",
+        "data_snapshot": "bc3011b15aff8ad88490fd4e127bf3de",
         "kind": "derived_inference"
       },
       {
         "id": "HHG-014-A010",
         "what": "55 confirmed-fraud closed cases sit within two hops of this card, device or customer (distance-decayed proximity 14.75)",
         "evidence_ids": [
-          "CC-4358",
-          "CC-0640",
-          "CC-2528",
-          "CC-0544",
-          "CC-1726",
-          "CC-3577",
-          "CC-3248",
           "CC-0084",
-          "CC-0911",
-          "CC-2840"
+          "CC-0089",
+          "CC-0240",
+          "CC-0280",
+          "CC-0411",
+          "CC-0417",
+          "CC-0447",
+          "CC-0544",
+          "CC-0640",
+          "CC-0688"
         ],
         "query": "fraud_proximity",
         "params": {
@@ -2428,8 +5138,8 @@
           "max_hops": "2"
         },
         "tool_calls": [],
-        "ran_at": "2026-10-29T11:20:13Z",
-        "data_snapshot": "597035c02ee4cdcb7c3cf7fd7a13f809",
+        "ran_at": "2026-10-30T07:09:21Z",
+        "data_snapshot": "bc3011b15aff8ad88490fd4e127bf3de",
         "kind": "derived_inference"
       },
       {
@@ -2439,8 +5149,8 @@
         "query": "policy:PATTERN-out_of_region_use",
         "params": {},
         "tool_calls": [],
-        "ran_at": "2026-10-29T11:20:13Z",
-        "data_snapshot": "597035c02ee4cdcb7c3cf7fd7a13f809",
+        "ran_at": "2026-10-30T07:09:21Z",
+        "data_snapshot": "bc3011b15aff8ad88490fd4e127bf3de",
         "kind": "policy_text"
       },
       {
@@ -2450,8 +5160,8 @@
         "query": "policy:PATTERN-card_not_present_fraud",
         "params": {},
         "tool_calls": [],
-        "ran_at": "2026-10-29T11:20:13Z",
-        "data_snapshot": "597035c02ee4cdcb7c3cf7fd7a13f809",
+        "ran_at": "2026-10-30T07:09:21Z",
+        "data_snapshot": "bc3011b15aff8ad88490fd4e127bf3de",
         "kind": "policy_text"
       },
       {
@@ -2482,7 +5192,7 @@
             "seq": 16,
             "method": "fraud_proximity",
             "key": "302d2222c539f7be051588a8",
-            "digest": "4247c1e5cc72e21a01175e9adde16a6d1373cfbc9f1883410f4f7f9687e2f0cd"
+            "digest": "bec596a366dce87350b3a3c8c43f12bf842a4b83bb2d3f6d035e501f034dc60b"
           },
           {
             "seq": 17,
@@ -2506,11 +5216,11 @@
             "seq": 2,
             "method": "episode_window",
             "key": "39746695e68be5a76148531e",
-            "digest": "e74e7a6e58ad02da12cbd251c62da61c7091fe022715eadb02424d3041798c10"
+            "digest": "e1aceec4d8827f6f1aa4320e0d2ba7fbba72844eebee6e4fd33e8fa95e4d5560"
           }
         ],
-        "ran_at": "2026-10-29T11:20:13Z",
-        "data_snapshot": "597035c02ee4cdcb7c3cf7fd7a13f809",
+        "ran_at": "2026-10-30T07:09:21Z",
+        "data_snapshot": "bc3011b15aff8ad88490fd4e127bf3de",
         "kind": "exposure"
       },
       {
@@ -2547,7 +5257,7 @@
             "seq": 26,
             "method": "origin_counts",
             "key": "15a106545219be824b6f3687",
-            "digest": "69eaea611fc29fa1e7a0c9d2a7dcca27dddd80a2564ac120727f62e4f23fc0bf"
+            "digest": "429e5c9be740b3fdcccd1f1ad9cdd107a9c2535242f1ff936efcf913358dabba"
           },
           {
             "seq": 28,
@@ -2559,11 +5269,11 @@
             "seq": 15,
             "method": "shared_entity_ring",
             "key": "007495101c1e64f010354534",
-            "digest": "6d95ffd0f981dee27df5286c8aeeea01c3b095dfc6f525d0599e4a59e62f98c3"
+            "digest": "edcbf9e3c800343f628c5b698e67940c13498275bfe0591b0b9ef11720e52747"
           }
         ],
-        "ran_at": "2026-10-29T11:20:13Z",
-        "data_snapshot": "597035c02ee4cdcb7c3cf7fd7a13f809",
+        "ran_at": "2026-10-30T07:09:21Z",
+        "data_snapshot": "bc3011b15aff8ad88490fd4e127bf3de",
         "kind": "connection"
       },
       {
@@ -2604,7 +5314,7 @@
             "seq": 16,
             "method": "fraud_proximity",
             "key": "302d2222c539f7be051588a8",
-            "digest": "4247c1e5cc72e21a01175e9adde16a6d1373cfbc9f1883410f4f7f9687e2f0cd"
+            "digest": "bec596a366dce87350b3a3c8c43f12bf842a4b83bb2d3f6d035e501f034dc60b"
           },
           {
             "seq": 17,
@@ -2625,16 +5335,24 @@
             "digest": "f3b0791892d567895a8d77d1ea22faf9ac6449d946984202bc9a61dc3640c1ec"
           }
         ],
-        "ran_at": "2026-10-29T11:20:13Z",
-        "data_snapshot": "597035c02ee4cdcb7c3cf7fd7a13f809",
+        "ran_at": "2026-10-30T07:09:21Z",
+        "data_snapshot": "bc3011b15aff8ad88490fd4e127bf3de",
         "kind": "proof"
       },
       {
         "id": "HHG-014-A016",
-        "what": "2 closed cases share these facts: 2 confirmed, 0 cleared",
+        "what": "10 closed cases share these facts: 9 confirmed, 1 cleared",
         "evidence_ids": [
+          "CC-1227",
+          "CC-1289",
+          "CC-1349",
+          "CC-2649",
           "CC-2971",
-          "CC-2985"
+          "CC-2985",
+          "CC-3035",
+          "CC-4056",
+          "CC-4107",
+          "CC-4122"
         ],
         "query": "precedent_by_facts",
         "params": {
@@ -2646,16 +5364,16 @@
             "seq": 24,
             "method": "precedent_by_facts",
             "key": "a2c06160267d26f54926e8ab",
-            "digest": "15ae8d045e46424ba650ed4b72af33392110ac6256a208c0ec3cff5d65ae5ad4"
+            "digest": "f34d1f565ab322358d809f220f1c7b612cd8b59da09f2ecb21d3f2f5798e345c"
           }
         ],
-        "ran_at": "2026-10-29T11:20:13Z",
-        "data_snapshot": "597035c02ee4cdcb7c3cf7fd7a13f809",
+        "ran_at": "2026-10-30T07:09:21Z",
+        "data_snapshot": "bc3011b15aff8ad88490fd4e127bf3de",
         "kind": "precedent"
       },
       {
         "id": "HHG-014-A017",
-        "what": "Compromise origin device_profile SM-G935F Build/NRD90M | Android 7.0 | chrome 62.0 for androi: 16 of 20 ring cards vs 0 of 6184 controls, lift 4947.2, p=2.15e-44",
+        "what": "Compromise origin device_profile SM-G935F Build/NRD90M | Android 7.0 | chrome 62.0 for androi: 16 of 20 ring cards vs 0 of 6182 controls, lift 4945.6, p=2.16e-44",
         "evidence_ids": [
           "C01289-K2",
           "C01996-K2",
@@ -2706,7 +5424,7 @@
             "seq": 26,
             "method": "origin_counts",
             "key": "15a106545219be824b6f3687",
-            "digest": "69eaea611fc29fa1e7a0c9d2a7dcca27dddd80a2564ac120727f62e4f23fc0bf"
+            "digest": "429e5c9be740b3fdcccd1f1ad9cdd107a9c2535242f1ff936efcf913358dabba"
           },
           {
             "seq": 28,
@@ -2715,12 +5433,172 @@
             "digest": "10c00e13872f70ba1f1be286e0aa6fa38de9527a3c22d538f85d7bdaea200aa3"
           }
         ],
-        "ran_at": "2026-10-29T11:20:13Z",
-        "data_snapshot": "597035c02ee4cdcb7c3cf7fd7a13f809",
+        "ran_at": "2026-10-30T07:09:21Z",
+        "data_snapshot": "bc3011b15aff8ad88490fd4e127bf3de",
         "kind": "containment"
       },
       {
         "id": "HHG-014-A018",
+        "what": "141 at-risk cards touched the origin and are not yet hit",
+        "evidence_ids": [
+          "C00060-K1",
+          "C00750-K2",
+          "C00779-K1",
+          "C00854-K2",
+          "C00989-K1",
+          "C01053-K1",
+          "C01104-K2",
+          "C01109-K2",
+          "C01154-K1",
+          "C01155-K2",
+          "C01315-K2",
+          "C01349-K2",
+          "C01426-K1",
+          "C01489-K1",
+          "C01492-K1",
+          "C01615-K1",
+          "C01688-K1",
+          "C01812-K1",
+          "C01828-K2",
+          "C02033-K1",
+          "C02231-K1",
+          "C02250-K2",
+          "C02608-K1",
+          "C02667-K1",
+          "C02695-K1",
+          "C02716-K2",
+          "C02881-K1",
+          "C03019-K2",
+          "C03019-K3",
+          "C03047-K2",
+          "C03066-K1",
+          "C03185-K1",
+          "C03218-K2",
+          "C03302-K1",
+          "C03341-K2",
+          "C03405-K2",
+          "C03467-K1",
+          "C03738-K2",
+          "C03992-K2",
+          "C04046-K2",
+          "C04059-K1",
+          "C04105-K2",
+          "C04124-K1",
+          "C04125-K2",
+          "C04196-K2",
+          "C04285-K1",
+          "C04391-K1",
+          "C04576-K1",
+          "C04660-K1",
+          "C04840-K1",
+          "C04844-K1",
+          "C05047-K1",
+          "C05245-K2",
+          "C05530-K2",
+          "C05560-K2",
+          "C05704-K2",
+          "C05786-K2",
+          "C06067-K2",
+          "C06168-K1",
+          "C06190-K1",
+          "C06224-K2",
+          "C06391-K1",
+          "C06399-K2",
+          "C06403-K3",
+          "C06571-K1",
+          "C06947-K2",
+          "C07033-K1",
+          "C07102-K1",
+          "C07212-K2",
+          "C07311-K1",
+          "C07496-K1",
+          "C07518-K2",
+          "C07523-K1",
+          "C07648-K2",
+          "C07668-K1",
+          "C07741-K2",
+          "C07867-K2",
+          "C07872-K2",
+          "C07901-K1",
+          "C07913-K2",
+          "C07925-K1",
+          "C07936-K2",
+          "C08193-K1",
+          "C08207-K1",
+          "C08294-K1",
+          "C08450-K2",
+          "C08489-K2",
+          "C08528-K1",
+          "C08637-K2",
+          "C08826-K1",
+          "C08833-K1",
+          "C08851-K1",
+          "C08918-K2",
+          "C08925-K1",
+          "C08943-K2",
+          "C08945-K2",
+          "C09159-K1",
+          "C09187-K1",
+          "C09206-K2",
+          "C09231-K1",
+          "C09241-K2",
+          "C09323-K1",
+          "C09343-K1",
+          "C09350-K1",
+          "C09459-K1",
+          "C09568-K1",
+          "C09601-K1",
+          "C09663-K1",
+          "C09683-K1",
+          "C09719-K1",
+          "C09820-K2",
+          "C10016-K2",
+          "C10045-K1",
+          "C10219-K1",
+          "C10245-K1",
+          "C10349-K1",
+          "C10654-K1",
+          "C10981-K1",
+          "C11000-K2",
+          "C11005-K1",
+          "C11010-K1",
+          "C11309-K1",
+          "C11373-K1",
+          "C11464-K2",
+          "C11679-K1",
+          "C11686-K1",
+          "C11704-K1",
+          "C11743-K2",
+          "C11754-K1",
+          "C11965-K1",
+          "C11970-K1",
+          "C12033-K1",
+          "C12166-K2",
+          "C12208-K1",
+          "C12690-K2",
+          "C12757-K1",
+          "C12897-K1",
+          "C12925-K1",
+          "C12942-K2",
+          "C13153-K1",
+          "C13393-K2"
+        ],
+        "query": "origin_touchers",
+        "params": {},
+        "tool_calls": [
+          {
+            "seq": 27,
+            "method": "origin_touchers",
+            "key": "f966bfad1c26a6a289327821",
+            "digest": "f52eea8e4b102c3c58c2dc3e514a403eea3469fead132928234459cf715791f1"
+          }
+        ],
+        "ran_at": "2026-10-30T07:09:21Z",
+        "data_snapshot": "bc3011b15aff8ad88490fd4e127bf3de",
+        "kind": "containment"
+      },
+      {
+        "id": "HHG-014-A019",
         "what": "Block set cuts $74.96 and touches customers ['C13487']",
         "evidence_ids": [
           "C13487-K1",
@@ -2741,7 +5619,7 @@
             "seq": 2,
             "method": "episode_window",
             "key": "39746695e68be5a76148531e",
-            "digest": "e74e7a6e58ad02da12cbd251c62da61c7091fe022715eadb02424d3041798c10"
+            "digest": "e1aceec4d8827f6f1aa4320e0d2ba7fbba72844eebee6e4fd33e8fa95e4d5560"
           },
           {
             "seq": 3,
@@ -2780,17 +5658,17 @@
             "digest": "10c00e13872f70ba1f1be286e0aa6fa38de9527a3c22d538f85d7bdaea200aa3"
           }
         ],
-        "ran_at": "2026-10-29T11:20:13Z",
-        "data_snapshot": "597035c02ee4cdcb7c3cf7fd7a13f809",
+        "ran_at": "2026-10-30T07:09:21Z",
+        "data_snapshot": "bc3011b15aff8ad88490fd4e127bf3de",
         "kind": "containment"
       },
       {
-        "id": "HHG-014-A019",
-        "what": "This investigation concerns customer C13487 operating payment card C13487-K1, along with 19 connected cards including C01289-K2, C01996-K2, and C13291-K1, sharing device profile SM-G935F Build/NRD90M | Android 7.0 | chrome 62.0 for android | 1920x1080.",
+        "id": "HHG-014-A020",
+        "what": "This report concerns customer C13487 and card C13487-K1, operating on a new device profile identified as SM-G935F Build/NRD90M | Android 7.0 | chrome 62.0 for android | 1920x1080, which connects to 19 other cards including C01289-K2, C01996-K2, and C02910-K1.",
         "evidence_ids": [
           "C01289-K2",
           "C01996-K2",
-          "C13291-K1",
+          "C02910-K1",
           "C13487",
           "C13487-K1"
         ],
@@ -2801,7 +5679,7 @@
             "seq": 2,
             "method": "episode_window",
             "key": "39746695e68be5a76148531e",
-            "digest": "e74e7a6e58ad02da12cbd251c62da61c7091fe022715eadb02424d3041798c10"
+            "digest": "e1aceec4d8827f6f1aa4320e0d2ba7fbba72844eebee6e4fd33e8fa95e4d5560"
           },
           {
             "seq": 3,
@@ -2834,13 +5712,13 @@
             "digest": "3eeb69f69116e91eb489e75233e13e3abb022ae1fbf761b9079f0bb4069cee92"
           }
         ],
-        "ran_at": "2026-10-29T11:20:13Z",
-        "data_snapshot": "597035c02ee4cdcb7c3cf7fd7a13f809",
+        "ran_at": "2026-10-30T07:09:21Z",
+        "data_snapshot": "bc3011b15aff8ad88490fd4e127bf3de",
         "kind": "sar_sentence"
       },
       {
-        "id": "HHG-014-A020",
-        "what": "The reported suspicious activity comprises flagged online transaction 3478561 for product code C, representing a total exposure amount of $74.96.",
+        "id": "HHG-014-A021",
+        "what": "The suspicious activity involves unauthorized online transaction activity, specifically flagged online transaction 3478561 for product code C, representing a total exposure amount of $74.96.",
         "evidence_ids": [
           "3478561"
         ],
@@ -2863,7 +5741,7 @@
             "seq": 16,
             "method": "fraud_proximity",
             "key": "302d2222c539f7be051588a8",
-            "digest": "4247c1e5cc72e21a01175e9adde16a6d1373cfbc9f1883410f4f7f9687e2f0cd"
+            "digest": "bec596a366dce87350b3a3c8c43f12bf842a4b83bb2d3f6d035e501f034dc60b"
           },
           {
             "seq": 17,
@@ -2884,13 +5762,13 @@
             "digest": "f3b0791892d567895a8d77d1ea22faf9ac6449d946984202bc9a61dc3640c1ec"
           }
         ],
-        "ran_at": "2026-10-29T11:20:13Z",
-        "data_snapshot": "597035c02ee4cdcb7c3cf7fd7a13f809",
+        "ran_at": "2026-10-30T07:09:21Z",
+        "data_snapshot": "bc3011b15aff8ad88490fd4e127bf3de",
         "kind": "sar_sentence"
       },
       {
-        "id": "HHG-014-A021",
-        "what": "In addition, card C13487-K1 is linked to a 54-card connected component of anonymous-proxy device sharing ranked second by PageRank, and demonstrated a velocity burst of 3 transactions totaling $142.00 within 48 hours prior to the alert.",
+        "id": "HHG-014-A022",
+        "what": "Network analysis places card C13487-K1 inside a 54-card connected component ranked second by PageRank, with 55 confirmed-fraud cases residing within two hops of the customer, card, or device.",
         "evidence_ids": [
           "C13487-K1"
         ],
@@ -2901,7 +5779,7 @@
             "seq": 2,
             "method": "episode_window",
             "key": "39746695e68be5a76148531e",
-            "digest": "e74e7a6e58ad02da12cbd251c62da61c7091fe022715eadb02424d3041798c10"
+            "digest": "e1aceec4d8827f6f1aa4320e0d2ba7fbba72844eebee6e4fd33e8fa95e4d5560"
           },
           {
             "seq": 3,
@@ -2934,110 +5812,114 @@
             "digest": "3eeb69f69116e91eb489e75233e13e3abb022ae1fbf761b9079f0bb4069cee92"
           }
         ],
-        "ran_at": "2026-10-29T11:20:13Z",
-        "data_snapshot": "597035c02ee4cdcb7c3cf7fd7a13f809",
+        "ran_at": "2026-10-30T07:09:21Z",
+        "data_snapshot": "bc3011b15aff8ad88490fd4e127bf3de",
         "kind": "sar_sentence"
       },
       {
-        "id": "HHG-014-A022",
-        "what": "Finally, five similar prior confirmed fraud cases—CC-2985, CC-2649, CC-3035, CC-2971, and CC-3470—exhibit narrative and entity overlap with this undocumented coordinated pattern, resulting in an evaluated fraud probability of 0.97.",
+        "id": "HHG-014-A023",
+        "what": "Furthermore, the activity directly mirrors 5 closely matching prior confirmed-fraud investigations including CC-2985, CC-2649, and CC-3035, even though the flagged $74.96 transaction on its own sits within the card's normal baseline median of $55.95 across 70 prior transactions.",
         "evidence_ids": [
           "CC-2649",
-          "CC-2971",
           "CC-2985",
-          "CC-3035",
-          "CC-3470"
+          "CC-3035"
         ],
         "query": "sar_sentence",
         "params": {},
         "tool_calls": [],
-        "ran_at": "2026-10-29T11:20:13Z",
-        "data_snapshot": "597035c02ee4cdcb7c3cf7fd7a13f809",
+        "ran_at": "2026-10-30T07:09:21Z",
+        "data_snapshot": "bc3011b15aff8ad88490fd4e127bf3de",
         "kind": "sar_sentence"
       }
     ],
     "sar_citations": [
       {
-        "sentence": "This investigation concerns customer C13487 operating payment card C13487-K1, along with 19 connected cards including C01289-K2, C01996-K2, and C13291-K1, sharing device profile SM-G935F Build/NRD90M | Android 7.0 | chrome 62.0 for android | 1920x1080.",
+        "sentence": "This report concerns customer C13487 and card C13487-K1, operating on a new device profile identified as SM-G935F Build/NRD90M | Android 7.0 | chrome 62.0 for android | 1920x1080, which connects to 19 other cards including C01289-K2, C01996-K2, and C02910-K1.",
         "attestations": [
-          "HHG-014-A019"
+          "HHG-014-A020"
         ],
         "ids": [
           "C01289-K2",
           "C01996-K2",
-          "C13291-K1",
+          "C02910-K1",
           "C13487",
           "C13487-K1"
         ]
       },
       {
-        "sentence": "The reported suspicious activity comprises flagged online transaction 3478561 for product code C, representing a total exposure amount of $74.96.",
+        "sentence": "The suspicious activity involves unauthorized online transaction activity, specifically flagged online transaction 3478561 for product code C, representing a total exposure amount of $74.96.",
         "attestations": [
-          "HHG-014-A020"
+          "HHG-014-A021"
         ],
         "ids": [
           "3478561"
         ]
       },
       {
-        "sentence": "The flagged transaction occurred on 2016-11-22 at 16:11:00 during activity on 2016-11-22, generating an analyst request alert as of 2016-11-22 20:11:00.",
+        "sentence": "The flagged transaction occurred on 2016-11-22 at 16:11:00, triggering an analyst review on 2016-11-22 at 20:11:00 covering activity on 2016-11-22.",
         "attestations": [
           "HHG-014-A013"
         ],
         "ids": []
       },
       {
-        "sentence": "The transaction was processed through the online channel under billing region 191.0, which matches the cardholder home region 191.0.",
+        "sentence": "This transaction was conducted through the online channel in billing region 191.0, which aligns with the customer's recorded home region of 191.0.",
         "attestations": [
           "HHG-014-A013"
         ],
         "ids": []
       },
       {
-        "sentence": "The activity was carried out using a new device profile for this account, routed through an anonymising proxy classified as IP_PROXY:ANONYMOUS, with a purchaser email domain of yahoo.com differing from the recipient domain of gmail.com.",
+        "sentence": "The purchase was executed using a device profile marked as new for this account, routed through an anonymising proxy classified as IP_PROXY:ANONYMOUS, and contained a mismatch between the purchaser email domain yahoo.com and recipient email domain gmail.com.",
         "attestations": [
           "HHG-014-A013"
         ],
         "ids": []
       },
       {
-        "sentence": "The activity is suspicious because 20 distinct cards accessed this device profile through an anonymising proxy within a 30-day window, with 100 percent of cards touching the profile arriving via proxy.",
+        "sentence": "Additional transaction behavior shows a burst of 3 transactions totaling $142.00 in the 48 hours prior to the alert, shifting the card's baseline online share by 0.30 over 72 hours.",
         "attestations": [
           "HHG-014-A013"
         ],
         "ids": []
       },
       {
-        "sentence": "In addition, card C13487-K1 is linked to a 54-card connected component of anonymous-proxy device sharing ranked second by PageRank, and demonstrated a velocity burst of 3 transactions totaling $142.00 within 48 hours prior to the alert.",
+        "sentence": "This activity is suspicious due to an undocumented coordinated abuse typology evaluated at a 0.97 fraud probability, where the device profile serves as a central hub reached by 20 distinct cards through anonymising proxies within 30 days.",
         "attestations": [
-          "HHG-014-A021"
+          "HHG-014-A013"
+        ],
+        "ids": []
+      },
+      {
+        "sentence": "Network analysis places card C13487-K1 inside a 54-card connected component ranked second by PageRank, with 55 confirmed-fraud cases residing within two hops of the customer, card, or device.",
+        "attestations": [
+          "HHG-014-A022"
         ],
         "ids": [
           "C13487-K1"
         ]
       },
       {
-        "sentence": "Finally, five similar prior confirmed fraud cases—CC-2985, CC-2649, CC-3035, CC-2971, and CC-3470—exhibit narrative and entity overlap with this undocumented coordinated pattern, resulting in an evaluated fraud probability of 0.97.",
+        "sentence": "Furthermore, the activity directly mirrors 5 closely matching prior confirmed-fraud investigations including CC-2985, CC-2649, and CC-3035, even though the flagged $74.96 transaction on its own sits within the card's normal baseline median of $55.95 across 70 prior transactions.",
         "attestations": [
-          "HHG-014-A022"
+          "HHG-014-A023"
         ],
         "ids": [
           "CC-2649",
-          "CC-2971",
           "CC-2985",
-          "CC-3035",
-          "CC-3470"
+          "CC-3035"
         ]
       }
     ],
     "unattested": [],
-    "data_snapshot": "597035c02ee4cdcb7c3cf7fd7a13f809",
-    "n_attestations": 22,
+    "data_snapshot": "bc3011b15aff8ad88490fd4e127bf3de",
+    "n_attestations": 23,
     "handover": {
       "state": "escalated",
       "waiting_on": [
         "BLOCK_CARD needs team lead approval (L1)",
-        "FILE_REPORT needs fraud manager approval (L2)"
+        "FILE_REPORT needs fraud manager approval (L2)",
+        "141 WATCH child cases on at-risk cards"
       ],
       "decided_by_agent": [
         "CREATE_CASE",
@@ -3052,7 +5934,158 @@
       "gate": "kept: margin k=2 meets the floor of 2 and precedent does not contradict"
     },
     "answer_hash": "37a12494a56f39b7cddd9a47a11fe5bb6267912c0b4928013bf1b70edad98926",
-    "watch_children": [],
+    "watch_children": [
+      {
+        "id": "CASE-HHG-014-WATCH-C00060-K1",
+        "card_id": "C00060-K1",
+        "customer_id": "",
+        "reason": "touched compromise origin device_profile SM-G935F Build/NRD90M | Android 7.0 | chrome 62.0 for androi (lift 4945.6) on ; monitor and step up on next card-not-present"
+      },
+      {
+        "id": "CASE-HHG-014-WATCH-C00750-K2",
+        "card_id": "C00750-K2",
+        "customer_id": "",
+        "reason": "touched compromise origin device_profile SM-G935F Build/NRD90M | Android 7.0 | chrome 62.0 for androi (lift 4945.6) on ; monitor and step up on next card-not-present"
+      },
+      {
+        "id": "CASE-HHG-014-WATCH-C00779-K1",
+        "card_id": "C00779-K1",
+        "customer_id": "",
+        "reason": "touched compromise origin device_profile SM-G935F Build/NRD90M | Android 7.0 | chrome 62.0 for androi (lift 4945.6) on ; monitor and step up on next card-not-present"
+      },
+      {
+        "id": "CASE-HHG-014-WATCH-C00854-K2",
+        "card_id": "C00854-K2",
+        "customer_id": "",
+        "reason": "touched compromise origin device_profile SM-G935F Build/NRD90M | Android 7.0 | chrome 62.0 for androi (lift 4945.6) on ; monitor and step up on next card-not-present"
+      },
+      {
+        "id": "CASE-HHG-014-WATCH-C00989-K1",
+        "card_id": "C00989-K1",
+        "customer_id": "",
+        "reason": "touched compromise origin device_profile SM-G935F Build/NRD90M | Android 7.0 | chrome 62.0 for androi (lift 4945.6) on ; monitor and step up on next card-not-present"
+      },
+      {
+        "id": "CASE-HHG-014-WATCH-C01053-K1",
+        "card_id": "C01053-K1",
+        "customer_id": "",
+        "reason": "touched compromise origin device_profile SM-G935F Build/NRD90M | Android 7.0 | chrome 62.0 for androi (lift 4945.6) on ; monitor and step up on next card-not-present"
+      },
+      {
+        "id": "CASE-HHG-014-WATCH-C01104-K2",
+        "card_id": "C01104-K2",
+        "customer_id": "",
+        "reason": "touched compromise origin device_profile SM-G935F Build/NRD90M | Android 7.0 | chrome 62.0 for androi (lift 4945.6) on ; monitor and step up on next card-not-present"
+      },
+      {
+        "id": "CASE-HHG-014-WATCH-C01109-K2",
+        "card_id": "C01109-K2",
+        "customer_id": "",
+        "reason": "touched compromise origin device_profile SM-G935F Build/NRD90M | Android 7.0 | chrome 62.0 for androi (lift 4945.6) on ; monitor and step up on next card-not-present"
+      },
+      {
+        "id": "CASE-HHG-014-WATCH-C01154-K1",
+        "card_id": "C01154-K1",
+        "customer_id": "",
+        "reason": "touched compromise origin device_profile SM-G935F Build/NRD90M | Android 7.0 | chrome 62.0 for androi (lift 4945.6) on ; monitor and step up on next card-not-present"
+      },
+      {
+        "id": "CASE-HHG-014-WATCH-C01155-K2",
+        "card_id": "C01155-K2",
+        "customer_id": "",
+        "reason": "touched compromise origin device_profile SM-G935F Build/NRD90M | Android 7.0 | chrome 62.0 for androi (lift 4945.6) on ; monitor and step up on next card-not-present"
+      },
+      {
+        "id": "CASE-HHG-014-WATCH-C01315-K2",
+        "card_id": "C01315-K2",
+        "customer_id": "",
+        "reason": "touched compromise origin device_profile SM-G935F Build/NRD90M | Android 7.0 | chrome 62.0 for androi (lift 4945.6) on ; monitor and step up on next card-not-present"
+      },
+      {
+        "id": "CASE-HHG-014-WATCH-C01349-K2",
+        "card_id": "C01349-K2",
+        "customer_id": "",
+        "reason": "touched compromise origin device_profile SM-G935F Build/NRD90M | Android 7.0 | chrome 62.0 for androi (lift 4945.6) on ; monitor and step up on next card-not-present"
+      },
+      {
+        "id": "CASE-HHG-014-WATCH-C01426-K1",
+        "card_id": "C01426-K1",
+        "customer_id": "",
+        "reason": "touched compromise origin device_profile SM-G935F Build/NRD90M | Android 7.0 | chrome 62.0 for androi (lift 4945.6) on ; monitor and step up on next card-not-present"
+      },
+      {
+        "id": "CASE-HHG-014-WATCH-C01489-K1",
+        "card_id": "C01489-K1",
+        "customer_id": "",
+        "reason": "touched compromise origin device_profile SM-G935F Build/NRD90M | Android 7.0 | chrome 62.0 for androi (lift 4945.6) on ; monitor and step up on next card-not-present"
+      },
+      {
+        "id": "CASE-HHG-014-WATCH-C01492-K1",
+        "card_id": "C01492-K1",
+        "customer_id": "",
+        "reason": "touched compromise origin device_profile SM-G935F Build/NRD90M | Android 7.0 | chrome 62.0 for androi (lift 4945.6) on ; monitor and step up on next card-not-present"
+      },
+      {
+        "id": "CASE-HHG-014-WATCH-C01615-K1",
+        "card_id": "C01615-K1",
+        "customer_id": "",
+        "reason": "touched compromise origin device_profile SM-G935F Build/NRD90M | Android 7.0 | chrome 62.0 for androi (lift 4945.6) on ; monitor and step up on next card-not-present"
+      },
+      {
+        "id": "CASE-HHG-014-WATCH-C01688-K1",
+        "card_id": "C01688-K1",
+        "customer_id": "",
+        "reason": "touched compromise origin device_profile SM-G935F Build/NRD90M | Android 7.0 | chrome 62.0 for androi (lift 4945.6) on ; monitor and step up on next card-not-present"
+      },
+      {
+        "id": "CASE-HHG-014-WATCH-C01812-K1",
+        "card_id": "C01812-K1",
+        "customer_id": "",
+        "reason": "touched compromise origin device_profile SM-G935F Build/NRD90M | Android 7.0 | chrome 62.0 for androi (lift 4945.6) on ; monitor and step up on next card-not-present"
+      },
+      {
+        "id": "CASE-HHG-014-WATCH-C01828-K2",
+        "card_id": "C01828-K2",
+        "customer_id": "",
+        "reason": "touched compromise origin device_profile SM-G935F Build/NRD90M | Android 7.0 | chrome 62.0 for androi (lift 4945.6) on ; monitor and step up on next card-not-present"
+      },
+      {
+        "id": "CASE-HHG-014-WATCH-C02033-K1",
+        "card_id": "C02033-K1",
+        "customer_id": "",
+        "reason": "touched compromise origin device_profile SM-G935F Build/NRD90M | Android 7.0 | chrome 62.0 for androi (lift 4945.6) on ; monitor and step up on next card-not-present"
+      },
+      {
+        "id": "CASE-HHG-014-WATCH-C02231-K1",
+        "card_id": "C02231-K1",
+        "customer_id": "",
+        "reason": "touched compromise origin device_profile SM-G935F Build/NRD90M | Android 7.0 | chrome 62.0 for androi (lift 4945.6) on ; monitor and step up on next card-not-present"
+      },
+      {
+        "id": "CASE-HHG-014-WATCH-C02250-K2",
+        "card_id": "C02250-K2",
+        "customer_id": "",
+        "reason": "touched compromise origin device_profile SM-G935F Build/NRD90M | Android 7.0 | chrome 62.0 for androi (lift 4945.6) on ; monitor and step up on next card-not-present"
+      },
+      {
+        "id": "CASE-HHG-014-WATCH-C02608-K1",
+        "card_id": "C02608-K1",
+        "customer_id": "",
+        "reason": "touched compromise origin device_profile SM-G935F Build/NRD90M | Android 7.0 | chrome 62.0 for androi (lift 4945.6) on ; monitor and step up on next card-not-present"
+      },
+      {
+        "id": "CASE-HHG-014-WATCH-C02667-K1",
+        "card_id": "C02667-K1",
+        "customer_id": "",
+        "reason": "touched compromise origin device_profile SM-G935F Build/NRD90M | Android 7.0 | chrome 62.0 for androi (lift 4945.6) on ; monitor and step up on next card-not-present"
+      },
+      {
+        "id": "CASE-HHG-014-WATCH-C02695-K1",
+        "card_id": "C02695-K1",
+        "customer_id": "",
+        "reason": "touched compromise origin device_profile SM-G935F Build/NRD90M | Android 7.0 | chrome 62.0 for androi (lift 4945.6) on ; monitor and step up on next card-not-present"
+      }
+    ],
     "write_verification": {
       "read_back": true,
       "checks": {
@@ -3075,12 +6108,12 @@
     },
     "framework": "langgraph",
     "telemetry": {
-      "wall_s": 80.59,
-      "graph_calls": 30,
+      "wall_s": 67.27,
+      "graph_calls": 31,
       "graph_errors": 0,
       "llm_calls": 4,
-      "tokens": 10574,
-      "llm_cost_usd": 0.0431,
+      "tokens": 10607,
+      "llm_cost_usd": 0.04359,
       "template_fallbacks": 0,
       "backend": "tigergraph",
       "unattested_claims": 0

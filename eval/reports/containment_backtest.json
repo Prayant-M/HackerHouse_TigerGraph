@@ -1,7 +1,7 @@
 {
   "rings": 80,
-  "origins_found": 0,
-  "base_rate": 0.07613,
+  "origins_found": 38,
+  "base_rate": 0.07407,
   "arms": {
     "A0 none": {
       "rings": 80,
@@ -15,83 +15,83 @@
     },
     "A1 device fan-out": {
       "rings": 80,
-      "flagged": 99284,
-      "hits": 20128,
-      "precision": 0.2027,
-      "loss_preempted_usd": 25430640.99,
-      "step_ups": 99284,
+      "flagged": 100189,
+      "hits": 19814,
+      "precision": 0.1978,
+      "loss_preempted_usd": 24884961.86,
+      "step_ups": 100189,
       "blocks_on_innocents": 0,
-      "lift": 2.66
+      "lift": 2.67
     },
     "A1b fan-out, rare devices only": {
       "rings": 80,
-      "flagged": 8166,
-      "hits": 4113,
-      "precision": 0.5037,
-      "loss_preempted_usd": 8610620.97,
-      "step_ups": 8166,
+      "flagged": 8214,
+      "hits": 4031,
+      "precision": 0.4907,
+      "loss_preempted_usd": 8472046.59,
+      "step_ups": 8214,
       "blocks_on_innocents": 0,
       "lift": 6.62
     },
     "A2 origin lift (controls)": {
       "rings": 80,
-      "flagged": 0,
-      "hits": 0,
-      "precision": 0.0,
-      "loss_preempted_usd": 0,
-      "step_ups": 0,
+      "flagged": 246,
+      "hits": 65,
+      "precision": 0.2642,
+      "loss_preempted_usd": 193906.84,
+      "step_ups": 246,
       "blocks_on_innocents": 0,
-      "lift": null
+      "lift": 3.57
     },
     "A2b origin lift, no specificity cap": {
       "rings": 80,
-      "flagged": 0,
-      "hits": 0,
-      "precision": 0.0,
-      "loss_preempted_usd": 0,
-      "step_ups": 0,
+      "flagged": 4070,
+      "hits": 457,
+      "precision": 0.1123,
+      "loss_preempted_usd": 488915.35,
+      "step_ups": 4070,
       "blocks_on_innocents": 0,
-      "lift": null
+      "lift": 1.52
     },
     "A3 origin raw counts (no controls)": {
       "rings": 80,
-      "flagged": 0,
-      "hits": 0,
-      "precision": 0.0,
-      "loss_preempted_usd": 0,
-      "step_ups": 0,
+      "flagged": 39838,
+      "hits": 1561,
+      "precision": 0.0392,
+      "loss_preempted_usd": 1171143.46,
+      "step_ups": 39838,
       "blocks_on_innocents": 0,
-      "lift": null
+      "lift": 0.53
     },
     "A4 time-sliced WCC component (as_of, 45 d)": {
       "rings": 80,
-      "flagged": 0,
-      "hits": 0,
-      "precision": 0.0,
-      "loss_preempted_usd": 0,
-      "step_ups": 0,
+      "flagged": 23042,
+      "hits": 8615,
+      "precision": 0.3739,
+      "loss_preempted_usd": 14411190.05,
+      "step_ups": 23042,
       "blocks_on_innocents": 0,
-      "lift": null
+      "lift": 5.05
     },
     "A4b all-time component (ablation)": {
       "rings": 80,
-      "flagged": 0,
-      "hits": 0,
-      "precision": 0.0,
-      "loss_preempted_usd": 0,
-      "step_ups": 0,
+      "flagged": 24826,
+      "hits": 8799,
+      "precision": 0.3544,
+      "loss_preempted_usd": 14909962.81,
+      "step_ups": 24826,
       "blocks_on_innocents": 0,
-      "lift": null
+      "lift": 4.78
     },
     "A5 agent: origin lift + time-sliced component": {
       "rings": 80,
-      "flagged": 0,
-      "hits": 0,
-      "precision": 0.0,
-      "loss_preempted_usd": 0,
-      "step_ups": 0,
+      "flagged": 23211,
+      "hits": 8642,
+      "precision": 0.3723,
+      "loss_preempted_usd": 14416391.47,
+      "step_ups": 23211,
       "blocks_on_innocents": 0,
-      "lift": null
+      "lift": 5.03
     }
   },
   "per_ring": [
@@ -99,95 +99,308 @@
       "ring_device": "explicit",
       "as_of": "2016-08-27 04:53:00",
       "ring_cards": 24,
-      "base_rate": 0.07433,
-      "origin": null,
-      "raw_origin": ""
+      "base_rate": 0.07367,
+      "origin": {
+        "entity_type": "device_profile",
+        "entity": "SM-G935F Build/NRD90M | Android 7.0 | chrome 62.0 for android | 1920x1080",
+        "ring_cards_touching": 12,
+        "control_cards_touching": 0,
+        "n_ring": 24,
+        "n_control": 8451,
+        "lift": 4225.5,
+        "p_value": 9.51e-33,
+        "ring_card_ids": [
+          "C03528-K1",
+          "C03551-K2",
+          "C04311-K1",
+          "C06197-K2",
+          "C06617-K1",
+          "C07762-K1",
+          "C09174-K1",
+          "C11468-K2",
+          "C11687-K2",
+          "C12033-K1",
+          "C12395-K2",
+          "C12900-K2"
+        ]
+      },
+      "raw_origin": "gmail.com"
     },
     {
       "ring_device": "explicit",
       "as_of": "2016-09-03 03:25:00",
       "ring_cards": 24,
-      "base_rate": 0.076,
-      "origin": null,
-      "raw_origin": ""
+      "base_rate": 0.06767,
+      "origin": {
+        "entity_type": "device_profile",
+        "entity": "SM-G935F Build/NRD90M | Android 7.0 | chrome 62.0 for android | 1920x1080",
+        "ring_cards_touching": 22,
+        "control_cards_touching": 0,
+        "n_ring": 24,
+        "n_control": 8014,
+        "lift": 7346.17,
+        "p_value": 3.9e-63,
+        "ring_card_ids": [
+          "C01935-K1",
+          "C03528-K1",
+          "C03551-K2",
+          "C03744-K1",
+          "C04311-K1",
+          "C06197-K2",
+          "C06617-K1",
+          "C07485-K1",
+          "C07762-K1",
+          "C08112-K2",
+          "C09174-K1",
+          "C09354-K1",
+          "C09998-K1",
+          "C10350-K1",
+          "C10955-K2",
+          "C11468-K2",
+          "C11687-K2",
+          "C12033-K1",
+          "C12132-K2",
+          "C12395-K2"
+        ]
+      },
+      "raw_origin": "gmail.com"
     },
     {
       "ring_device": "explicit",
       "as_of": "2016-09-03 10:20:00",
       "ring_cards": 24,
-      "base_rate": 0.074,
-      "origin": null,
-      "raw_origin": ""
+      "base_rate": 0.073,
+      "origin": {
+        "entity_type": "device_profile",
+        "entity": "SM-G935F Build/NRD90M | Android 7.0 | chrome 62.0 for android | 1920x1080",
+        "ring_cards_touching": 22,
+        "control_cards_touching": 0,
+        "n_ring": 24,
+        "n_control": 8004,
+        "lift": 7337.0,
+        "p_value": 4.01e-63,
+        "ring_card_ids": [
+          "C01935-K1",
+          "C03528-K1",
+          "C03551-K2",
+          "C03744-K1",
+          "C04311-K1",
+          "C06197-K2",
+          "C06617-K1",
+          "C07485-K1",
+          "C07762-K1",
+          "C08112-K2",
+          "C09174-K1",
+          "C09354-K1",
+          "C09998-K1",
+          "C10350-K1",
+          "C10955-K2",
+          "C11468-K2",
+          "C11687-K2",
+          "C12033-K1",
+          "C12132-K2",
+          "C12395-K2"
+        ]
+      },
+      "raw_origin": "gmail.com"
     },
     {
       "ring_device": "explicit",
       "as_of": "2016-09-04 12:44:00",
       "ring_cards": 24,
-      "base_rate": 0.07467,
-      "origin": null,
-      "raw_origin": ""
+      "base_rate": 0.08033,
+      "origin": {
+        "entity_type": "device_profile",
+        "entity": "SM-G935F Build/NRD90M | Android 7.0 | chrome 62.0 for android | 1920x1080",
+        "ring_cards_touching": 22,
+        "control_cards_touching": 0,
+        "n_ring": 24,
+        "n_control": 7893,
+        "lift": 7235.25,
+        "p_value": 5.45e-63,
+        "ring_card_ids": [
+          "C01935-K1",
+          "C03528-K1",
+          "C03551-K2",
+          "C03744-K1",
+          "C04311-K1",
+          "C06197-K2",
+          "C06617-K1",
+          "C07485-K1",
+          "C07762-K1",
+          "C08112-K2",
+          "C09174-K1",
+          "C09354-K1",
+          "C09998-K1",
+          "C10350-K1",
+          "C10955-K2",
+          "C11468-K2",
+          "C11687-K2",
+          "C12033-K1",
+          "C12132-K2",
+          "C12395-K2"
+        ]
+      },
+      "raw_origin": "gmail.com"
+    },
+    {
+      "ring_device": "explicit",
+      "as_of": "2016-11-22 02:30:00",
+      "ring_cards": 12,
+      "base_rate": 0.00533,
+      "origin": {
+        "entity_type": "device_profile",
+        "entity": "Windows |  | firefox 59.0",
+        "ring_cards_touching": 3,
+        "control_cards_touching": 22,
+        "n_ring": 12,
+        "n_control": 6200,
+        "lift": 70.45,
+        "p_value": 1.24e-05,
+        "ring_card_ids": [
+          "C01890-K1",
+          "C05423-K1",
+          "C10990-K1"
+        ]
+      },
+      "raw_origin": "gmail.com"
+    },
+    {
+      "ring_device": "explicit",
+      "as_of": "2016-11-22 20:11:00",
+      "ring_cards": 28,
+      "base_rate": 0.00133,
+      "origin": {
+        "entity_type": "device_profile",
+        "entity": "SM-G935F Build/NRD90M | Android 7.0 | chrome 62.0 for android | 1920x1080",
+        "ring_cards_touching": 14,
+        "control_cards_touching": 2,
+        "n_ring": 28,
+        "n_control": 6180,
+        "lift": 1545.0,
+        "p_value": 3.36e-33,
+        "ring_card_ids": [
+          "C01996-K2",
+          "C02910-K1",
+          "C02975-K1",
+          "C04108-K2",
+          "C04274-K1",
+          "C08168-K1",
+          "C09049-K1",
+          "C09906-K1",
+          "C10193-K2",
+          "C10326-K1",
+          "C11670-K2",
+          "C12796-K1",
+          "C13291-K1",
+          "C13487-K1"
+        ]
+      },
+      "raw_origin": "gmail.com"
     },
     {
       "ring_device": "SM-G550T Build/MMB29K | Android 6.0.1 | chrome 59.0 for andr",
       "as_of": "2016-07-06 01:30:14",
       "ring_cards": 3,
-      "base_rate": 0.14808,
-      "origin": null,
-      "raw_origin": ""
+      "base_rate": 0.14815,
+      "origin": {
+        "entity_type": "device_profile",
+        "entity": "SM-G550T Build/MMB29K | Android 6.0.1 | chrome 59.0 for android | 1280x720",
+        "ring_cards_touching": 3,
+        "control_cards_touching": 0,
+        "n_ring": 3,
+        "n_control": 504,
+        "lift": 504.0,
+        "p_value": 4.63e-08,
+        "ring_card_ids": [
+          "C00750-K2",
+          "C09165-K2",
+          "C13259-K1"
+        ]
+      },
+      "raw_origin": "SM-G550T Build/MMB29K | Android 6.0.1 | chrome 59.0 for andr"
     },
     {
       "ring_device": "Y635-L03 Build/HuaweiY635-L03 |  | chrome 62.0 for android",
       "as_of": "2016-07-06 20:40:03",
       "ring_cards": 3,
-      "base_rate": 0.14005,
+      "base_rate": 0.14011,
       "origin": null,
-      "raw_origin": ""
+      "raw_origin": "C|$75"
     },
     {
       "ring_device": "Android | chrome 62.0 | 801x480",
       "as_of": "2016-08-02 22:34:21",
       "ring_cards": 3,
-      "base_rate": 0.06733,
+      "base_rate": 0.069,
       "origin": null,
-      "raw_origin": ""
+      "raw_origin": "S|$25"
     },
     {
       "ring_device": "HUAWEI |  | chrome 62.0 for android",
       "as_of": "2016-07-14 16:02:19",
       "ring_cards": 3,
-      "base_rate": 0.08467,
-      "origin": null,
-      "raw_origin": ""
+      "base_rate": 0.089,
+      "origin": {
+        "entity_type": "region",
+        "entity": "161.0",
+        "ring_cards_touching": 3,
+        "control_cards_touching": 18,
+        "n_ring": 3,
+        "n_control": 4112,
+        "lift": 228.44,
+        "p_value": 1.15e-07,
+        "ring_card_ids": [
+          "C04248-K2",
+          "C07204-K1",
+          "C12258-K2"
+        ]
+      },
+      "raw_origin": "161.0"
     },
     {
       "ring_device": "BLADE V8 SE Build/NRD90M |  | chrome 62.0 for android",
       "as_of": "2016-07-09 05:06:43",
       "ring_cards": 3,
-      "base_rate": 0.109,
+      "base_rate": 0.11167,
       "origin": null,
-      "raw_origin": ""
+      "raw_origin": "C|$50"
     },
     {
       "ring_device": "SM-A720F Build/MMB29K |  | chrome 62.0 for android",
       "as_of": "2016-07-15 03:15:05",
       "ring_cards": 3,
-      "base_rate": 0.08333,
-      "origin": null,
-      "raw_origin": ""
+      "base_rate": 0.08233,
+      "origin": {
+        "entity_type": "region",
+        "entity": "161.0",
+        "ring_cards_touching": 3,
+        "control_cards_touching": 17,
+        "n_ring": 3,
+        "n_control": 4332,
+        "lift": 254.82,
+        "p_value": 8.4e-08,
+        "ring_card_ids": [
+          "C06630-K2",
+          "C10837-K2",
+          "C12987-K1"
+        ]
+      },
+      "raw_origin": "161.0"
     },
     {
       "ring_device": "XT1635-01 Build/NDNS26.118-23-12-3 |  | chrome 62.0 for andr",
       "as_of": "2016-07-15 03:15:05",
       "ring_cards": 3,
-      "base_rate": 0.08267,
+      "base_rate": 0.08667,
       "origin": null,
-      "raw_origin": ""
+      "raw_origin": "465.0"
     },
     {
       "ring_device": "XT1563 Build/MPDS24.107-52-5 |  | chrome 60.0 for android",
       "as_of": "2016-07-24 17:34:08",
       "ring_cards": 2,
-      "base_rate": 0.07,
+      "base_rate": 0.06667,
       "origin": null,
       "raw_origin": ""
     },
@@ -195,25 +408,25 @@
       "ring_device": "rv:57.0 | Windows 8.1 | firefox 57.0 | 1366x768",
       "as_of": "2016-07-19 23:34:34",
       "ring_cards": 3,
-      "base_rate": 0.073,
+      "base_rate": 0.07167,
       "origin": null,
-      "raw_origin": ""
+      "raw_origin": "225.0"
     },
     {
       "ring_device": "HUAWEI CUN-L03 Build/HUAWEICUN-L03 |  | chrome 62.0 for andr",
       "as_of": "2016-07-24 11:58:23",
       "ring_cards": 3,
-      "base_rate": 0.067,
+      "base_rate": 0.069,
       "origin": null,
-      "raw_origin": ""
+      "raw_origin": "HUAWEI CUN-L03 Build/HUAWEICUN-L03 |  | chrome 62.0 for andr"
     },
     {
       "ring_device": "HUAWEI TAG-L13 Build/HUAWEITAG-L13 |  | chrome 61.0 for andr",
       "as_of": "2016-07-20 02:01:46",
       "ring_cards": 3,
-      "base_rate": 0.06333,
+      "base_rate": 0.06767,
       "origin": null,
-      "raw_origin": ""
+      "raw_origin": "Windows |  | chrome 62.0"
     },
     {
       "ring_device": "NOKIA |  | edge",
@@ -221,93 +434,191 @@
       "ring_cards": 3,
       "base_rate": 0.06567,
       "origin": null,
-      "raw_origin": ""
+      "raw_origin": "Windows |  | chrome 62.0"
     },
     {
       "ring_device": "opera",
       "as_of": "2016-07-26 22:21:17",
       "ring_cards": 3,
-      "base_rate": 0.067,
-      "origin": null,
-      "raw_origin": ""
+      "base_rate": 0.05567,
+      "origin": {
+        "entity_type": "device_profile",
+        "entity": "opera",
+        "ring_cards_touching": 3,
+        "control_cards_touching": 0,
+        "n_ring": 3,
+        "n_control": 7054,
+        "lift": 7054.0,
+        "p_value": 1.71e-11,
+        "ring_card_ids": [
+          "C04597-K2",
+          "C05381-K2",
+          "C11847-K2"
+        ]
+      },
+      "raw_origin": "opera"
     },
     {
       "ring_device": "Linux | chrome 55.0 | 1366x768",
       "as_of": "2016-07-27 06:28:44",
       "ring_cards": 3,
-      "base_rate": 0.05967,
+      "base_rate": 0.06933,
       "origin": null,
-      "raw_origin": ""
+      "raw_origin": "Windows | Windows 10 | firefox 57.0 | 1366x768"
     },
     {
       "ring_device": "F5121 Build/34.3.A.0.238 |  | chrome 63.0 for android",
       "as_of": "2016-07-26 02:50:50",
       "ring_cards": 3,
-      "base_rate": 0.07267,
-      "origin": null,
-      "raw_origin": ""
+      "base_rate": 0.07067,
+      "origin": {
+        "entity_type": "region",
+        "entity": "332.0",
+        "ring_cards_touching": 3,
+        "control_cards_touching": 1,
+        "n_ring": 3,
+        "n_control": 6884,
+        "lift": 6884.0,
+        "p_value": 7.35e-11,
+        "ring_card_ids": [
+          "C00294-K2",
+          "C05381-K2",
+          "C13447-K1"
+        ]
+      },
+      "raw_origin": "332.0"
     },
     {
       "ring_device": "Z835 Build/NMF26V | Android 7.1.1 | other | 855x480",
       "as_of": "2016-08-10 03:15:05",
       "ring_cards": 3,
-      "base_rate": 0.063,
+      "base_rate": 0.06833,
       "origin": null,
-      "raw_origin": ""
+      "raw_origin": "H|$275"
     },
     {
       "ring_device": "5049W Build/NRD90M | Android 7.0 | chrome 62.0 for android |",
       "as_of": "2016-07-24 23:28:12",
       "ring_cards": 3,
-      "base_rate": 0.069,
-      "origin": null,
-      "raw_origin": ""
+      "base_rate": 0.07067,
+      "origin": {
+        "entity_type": "device_profile",
+        "entity": "Trident/7.0 | Windows 7 | ie 11.0 for desktop | 1440x900",
+        "ring_cards_touching": 3,
+        "control_cards_touching": 21,
+        "n_ring": 3,
+        "n_control": 6619,
+        "lift": 315.19,
+        "p_value": 4.18e-08,
+        "ring_card_ids": [
+          "C03066-K1",
+          "C07338-K1",
+          "C12961-K2"
+        ]
+      },
+      "raw_origin": "Trident/7.0 | Windows 7 | ie 11.0 for desktop | 1440x900"
     },
     {
       "ring_device": "SAMSUNG SM-G550T1 Build/MMB29K | Android 6.0.1 | samsung bro",
       "as_of": "2016-07-28 19:31:32",
       "ring_cards": 3,
-      "base_rate": 0.07467,
-      "origin": null,
-      "raw_origin": ""
+      "base_rate": 0.06533,
+      "origin": {
+        "entity_type": "device_profile",
+        "entity": "Windows | Windows 10 | chrome 62.0 | 1680x1050",
+        "ring_cards_touching": 3,
+        "control_cards_touching": 10,
+        "n_ring": 3,
+        "n_control": 7414,
+        "lift": 741.4,
+        "p_value": 4.21e-09,
+        "ring_card_ids": [
+          "C04108-K2",
+          "C07867-K2",
+          "C11000-K2"
+        ]
+      },
+      "raw_origin": "Windows | Windows 10 | chrome 62.0 | 1680x1050"
     },
     {
       "ring_device": "Le X520 Build/IEXCNFN5902303111S |  | chrome 63.0 for androi",
       "as_of": "2016-08-18 20:06:57",
       "ring_cards": 3,
-      "base_rate": 0.07133,
-      "origin": null,
-      "raw_origin": ""
+      "base_rate": 0.07333,
+      "origin": {
+        "entity_type": "device_profile",
+        "entity": "SM-A300H Build/LRX22G |  | chrome 63.0 for android",
+        "ring_cards_touching": 3,
+        "control_cards_touching": 1,
+        "n_ring": 3,
+        "n_control": 8784,
+        "lift": 8784.0,
+        "p_value": 3.54e-11,
+        "ring_card_ids": [
+          "C01521-K2",
+          "C07855-K1",
+          "C10837-K2"
+        ]
+      },
+      "raw_origin": "SM-A300H Build/LRX22G |  | chrome 63.0 for android"
     },
     {
       "ring_device": "5015A Build/LMY47I |  | chrome 63.0 for android",
       "as_of": "2016-07-29 10:15:57",
       "ring_cards": 3,
-      "base_rate": 0.063,
-      "origin": null,
-      "raw_origin": ""
+      "base_rate": 0.06333,
+      "origin": {
+        "entity_type": "merchant_proxy",
+        "entity": "C|$200",
+        "ring_cards_touching": 3,
+        "control_cards_touching": 10,
+        "n_ring": 3,
+        "n_control": 7534,
+        "lift": 753.4,
+        "p_value": 4.01e-09,
+        "ring_card_ids": [
+          "C06855-K1",
+          "C11509-K2",
+          "C11919-K2"
+        ]
+      },
+      "raw_origin": "C|$200"
     },
     {
       "ring_device": "SM-N920A Build/MMB29K |  | chrome 61.0 for android",
       "as_of": "2016-08-07 13:40:39",
       "ring_cards": 2,
-      "base_rate": 0.07067,
+      "base_rate": 0.076,
       "origin": null,
-      "raw_origin": ""
+      "raw_origin": "SM-N920A Build/MMB29K |  | chrome 61.0 for android"
     },
     {
       "ring_device": "Moto Z2 Play Build/NPSS26.118-19-11 |  | chrome 63.0 for and",
       "as_of": "2016-07-30 02:32:12",
       "ring_cards": 3,
-      "base_rate": 0.06233,
-      "origin": null,
-      "raw_origin": ""
+      "base_rate": 0.058,
+      "origin": {
+        "entity_type": "region",
+        "entity": "130.0",
+        "ring_cards_touching": 3,
+        "control_cards_touching": 13,
+        "n_ring": 3,
+        "n_control": 7688,
+        "lift": 591.38,
+        "p_value": 7.39e-09,
+        "ring_card_ids": [
+          "C00466-K1",
+          "C01521-K2",
+          "C11919-K2"
+        ]
+      },
+      "raw_origin": "130.0"
     },
     {
       "ring_device": "SAMSUNG SM-J701M Build/NRD90M |  | samsung browser 6.2",
       "as_of": "2016-08-06 15:35:03",
       "ring_cards": 1,
-      "base_rate": 0.06567,
+      "base_rate": 0.06733,
       "origin": null,
       "raw_origin": ""
     },
@@ -315,279 +626,517 @@
       "ring_device": "SAMSUNG SM-G955F Build/NRD90M |  | samsung browser 6.2",
       "as_of": "2016-08-28 17:23:08",
       "ring_cards": 3,
-      "base_rate": 0.07833,
-      "origin": null,
-      "raw_origin": ""
+      "base_rate": 0.07533,
+      "origin": {
+        "entity_type": "email_p",
+        "entity": "live.com.mx",
+        "ring_cards_touching": 3,
+        "control_cards_touching": 2,
+        "n_ring": 3,
+        "n_control": 8392,
+        "lift": 4196.0,
+        "p_value": 1.01e-10,
+        "ring_card_ids": [
+          "C07981-K1",
+          "C10837-K2",
+          "C12028-K2"
+        ]
+      },
+      "raw_origin": "live.com.mx"
     },
     {
       "ring_device": "SM-G550T1 Build/MMB29K | Android 6.0.1 | chrome 63.0 for and",
       "as_of": "2016-08-22 22:13:19",
       "ring_cards": 2,
-      "base_rate": 0.07467,
+      "base_rate": 0.071,
       "origin": null,
-      "raw_origin": ""
+      "raw_origin": "Windows | Windows 10 | chrome 60.0 | 1366x768"
     },
     {
       "ring_device": "Blade L3 Build/KOT49H |  | chrome 61.0 for android",
       "as_of": "2016-08-08 13:32:56",
       "ring_cards": 3,
-      "base_rate": 0.06333,
+      "base_rate": 0.069,
       "origin": null,
-      "raw_origin": ""
+      "raw_origin": "C|$25"
     },
     {
       "ring_device": "LG-X220 Build/LMY47I |  | chrome 63.0 for android",
       "as_of": "2016-08-21 21:22:45",
       "ring_cards": 3,
-      "base_rate": 0.07067,
-      "origin": null,
-      "raw_origin": ""
+      "base_rate": 0.074,
+      "origin": {
+        "entity_type": "email_p",
+        "entity": "live.com.mx",
+        "ring_cards_touching": 3,
+        "control_cards_touching": 2,
+        "n_ring": 3,
+        "n_control": 8671,
+        "lift": 4335.5,
+        "p_value": 9.2e-11,
+        "ring_card_ids": [
+          "C05381-K2",
+          "C07508-K2",
+          "C12028-K2"
+        ]
+      },
+      "raw_origin": "live.com.mx"
     },
     {
       "ring_device": "SM-G530H Build/KTU84P |  | chrome 49.0 for android",
       "as_of": "2016-08-15 12:49:38",
       "ring_cards": 2,
-      "base_rate": 0.07133,
+      "base_rate": 0.066,
       "origin": null,
-      "raw_origin": ""
+      "raw_origin": "161.0"
     },
     {
       "ring_device": "SM-J730GM Build/NRD90M |  | chrome 58.0 for android",
       "as_of": "2016-08-18 02:39:35",
       "ring_cards": 3,
-      "base_rate": 0.072,
-      "origin": null,
-      "raw_origin": ""
+      "base_rate": 0.071,
+      "origin": {
+        "entity_type": "device_profile",
+        "entity": "SM-J730GM Build/NRD90M |  | chrome 58.0 for android",
+        "ring_cards_touching": 3,
+        "control_cards_touching": 0,
+        "n_ring": 3,
+        "n_control": 8810,
+        "lift": 8810.0,
+        "p_value": 8.77e-12,
+        "ring_card_ids": [
+          "C07508-K2",
+          "C07562-K2",
+          "C09657-K2"
+        ]
+      },
+      "raw_origin": "SM-J730GM Build/NRD90M |  | chrome 58.0 for android"
     },
     {
       "ring_device": "GT-I9060M Build/KTU84P |  | chrome 63.0 for android",
       "as_of": "2016-08-17 18:04:51",
       "ring_cards": 3,
-      "base_rate": 0.068,
+      "base_rate": 0.07033,
       "origin": null,
-      "raw_origin": ""
+      "raw_origin": "gmail.com"
     },
     {
       "ring_device": "Linux | chrome 63.0 | 1536x864",
       "as_of": "2016-09-02 23:35:59",
       "ring_cards": 3,
-      "base_rate": 0.076,
+      "base_rate": 0.075,
       "origin": null,
-      "raw_origin": ""
+      "raw_origin": "436.0"
     },
     {
       "ring_device": "M4 SS4456 Build/LMY47V |  | chrome 46.0 for android",
       "as_of": "2016-08-17 14:46:43",
       "ring_cards": 3,
-      "base_rate": 0.06667,
-      "origin": null,
-      "raw_origin": ""
+      "base_rate": 0.07333,
+      "origin": {
+        "entity_type": "device_profile",
+        "entity": "SM-J510MN Build/MMB29M |  | chrome 63.0 for android",
+        "ring_cards_touching": 3,
+        "control_cards_touching": 0,
+        "n_ring": 3,
+        "n_control": 8838,
+        "lift": 8838.0,
+        "p_value": 8.69e-12,
+        "ring_card_ids": [
+          "C06663-K2",
+          "C07562-K2",
+          "C11923-K2"
+        ]
+      },
+      "raw_origin": "SM-J510MN Build/MMB29M |  | chrome 63.0 for android"
     },
     {
       "ring_device": "MacOS | Mac OS X 10_13_2 | chrome 63.0 | 1366x768",
       "as_of": "2016-08-14 18:43:38",
       "ring_cards": 3,
-      "base_rate": 0.07833,
+      "base_rate": 0.068,
       "origin": null,
-      "raw_origin": ""
+      "raw_origin": "420.0"
     },
     {
       "ring_device": "SAMSUNG SM-J120H Build/LMY47V |  | chrome generic",
       "as_of": "2016-08-17 01:39:22",
       "ring_cards": 3,
-      "base_rate": 0.07033,
-      "origin": null,
-      "raw_origin": ""
+      "base_rate": 0.06967,
+      "origin": {
+        "entity_type": "device_profile",
+        "entity": "HUAWEI RIO-L03 Build/HUAWEIRIO-L03 |  | chrome 63.0 for android",
+        "ring_cards_touching": 3,
+        "control_cards_touching": 1,
+        "n_ring": 3,
+        "n_control": 8846,
+        "lift": 8846.0,
+        "p_value": 3.46e-11,
+        "ring_card_ids": [
+          "C04597-K2",
+          "C06940-K1",
+          "C11509-K2"
+        ]
+      },
+      "raw_origin": "HUAWEI RIO-L03 Build/HUAWEIRIO-L03 |  | chrome 63.0 for andr"
     },
     {
       "ring_device": "E6603 Build/32.4.A.1.54 |  | chrome 58.0 for android",
       "as_of": "2016-08-17 14:46:43",
       "ring_cards": 3,
-      "base_rate": 0.07467,
-      "origin": null,
-      "raw_origin": ""
+      "base_rate": 0.08,
+      "origin": {
+        "entity_type": "email_p",
+        "entity": "live.com.mx",
+        "ring_cards_touching": 3,
+        "control_cards_touching": 2,
+        "n_ring": 3,
+        "n_control": 8838,
+        "lift": 4419.0,
+        "p_value": 8.69e-11,
+        "ring_card_ids": [
+          "C07562-K2",
+          "C09246-K1",
+          "C11509-K2"
+        ]
+      },
+      "raw_origin": "live.com.mx"
     },
     {
       "ring_device": "SM-G530H Build/LRX22G |  | chrome 46.0 for android",
       "as_of": "2016-08-18 08:22:57",
       "ring_cards": 3,
-      "base_rate": 0.07,
-      "origin": null,
-      "raw_origin": ""
+      "base_rate": 0.069,
+      "origin": {
+        "entity_type": "region",
+        "entity": "130.0",
+        "ring_cards_touching": 3,
+        "control_cards_touching": 9,
+        "n_ring": 3,
+        "n_control": 8802,
+        "lift": 978.0,
+        "p_value": 1.93e-09,
+        "ring_card_ids": [
+          "C01521-K2",
+          "C10760-K2",
+          "C13254-K1"
+        ]
+      },
+      "raw_origin": "130.0"
     },
     {
       "ring_device": "TA-1039 Build/N2G47H |  | chrome 63.0 for android",
       "as_of": "2016-08-21 21:22:45",
       "ring_cards": 3,
-      "base_rate": 0.07,
-      "origin": null,
-      "raw_origin": ""
+      "base_rate": 0.07133,
+      "origin": {
+        "entity_type": "region",
+        "entity": "374.0",
+        "ring_cards_touching": 3,
+        "control_cards_touching": 1,
+        "n_ring": 3,
+        "n_control": 8671,
+        "lift": 8671.0,
+        "p_value": 3.68e-11,
+        "ring_card_ids": [
+          "C05381-K2",
+          "C08391-K2",
+          "C08962-K2"
+        ]
+      },
+      "raw_origin": "374.0"
     },
     {
       "ring_device": "TA-1038 Build/NMF26O |  | chrome 63.0 for android",
       "as_of": "2016-08-17 14:07:24",
       "ring_cards": 3,
-      "base_rate": 0.07033,
-      "origin": null,
-      "raw_origin": ""
+      "base_rate": 0.06733,
+      "origin": {
+        "entity_type": "device_profile",
+        "entity": "SM-G610M Build/MMB29K |  | other",
+        "ring_cards_touching": 3,
+        "control_cards_touching": 1,
+        "n_ring": 3,
+        "n_control": 8838,
+        "lift": 8838.0,
+        "p_value": 3.47e-11,
+        "ring_card_ids": [
+          "C04597-K2",
+          "C11923-K2",
+          "C13407-K1"
+        ]
+      },
+      "raw_origin": "SM-G610M Build/MMB29K |  | other"
     },
     {
       "ring_device": "es-mx |  | android browser 4.0",
       "as_of": "2016-08-23 16:20:58",
       "ring_cards": 3,
-      "base_rate": 0.07367,
-      "origin": null,
-      "raw_origin": ""
+      "base_rate": 0.07133,
+      "origin": {
+        "entity_type": "device_profile",
+        "entity": "es-mx |  | android browser 4.0",
+        "ring_cards_touching": 3,
+        "control_cards_touching": 1,
+        "n_ring": 3,
+        "n_control": 8600,
+        "lift": 8600.0,
+        "p_value": 3.77e-11,
+        "ring_card_ids": [
+          "C01730-K1",
+          "C02250-K2",
+          "C09241-K2"
+        ]
+      },
+      "raw_origin": "es-mx |  | android browser 4.0"
     },
     {
       "ring_device": "Redmi 4X Build/N2G47H |  | chrome 63.0 for android",
       "as_of": "2016-08-22 20:53:05",
       "ring_cards": 3,
-      "base_rate": 0.07133,
-      "origin": null,
-      "raw_origin": ""
+      "base_rate": 0.07,
+      "origin": {
+        "entity_type": "email_p",
+        "entity": "outlook.es",
+        "ring_cards_touching": 3,
+        "control_cards_touching": 4,
+        "n_ring": 3,
+        "n_control": 8642,
+        "lift": 2160.5,
+        "p_value": 3.25e-10,
+        "ring_card_ids": [
+          "C06663-K2",
+          "C08962-K2",
+          "C13407-K1"
+        ]
+      },
+      "raw_origin": "outlook.es"
     },
     {
       "ring_device": "SAMSUNG SM-J327T1 Build/NRD90M | Android 7.0 | samsung brows",
       "as_of": "2016-09-17 23:46:27",
       "ring_cards": 2,
-      "base_rate": 0.08067,
+      "base_rate": 0.07567,
       "origin": null,
-      "raw_origin": ""
+      "raw_origin": "SAMSUNG SM-J327T1 Build/NRD90M | Android 7.0 | samsung brows"
     },
     {
       "ring_device": "Windows | Windows 10 | chrome 62.0 | 1600x1200",
       "as_of": "2016-09-01 07:41:56",
       "ring_cards": 3,
-      "base_rate": 0.08,
-      "origin": null,
-      "raw_origin": ""
+      "base_rate": 0.07967,
+      "origin": {
+        "entity_type": "device_profile",
+        "entity": "MacOS | Mac OS X 10_12_6 | safari generic | 1920x1080",
+        "ring_cards_touching": 3,
+        "control_cards_touching": 25,
+        "n_ring": 3,
+        "n_control": 8191,
+        "lift": 327.64,
+        "p_value": 3.57e-08,
+        "ring_card_ids": [
+          "C01755-K2",
+          "C03040-K2",
+          "C11000-K2"
+        ]
+      },
+      "raw_origin": "MacOS | Mac OS X 10_12_6 | safari generic | 1920x1080"
     },
     {
       "ring_device": "Windows | Windows 10 | chrome 61.0 | 1600x1200",
       "as_of": "2016-08-26 00:50:11",
       "ring_cards": 3,
-      "base_rate": 0.07433,
+      "base_rate": 0.078,
       "origin": null,
-      "raw_origin": ""
+      "raw_origin": "Linux | chrome 62.0 | 1366x768"
     },
     {
       "ring_device": "5010G Build/MRA58K |  | chrome 52.0 for android",
       "as_of": "2016-08-26 21:20:22",
       "ring_cards": 3,
-      "base_rate": 0.07633,
+      "base_rate": 0.08,
       "origin": null,
-      "raw_origin": ""
+      "raw_origin": "mobile safari 10.0"
     },
     {
       "ring_device": "ALE-L23 Build/HuaweiALE-L23 |  | chrome 50.0 for android",
       "as_of": "2016-08-27 23:26:21",
       "ring_cards": 3,
-      "base_rate": 0.07967,
-      "origin": null,
-      "raw_origin": ""
+      "base_rate": 0.072,
+      "origin": {
+        "entity_type": "email_p",
+        "entity": "yahoo.com.mx",
+        "ring_cards_touching": 3,
+        "control_cards_touching": 16,
+        "n_ring": 3,
+        "n_control": 8423,
+        "lift": 526.44,
+        "p_value": 9.72e-09,
+        "ring_card_ids": [
+          "C01656-K1",
+          "C07204-K1",
+          "C11595-K1"
+        ]
+      },
+      "raw_origin": "yahoo.com.mx"
     },
     {
       "ring_device": "SAMSUNG SM-G891A Build/NRD90M | Android 7.0 | samsung browse",
       "as_of": "2016-09-07 17:56:14",
       "ring_cards": 3,
-      "base_rate": 0.087,
+      "base_rate": 0.08367,
       "origin": null,
-      "raw_origin": ""
+      "raw_origin": "231.0"
     },
     {
       "ring_device": "TR10CS1 Build/JDQ39 |  | chrome 63.0 for android",
       "as_of": "2016-08-30 06:53:22",
       "ring_cards": 3,
-      "base_rate": 0.08167,
+      "base_rate": 0.07867,
       "origin": null,
-      "raw_origin": ""
+      "raw_origin": "Windows |  | firefox 57.0"
     },
     {
       "ring_device": "rv:57.0 | Windows 7 | firefox 57.0 | 1280x1024",
       "as_of": "2016-08-31 11:51:57",
       "ring_cards": 3,
-      "base_rate": 0.07867,
+      "base_rate": 0.082,
       "origin": null,
-      "raw_origin": ""
+      "raw_origin": "R|$200"
     },
     {
       "ring_device": "F5121 Build/34.3.A.0.252 |  | chrome generic for android",
       "as_of": "2016-09-09 20:10:52",
       "ring_cards": 3,
-      "base_rate": 0.08367,
-      "origin": null,
-      "raw_origin": ""
+      "base_rate": 0.07433,
+      "origin": {
+        "entity_type": "device_profile",
+        "entity": "F5121 Build/34.3.A.0.252 |  | chrome generic for android",
+        "ring_cards_touching": 3,
+        "control_cards_touching": 0,
+        "n_ring": 3,
+        "n_control": 7189,
+        "lift": 7189.0,
+        "p_value": 1.61e-11,
+        "ring_card_ids": [
+          "C01521-K2",
+          "C09666-K2",
+          "C13447-K1"
+        ]
+      },
+      "raw_origin": "F5121 Build/34.3.A.0.252 |  | chrome generic for android"
     },
     {
       "ring_device": "E2104 Build/24.0.A.5.14 |  | chrome generic",
       "as_of": "2016-09-06 04:50:36",
       "ring_cards": 3,
-      "base_rate": 0.08033,
+      "base_rate": 0.07667,
       "origin": null,
-      "raw_origin": ""
+      "raw_origin": "C|$100"
     },
     {
       "ring_device": "TA-1039 Build/NMF26F |  | chrome 64.0 for android",
       "as_of": "2016-09-08 13:41:22",
       "ring_cards": 3,
-      "base_rate": 0.07367,
-      "origin": null,
-      "raw_origin": ""
+      "base_rate": 0.07567,
+      "origin": {
+        "entity_type": "device_profile",
+        "entity": "Moto G Play Build/MPIS24.241-15.3-7 |  | chrome 63.0 for android",
+        "ring_cards_touching": 3,
+        "control_cards_touching": 0,
+        "n_ring": 3,
+        "n_control": 7370,
+        "lift": 7370.0,
+        "p_value": 1.5e-11,
+        "ring_card_ids": [
+          "C05031-K2",
+          "C11923-K2",
+          "C13171-K2"
+        ]
+      },
+      "raw_origin": "Moto G Play Build/MPIS24.241-15.3-7 |  | chrome 63.0 for and"
     },
     {
       "ring_device": "ZTE Blade A511 Build/MRA58K |  | chrome 63.0 for android",
       "as_of": "2016-09-07 08:41:17",
       "ring_cards": 3,
-      "base_rate": 0.089,
+      "base_rate": 0.07733,
       "origin": null,
-      "raw_origin": ""
+      "raw_origin": "SM-J700M Build/MMB29K |  | chrome 54.0 for android"
     },
     {
       "ring_device": "rv:58.0 | Mac OS X 10.11 | firefox 58.0 | 1280x800",
       "as_of": "2016-09-11 16:23:16",
       "ring_cards": 3,
-      "base_rate": 0.08033,
-      "origin": null,
-      "raw_origin": ""
+      "base_rate": 0.07767,
+      "origin": {
+        "entity_type": "email_p",
+        "entity": "protonmail.com",
+        "ring_cards_touching": 3,
+        "control_cards_touching": 0,
+        "n_ring": 3,
+        "n_control": 7020,
+        "lift": 7020.0,
+        "p_value": 1.73e-11,
+        "ring_card_ids": [
+          "C02513-K1",
+          "C03351-K2",
+          "C11000-K2"
+        ]
+      },
+      "raw_origin": "protonmail.com"
     },
     {
       "ring_device": "SM-N920A Build/MMB29K |  | chrome 63.0 for android",
       "as_of": "2016-09-11 19:39:47",
       "ring_cards": 3,
-      "base_rate": 0.07867,
+      "base_rate": 0.079,
       "origin": null,
-      "raw_origin": ""
+      "raw_origin": "hotmail.com"
     },
     {
       "ring_device": "SM-G955F Build/NRD90M |  | chrome 64.0 for android",
       "as_of": "2016-09-19 09:12:20",
       "ring_cards": 2,
-      "base_rate": 0.07467,
+      "base_rate": 0.07433,
       "origin": null,
-      "raw_origin": ""
+      "raw_origin": "yahoo.com.mx"
     },
     {
       "ring_device": "SAMSUNG SM-G925F Build/NRD90M |  | samsung browser 6.2",
       "as_of": "2016-09-16 18:02:10",
       "ring_cards": 3,
-      "base_rate": 0.08233,
-      "origin": null,
-      "raw_origin": ""
+      "base_rate": 0.077,
+      "origin": {
+        "entity_type": "device_profile",
+        "entity": "SAMSUNG SM-G925F Build/NRD90M |  | samsung browser 6.2",
+        "ring_cards_touching": 3,
+        "control_cards_touching": 2,
+        "n_ring": 3,
+        "n_control": 6774,
+        "lift": 3387.0,
+        "p_value": 1.93e-10,
+        "ring_card_ids": [
+          "C00978-K1",
+          "C02147-K2",
+          "C06630-K2"
+        ]
+      },
+      "raw_origin": "SAMSUNG SM-G925F Build/NRD90M |  | samsung browser 6.2"
     },
     {
       "ring_device": "rv:47.0 | Windows 10 | firefox 47.0 | 1768x992",
       "as_of": "2016-09-13 13:38:30",
       "ring_cards": 3,
-      "base_rate": 0.07867,
+      "base_rate": 0.08067,
       "origin": null,
-      "raw_origin": ""
+      "raw_origin": "rv:47.0 | Windows 10 | firefox 47.0 | 1768x992"
     },
     {
       "ring_device": "Windows | Windows 7 | firefox 58.0 | 1440x900",
       "as_of": "2016-09-11 00:32:36",
       "ring_cards": 3,
-      "base_rate": 0.079,
+      "base_rate": 0.082,
       "origin": null,
       "raw_origin": ""
     },
@@ -595,49 +1144,77 @@
       "ring_device": "Windows | Windows 10 | chrome 64.0 | 1280x800",
       "as_of": "2016-09-11 09:48:57",
       "ring_cards": 3,
-      "base_rate": 0.073,
+      "base_rate": 0.07333,
       "origin": null,
-      "raw_origin": ""
+      "raw_origin": "337.0"
     },
     {
       "ring_device": "5012G Build/MRA58K |  | chrome 62.0 for android",
       "as_of": "2016-09-15 18:00:25",
       "ring_cards": 3,
-      "base_rate": 0.07133,
+      "base_rate": 0.076,
       "origin": null,
-      "raw_origin": ""
+      "raw_origin": "C|$125"
     },
     {
       "ring_device": "rv:58.0 | Windows 10 | firefox | 1366x768",
       "as_of": "2016-09-30 09:33:47",
       "ring_cards": 3,
-      "base_rate": 0.07267,
+      "base_rate": 0.072,
       "origin": null,
-      "raw_origin": ""
+      "raw_origin": "yahoo.com"
     },
     {
       "ring_device": "MacOS | Mac OS X 10_13_1 | chrome 64.0 | 1920x1080",
       "as_of": "2016-09-16 20:26:50",
       "ring_cards": 3,
-      "base_rate": 0.07733,
-      "origin": null,
-      "raw_origin": ""
+      "base_rate": 0.06867,
+      "origin": {
+        "entity_type": "device_profile",
+        "entity": "Trident/7.0 | Windows 7 | ie 11.0 for desktop | 1440x900",
+        "ring_cards_touching": 3,
+        "control_cards_touching": 6,
+        "n_ring": 3,
+        "n_control": 6780,
+        "lift": 1130.0,
+        "p_value": 1.62e-09,
+        "ring_card_ids": [
+          "C02902-K2",
+          "C07212-K2",
+          "C11000-K2"
+        ]
+      },
+      "raw_origin": "Trident/7.0 | Windows 7 | ie 11.0 for desktop | 1440x900"
     },
     {
       "ring_device": "SM-J100VPP Build/LMY48B |  | chrome 63.0 for android",
       "as_of": "2016-10-11 08:58:35",
       "ring_cards": 2,
-      "base_rate": 0.06,
+      "base_rate": 0.056,
       "origin": null,
-      "raw_origin": ""
+      "raw_origin": "LG-K200 Build/MXB48T |  | chrome 63.0 for android"
     },
     {
       "ring_device": "Moto G Play Build/NPI26.48-36 |  | chrome 64.0 for android",
       "as_of": "2016-09-20 00:12:45",
       "ring_cards": 3,
-      "base_rate": 0.07633,
-      "origin": null,
-      "raw_origin": ""
+      "base_rate": 0.077,
+      "origin": {
+        "entity_type": "device_profile",
+        "entity": "chrome 49.0",
+        "ring_cards_touching": 3,
+        "control_cards_touching": 16,
+        "n_ring": 3,
+        "n_control": 6763,
+        "lift": 422.69,
+        "p_value": 1.88e-08,
+        "ring_card_ids": [
+          "C01521-K2",
+          "C06464-K1",
+          "C11509-K2"
+        ]
+      },
+      "raw_origin": "chrome 49.0"
     },
     {
       "ring_device": "SM-J320M Build/LMY47V |  | chrome 64.0 for android",
@@ -651,91 +1228,117 @@
       "ring_device": "SM-J700M Build/LMY48B |  | chrome 64.0 for android",
       "as_of": "2016-09-21 22:38:18",
       "ring_cards": 2,
-      "base_rate": 0.075,
+      "base_rate": 0.07833,
       "origin": null,
-      "raw_origin": ""
+      "raw_origin": "LG-K530 Build/MMB29M |  | chrome 63.0 for android"
     },
     {
       "ring_device": "Windows | Windows 10 | opera | 1366x768",
       "as_of": "2016-09-21 04:00:14",
       "ring_cards": 3,
-      "base_rate": 0.07233,
+      "base_rate": 0.07867,
       "origin": null,
-      "raw_origin": ""
+      "raw_origin": "iOS Device | iOS 11.2.1 | mobile safari 11.0 | 1334x750"
     },
     {
       "ring_device": "SM-N920A Build/MMB29K |  | chrome 64.0 for android",
       "as_of": "2016-09-21 13:13:27",
       "ring_cards": 3,
-      "base_rate": 0.07367,
+      "base_rate": 0.08067,
       "origin": null,
-      "raw_origin": ""
+      "raw_origin": "C|$50"
     },
     {
       "ring_device": "Windows | Windows 8.1 | chrome 58.0 | 1366x768",
       "as_of": "2016-09-24 23:43:23",
       "ring_cards": 3,
-      "base_rate": 0.07833,
+      "base_rate": 0.08,
       "origin": null,
-      "raw_origin": ""
+      "raw_origin": "S|$200"
     },
     {
       "ring_device": "HUAWEI Y360-U23 Build/HUAWEIY360-U23 |  | chrome 62.0 for an",
       "as_of": "2016-09-26 10:51:20",
       "ring_cards": 2,
-      "base_rate": 0.076,
+      "base_rate": 0.081,
       "origin": null,
-      "raw_origin": ""
+      "raw_origin": "TRT-L53 Build/HUAWEITRT-L53 |  | chrome 63.0 for android"
     },
     {
       "ring_device": "F8331 Build/41.2.A.7.76 |  | chrome 64.0 for android",
       "as_of": "2016-09-23 07:01:23",
       "ring_cards": 3,
-      "base_rate": 0.075,
-      "origin": null,
-      "raw_origin": ""
+      "base_rate": 0.076,
+      "origin": {
+        "entity_type": "device_profile",
+        "entity": "SM-G935F Build/NRD90M |  | chrome 63.0 for android",
+        "ring_cards_touching": 3,
+        "control_cards_touching": 1,
+        "n_ring": 3,
+        "n_control": 6725,
+        "lift": 6725.0,
+        "p_value": 7.88e-11,
+        "ring_card_ids": [
+          "C01525-K2",
+          "C05031-K2",
+          "C11847-K2"
+        ]
+      },
+      "raw_origin": "SM-G935F Build/NRD90M |  | chrome 63.0 for android"
     },
     {
       "ring_device": "Windows | Linux | chrome generic | 640x360",
       "as_of": "2016-09-26 09:52:47",
       "ring_cards": 3,
-      "base_rate": 0.07633,
+      "base_rate": 0.075,
       "origin": null,
-      "raw_origin": ""
+      "raw_origin": "yahoo.com"
     },
     {
       "ring_device": "MYA-L03 Build/HUAWEIMYA-L03 |  | chrome 64.0 for android",
       "as_of": "2016-09-28 10:23:16",
       "ring_cards": 3,
-      "base_rate": 0.075,
-      "origin": null,
-      "raw_origin": ""
+      "base_rate": 0.07967,
+      "origin": {
+        "entity_type": "device_profile",
+        "entity": "Windows |  | edge 16.0",
+        "ring_cards_touching": 3,
+        "control_cards_touching": 16,
+        "n_ring": 3,
+        "n_control": 6727,
+        "lift": 420.44,
+        "p_value": 1.91e-08,
+        "ring_card_ids": [
+          "C00426-K2",
+          "C02181-K2",
+          "C11597-K2"
+        ]
+      },
+      "raw_origin": "Windows |  | edge 16.0"
     },
     {
       "ring_device": "rv:58.0 | Windows 10 | firefox | 1920x1080",
       "as_of": "2016-09-25 15:53:47",
       "ring_cards": 3,
-      "base_rate": 0.08033,
-      "origin": null,
-      "raw_origin": ""
-    },
-    {
-      "ring_device": "Windows | Windows 7 | chrome 64.0 | 1920x975",
-      "as_of": "2016-09-28 01:10:45",
-      "ring_cards": 3,
-      "base_rate": 0.07733,
-      "origin": null,
-      "raw_origin": ""
-    },
-    {
-      "ring_device": "GT-I9060M Build/KTU84P |  | chrome 64.0 for android",
-      "as_of": "2016-09-28 23:07:51",
-      "ring_cards": 3,
-      "base_rate": 0.078,
-      "origin": null,
-      "raw_origin": ""
+      "base_rate": 0.07867,
+      "origin": {
+        "entity_type": "device_profile",
+        "entity": "Trident/7.0 | Windows 7 | ie 11.0 for desktop | 1600x900",
+        "ring_cards_touching": 3,
+        "control_cards_touching": 8,
+        "n_ring": 3,
+        "n_control": 6722,
+        "lift": 840.25,
+        "p_value": 3.26e-09,
+        "ring_card_ids": [
+          "C07212-K2",
+          "C11309-K1",
+          "C12166-K2"
+        ]
+      },
+      "raw_origin": "Trident/7.0 | Windows 7 | ie 11.0 for desktop | 1600x900"
     }
   ],
   "backend": "tigergraph",
-  "seconds": 46.2
+  "seconds": 158.4
 }

@@ -1,5 +1,7 @@
 # Architecture
 
+> **Final round:** the current, detailed diagram set (16 diagrams, each with a full explanation) is in [`docs/architecture/`](architecture/README.md), with PNG/SVG exports in [`docs/diagrams/`](diagrams/). The diagrams below document the Round 1 system and are kept for history; their images moved to `docs/diagrams/round1/`.
+
 ## Diagrams
 
 Eighteen diagrams, drawn from the code as it runs. GitHub renders them; the same set is published as an interactive page. Together they cover every component, every graph path, every policy rule and every one of the twenty benchmark cases.

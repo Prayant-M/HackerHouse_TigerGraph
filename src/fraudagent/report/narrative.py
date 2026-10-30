@@ -39,6 +39,18 @@ SYSTEM = (
 _ID = re.compile(r"\b(CASE-HHG-\d{3}|HHG-\d{3}|CC-\d{4}|C\d{5}-K\d|C\d{5}|\d{7})\b")
 
 
+def usable(text: str, min_words: int, llm=None) -> str:
+    """Quality floor on model prose. Garbage that survives the id filter —
+    too short to stand alone, or JSON / markup instead of sentences — is
+    replaced by the deterministic template, and the fallback is counted."""
+    t = (text or "").strip()
+    bad = (not t or len(t.split()) < min_words or t.startswith(("{", "[", "<"))
+           or t.count("{") + t.count("}") > 4)
+    if bad and t and llm is not None and hasattr(llm, "template_fallbacks"):
+        llm.template_fallbacks += 1
+    return "" if bad else t
+
+
 def grounded(text: str, source: str) -> str:
     """Return `text` only if every identifier it cites appears in `source`, the
     material the model was given. A citation the evidence does not contain is a
@@ -103,7 +115,7 @@ def case_summary(llm: LLMClient, ctx: InvestigationContext, pattern: str, verdic
         "the conclusion is, and what is still uncertain. Do not list the actions — they are "
         "recorded separately. Plain prose, no heading, no bullet points.\n\n" + brief,
         max_tokens=600)
-    return grounded(text, brief) or template_summary(ctx, pattern, verdict, p_fraud, episode,
+    return usable(grounded(text, brief), 15, llm) or template_summary(ctx, pattern, verdict, p_fraud, episode,
                                             evidence, priors)
 
 
@@ -166,7 +178,7 @@ def sar_narrative(llm: LLMClient, ctx: InvestigationContext, pattern: str, p_fra
         "identifiers and figures present in the brief.\n\n"
         f"Filing reason: {reason}\n\n" + brief,
         max_tokens=900)
-    return grounded(text, brief) or template_sar(ctx, pattern, p_fraud, episode, evidence,
+    return usable(grounded(text, brief), 60, llm) or template_sar(ctx, pattern, p_fraud, episode, evidence,
                                                  priors)
 
 
