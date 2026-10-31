@@ -37,6 +37,8 @@ evidence · 20 / 20 answers audit-clean · 64 tests.
 
 **Live console (read-only):** [prayant-fraudgraph-console.static.hf.space](https://prayant-fraudgraph-console.static.hf.space), all twenty
 investigations, no install. Live re-runs need the repository and a workspace.
+To host the live agent itself (token-gated re-runs against Savanna), see
+[`docs/DEPLOY.md`](docs/DEPLOY.md).
 
 **Diagrams:** final round — sixteen detailed diagrams in [`docs/architecture/`](docs/architecture/README.md); Round 1 — eighteen architecture diagrams (system, agent loop, MCP path, schema,
 GraphRAG, decision authority, ring detection, case lifecycle, R7 walkthrough,

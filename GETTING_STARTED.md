@@ -164,6 +164,10 @@ deploys unchanged to Render, Railway or Fly; it listens on `$PORT` (default
 To refresh the live copy after rerunning the cases, run the build and upload
 lines again.
 
+**Live agent** (`--live`, → `build/live/`): the real agent on a public URL,
+investigating against Savanna, with token-gated re-runs and secrets supplied by
+the host. See [`docs/DEPLOY.md`](docs/DEPLOY.md).
+
 ## 7. Troubleshooting
 
 | Symptom | Cause and fix |

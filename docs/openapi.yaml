@@ -166,11 +166,20 @@ paths:
         | `done` | The complete answer (see `Answer`). The stream ends |
         | `error` | An error message string. The stream ends |
 
-        This is a GET with side effects, and it takes no token. The run writes the
-        case to the graph and appends to the simulated action log. It does not
-        update the answer file in `cases/`.
+        This is a GET with side effects. The run writes the case to the graph and
+        appends to the simulated action log. It does not update the answer file in
+        `cases/`. Locally it takes no token. On a public live deployment
+        (`CONSOLE_RUN_AUTH=1`, see docs/DEPLOY.md) it needs a token from
+        `APPROVAL_TOKENS` (any role), as a bearer header or as `?token=`, because
+        EventSource cannot set headers. Only one run goes at a time; a second gets an
+        `error` event saying another run is in progress.
       parameters:
         - $ref: '#/components/parameters/CaseId'
+        - name: token
+          in: query
+          required: false
+          description: Run token, public live deployments only.
+          schema: { type: string }
       responses:
         '200':
           description: Event stream.
@@ -183,6 +192,8 @@ paths:
 
                 data: {"type": "done", "data": {"case_id": "HHF-016"}}
 
+        '401':
+          description: Public live deployment, and the token is missing or unknown.
         '403': { $ref: '#/components/responses/ReadOnly' }
         '404': { $ref: '#/components/responses/NotFound' }
   /api/approvals:

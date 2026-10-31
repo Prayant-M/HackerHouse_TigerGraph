@@ -16,6 +16,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import os
 import shutil
 import sys
 import time
@@ -215,16 +216,125 @@ def build_static(out: Path) -> None:
     print(f"[space] static site at {out} · {size / 1e6:.1f} MB")
 
 
+# ------------------------------------------------------------------ live ----
+# The real agent, not a snapshot: it investigates against TigerGraph through the
+# MCP server and writes prose with the configured model. Credentials are never
+# in the bundle; the host injects them as secrets (see docs/DEPLOY.md).
+LIVE_DOCKERFILE = """\
+FROM python:3.11-slim
+
+RUN useradd -m -u 1000 user
+USER user
+ENV HOME=/home/user PATH=/home/user/.local/bin:$PATH \\
+    HF_HOME=/home/user/.cache/huggingface \\
+    GRAPH_BACKEND=tigergraph GRAPH_STRICT=1 TG_VIA_MCP=1 \\
+    CONSOLE_RUN_AUTH=1 CONSOLE_MAX_LIVE=1 \\
+    EMBEDDING_PROVIDER=sentence-transformers \\
+    EMBEDDING_MODEL=sentence-transformers/all-MiniLM-L6-v2 EMBEDDING_DIM=384 \\
+    TG_LOAD_VERSION="{load_version}" \\
+    HOST=0.0.0.0 PORT=7860 PYTHONUNBUFFERED=1
+WORKDIR /home/user/app
+
+# CPU-only torch first, so sentence-transformers does not pull the CUDA build.
+RUN pip install --no-cache-dir --user torch --index-url https://download.pytorch.org/whl/cpu
+COPY --chown=user requirements.txt .
+RUN pip install --no-cache-dir --user -r requirements.txt
+# Bake the embedding model in, so a cold start does not download it.
+RUN python -c "from sentence_transformers import SentenceTransformer as S; S('sentence-transformers/all-MiniLM-L6-v2')"
+COPY --chown=user . .
+
+EXPOSE 7860
+CMD ["python", "ui/server.py"]
+"""
+
+LIVE_README = SPACE_README.replace(
+    "title: FraudGraph Analyst Console", "title: FraudGraph Agent (live)").replace(
+    "short_description: Agentic fraud investigation on TigerGraph, read-only demo",
+    "short_description: Agentic fraud investigation on TigerGraph, live agent").split(
+    "# FraudGraph Agent", 1)[0] + """\
+# FraudGraph Agent: live analyst console
+
+The agent itself, running: press **Re-run live** on a case and it investigates
+against TigerGraph Savanna through the TigerGraph MCP server, streaming each
+step. Decisions come from the deterministic core; the model writes prose only.
+
+Live runs need a token (ask the owner); one run at a time. Browsing the answer
+files, evidence, audit trail and approval queue needs none. Setup and secrets:
+`docs/DEPLOY.md` in the repository.
+"""
+
+# Small calibration artefacts the agent reads on the TigerGraph path. The 700 MB
+# of staged transactions stay behind: the graph serves those.
+LIVE_STAGED = ("likelihood_ratios.json", "conformal.json", "conformal_support.npy",
+               "proof_gate.json", "closed_case_facts.parquet", "embedder.pkl")
+LIVE_PARQUET_OK = {"closed_case_facts.parquet", "behaviour_emb.parquet"}
+
+
+def build_live(out: Path) -> None:
+    import pandas as pd
+
+    from fraudagent.config import PATHS
+    from fraudagent.core.attest import _staged_version
+
+    if out.exists():
+        shutil.rmtree(out)
+    out.mkdir(parents=True)
+    skip = shutil.ignore_patterns("__pycache__", "*.pyc", "_probe.html")
+    shutil.copytree(ROOT / "src" / "fraudagent", out / "src" / "fraudagent", ignore=skip)
+    shutil.copytree(ROOT / "ui", out / "ui", ignore=skip)
+    for d in ("queries", "algorithms"):
+        shutil.copytree(ROOT / "graph" / d, out / "graph" / d, ignore=skip)
+    copy_tree(ROOT / "benchmark", out / "benchmark", ("*.py",))
+    copy_tree(ROOT / "benchmark" / "autonomous", out / "benchmark" / "autonomous", ("AUTO-*.json",))
+    copy_tree(ROOT / "cases", out / "cases", ("HHF-*.json", "HHG-*.json"))
+    for d in ("policy", "detectors", "schema", "lifecycle", "approvals"):
+        if (ROOT / "data" / d).exists():
+            shutil.copytree(ROOT / "data" / d, out / "data" / d, ignore=skip)
+    shutil.copy2(ROOT / "data" / "manifest.json", out / "data" / "manifest.json")
+    pack = PATHS.case_pack_csv
+    (out / pack.relative_to(ROOT)).parent.mkdir(parents=True, exist_ok=True)
+    shutil.copy2(pack, out / pack.relative_to(ROOT))
+
+    staged = out / "data" / "staged"
+    staged.mkdir(parents=True)
+    for name in LIVE_STAGED:
+        shutil.copy2(PATHS.staged / name, staged / name)
+    # Behaviour vectors for the pack's flagged transactions only (160 MB → KB).
+    flagged = set(pd.read_csv(pack, dtype={"flagged_txn_id": str})["flagged_txn_id"])
+    b = pd.read_parquet(PATHS.behaviour_parquet)
+    b[b["txn_id"].astype(str).isin(flagged)].to_parquet(staged / "behaviour_emb.parquet")
+
+    # The answer files' data_snapshot hashes the staged sizes; pin it, so a live
+    # re-run attests against the same load the files were written from.
+    load = os.environ.get("TG_LOAD_VERSION", "") or _staged_version()
+    (out / "Dockerfile").write_text(LIVE_DOCKERFILE.replace("{load_version}", load), encoding="utf-8")
+    shutil.copy2(ROOT / "requirements.txt", out / "requirements.txt")
+    (out / "README.md").write_text(LIVE_README, encoding="utf-8")
+    (out / ".gitignore").write_text(GITIGNORE, encoding="utf-8")
+    (out / ".dockerignore").write_text(".env\n.cache/\n__pycache__/\n", encoding="utf-8")
+
+    leaked = [p for p in out.rglob("*") if p.name in {".env", "approval_signing_key"}
+              or (p.suffix == ".parquet" and p.name not in LIVE_PARQUET_OK)]
+    assert not leaked, f"refusing to ship {leaked}"
+    size = sum(p.stat().st_size for p in out.rglob("*") if p.is_file())
+    print(f"[live] bundle at {out} · {size / 1e6:.1f} MB · TG_LOAD_VERSION={load}")
+
+
 def main() -> int:
     ap = argparse.ArgumentParser()
     ap.add_argument("--out", default=None)
     ap.add_argument("--static", action="store_true",
                     help="export a server-less static site instead of a Docker app")
+    ap.add_argument("--live", action="store_true",
+                    help="a Docker app that runs the real agent (secrets come from the host)")
     ap.add_argument("--console", default="http://127.0.0.1:8080",
                     help="a running live console to take the health snapshot from")
     ap.add_argument("--keep-snapshot", action="store_true",
                     help="reuse ui/snapshot/ instead of capturing a new one")
     args = ap.parse_args()
+    if args.live:
+        build_live(Path(args.out or ROOT / "build" / "live"))
+        return 0
     if not args.keep_snapshot:
         capture_snapshot(args.console)
     if args.static:

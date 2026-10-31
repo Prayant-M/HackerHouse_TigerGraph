@@ -34,6 +34,12 @@ answer files and a snapshot of the graph health and audit taken from the last
 live run, needs no TigerGraph credentials, no LLM key and none of the staged
 data, and refuses live re-runs. Approvals are kept in memory and never written
 to a graph. `python deploy/build_space.py` assembles such a bundle.
+
+Public live mode (CONSOLE_RUN_AUTH=1) is for hosting the real agent: live
+re-runs and replays need a token from APPROVAL_TOKENS (any role), and at most
+CONSOLE_MAX_LIVE (default 1) investigations run at once, so a public URL cannot
+spend the model quota or write to the graph on its own.
+`python deploy/build_space.py --live` assembles such a bundle.
 """
 
 from __future__ import annotations
@@ -74,6 +80,8 @@ STATIC = Path(__file__).parent / "static"
 SNAPSHOT = Path(__file__).parent / "snapshot"
 OPENAPI_SPEC = ROOT / "docs" / "openapi.yaml"
 READONLY = os.environ.get("CONSOLE_READONLY", "").strip().lower() in {"1", "true", "yes"}
+RUN_AUTH = os.environ.get("CONSOLE_RUN_AUTH", "").strip().lower() in {"1", "true", "yes"}
+_live_slots = threading.BoundedSemaphore(int(os.environ.get("CONSOLE_MAX_LIVE", "1") or 1))
 app = FastAPI(title="TigerGraph Agentic Fraud Investigation — Analyst Console")
 
 _lock = threading.Lock()
@@ -96,6 +104,19 @@ def _snapshot(name: str) -> dict[str, Any] | None:
     return json.loads(path.read_text(encoding="utf-8")) if path.exists() else None
 
 
+def _require_runner(authorization: str | None, token: str | None) -> None:
+    """Public live mode: a live run needs a known token. The header is used by
+    fetch; EventSource cannot set headers, so the stream passes ?token=."""
+    if not RUN_AUTH:
+        return
+    from fraudagent.governance import approvals as gov
+
+    try:
+        gov.authenticate(authorization or (f"Bearer {token}" if token else None))
+    except gov.AuthError as exc:
+        raise HTTPException(exc.status, f"live runs need a token: {exc.message}") from exc
+
+
 @app.get("/api/health")
 def health() -> dict[str, Any]:
     if READONLY:
@@ -105,9 +126,12 @@ def health() -> dict[str, Any]:
                 "captured_at": snap.get("captured_at"),
                 "answer_files": len(_case_files()),
                 "calibration": PATHS.lr_table_json.exists()}
-    store = get_store()
+    try:
+        graph = get_store().health()
+    except Exception as exc:  # noqa: BLE001 - a sleeping workspace must not take the page down
+        graph = {"backend": "unavailable", "error": str(exc)[:300]}
     ids = graph_case_ids()
-    return {"ok": True, "readonly": False, "graph": store.health(),
+    return {"ok": True, "readonly": False, "run_auth": RUN_AUTH, "graph": graph,
             "graph_case_ids": sorted(ids) if ids is not None else None,
             "answer_files": len(_case_files()),
             "calibration": PATHS.lr_table_json.exists(),
@@ -247,7 +271,8 @@ def case_graph(case_id: str) -> dict[str, Any]:
 
 
 @app.get("/api/investigate/{case_id}")
-async def investigate(case_id: str) -> StreamingResponse:
+async def investigate(case_id: str, token: str | None = None,
+                      authorization: str | None = Header(default=None)) -> StreamingResponse:
     """Re-run the agent and stream its reasoning trace as it happens.
 
     This is what makes the console a console rather than a JSON viewer: the
@@ -258,6 +283,7 @@ async def investigate(case_id: str) -> StreamingResponse:
         raise HTTPException(403, "Live re-runs are disabled on this read-only deployment. "
                                  "Clone the repository and run `python ui/server.py` "
                                  "to watch the agent investigate against TigerGraph.")
+    _require_runner(authorization, token)
     pack = _pack()
     row = pack[pack["case_id"] == case_id]
     if row.empty:
@@ -266,6 +292,13 @@ async def investigate(case_id: str) -> StreamingResponse:
 
     async def stream():
         from fraudagent.agent.graph import Investigator, trigger_from_row
+
+        # Taken here, not before the response, so a client that never reads
+        # the stream cannot hold a slot; the worker gives it back.
+        if not _live_slots.acquire(blocking=False):
+            yield ("data: " + json.dumps({"type": "error", "data": "Another live investigation "
+                                          "is running; try again in a minute."}) + "\n\n")
+            return
 
         queue: asyncio.Queue = asyncio.Queue()
         loop = asyncio.get_running_loop()
@@ -296,6 +329,8 @@ async def investigate(case_id: str) -> StreamingResponse:
             except Exception as exc:                       # pragma: no cover
                 loop.call_soon_threadsafe(queue.put_nowait,
                                           {"type": "error", "data": str(exc)})
+            finally:
+                _live_slots.release()
 
         threading.Thread(target=worker, daemon=True).start()
         while True:
@@ -520,13 +555,15 @@ def regulator_replay(case_id: str) -> dict[str, Any]:
 
 
 @app.post("/api/replay/{case_id}/rerun/{seq}")
-def rerun_call(case_id: str, seq: int) -> dict[str, Any]:
+def rerun_call(case_id: str, seq: int,
+               authorization: str | None = Header(default=None)) -> dict[str, Any]:
     """Challenge one step: re-run that recorded tool call against the live
     store and compare the response digest with what the agent saw."""
     from fraudagent.agent.recorder import digest, load_recording
 
     if READONLY:
         raise HTTPException(403, "read-only deployment")
+    _require_runner(authorization, None)
     rec = load_recording(case_id) or {"calls": []}
     call = next((c for c in rec["calls"] if c.get("seq") == seq), None)
     if call is None or not call.get("ok") or call["method"] == "write_case":

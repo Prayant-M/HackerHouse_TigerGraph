@@ -824,7 +824,10 @@ function rerun(id) {
   $("#drawer-title").textContent = `Investigating ${id}…`;
   $("#live-steps").innerHTML = ""; liveBar(0); openDrawer();
   let n = 0;
-  const es = new EventSource(`/api/investigate/${encodeURIComponent(id)}`);
+  // Public live deployments gate re-runs on a token; EventSource cannot set headers.
+  const tok = S.health?.run_auth ? approvalToken() : "";
+  if (S.health?.run_auth && !tok) { btn.disabled = false; btn.innerHTML = "▶ Re-run live"; closeDrawer(); return; }
+  const es = new EventSource(`/api/investigate/${encodeURIComponent(id)}` + (tok ? `?token=${encodeURIComponent(tok)}` : ""));
   const reset = () => { const b = $("#rerun"); if (b) { b.disabled = false; b.innerHTML = "▶ Re-run live"; } };
   es.onmessage = ev => {
     const msg = JSON.parse(ev.data);
@@ -1228,7 +1231,8 @@ async function tabReplay(d, pane) {
   $$("#tabpane [data-seq]").forEach(b => b.onclick = async () => {
     b.disabled = true;
     try {
-      const res = await fetch(apiUrl(`/api/replay/${encodeURIComponent(d.case_id)}/rerun/${b.dataset.seq}`), { method: "POST" }).then(x => x.json());
+      const res = await fetch(apiUrl(`/api/replay/${encodeURIComponent(d.case_id)}/rerun/${b.dataset.seq}`), { method: "POST",
+        headers: S.health?.run_auth ? { Authorization: `Bearer ${approvalToken()}` } : {} }).then(x => x.json());
       b.textContent = res.matches ? "✓ matches" : "✕ differs";
     } catch { b.textContent = "unavailable"; }
   });
