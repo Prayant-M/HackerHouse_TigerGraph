@@ -223,6 +223,20 @@ matter:
 
 ## Quickstart
 
+### One command
+
+```bash
+python reproduce.py            # clean clone -> 18 graded answer files (resumes; skips finished stages)
+python reproduce.py --offline  # no TigerGraph, no API key: local mirror, template prose
+python reproduce.py --quick    # sampled calibration, ~20 min instead of hours (answers may differ)
+```
+
+It installs `requirements.txt`, checks the dataset, creates approval tokens (printed once,
+hashes only in `.env`), runs the drift gate and asks you, as fraud manager, to approve
+January, builds and calibrates, loads TigerGraph only if it is not already loaded,
+investigates all 18 cases, then audits, grades, re-verifies every attestation and runs the
+tests. Logs go to `logs/reproduce/`. The steps below are what it runs, if you want them by hand.
+
 ### 0. Requirements
 
 Python ≥ 3.11, ~8 GB RAM, ~4 GB disk. Nothing else — no Docker, no Node, no
