@@ -453,9 +453,10 @@ flowchart LR
 widens automatically when a case looks like nothing calibration has seen — the brief's warning
 that the bank's model has never seen January.
 
-**Measured** (`eval/reports/conformal.md`): October empirical coverage 0.86 overall
-(legit 0.94, fraud 0.81) against nominal 0.90. The fraud class under-covers under the
-month-to-month shift, and we say so. Mean set size 1.75, so the set is often {fraud, legit},
+**Measured** (`eval/reports/conformal.md`): October empirical coverage **0.90** overall
+(fraud 0.89, legit 0.92) against nominal 0.90, and 0.89 on Nov–Dec with the deployed fit. It
+was 0.86 (fraud 0.81) until we found a signal that cannot fire once the closed-case pool passes
+~93% fraud, and masked it. Mean set size 1.81, so the set is often {fraud, legit},
 but it only ever *widens a fraud verdict*; a legitimate verdict that cannot wrong anyone is
 reported and left alone.
 
@@ -477,7 +478,7 @@ flowchart TB
   REC["Recorded tool I/O of each case<br/>(.cache/recordings — no live graph touched)"]:::data
   subgraph MR["Metamorphic relations (eval/metamorphic.py)"]
     M1["M1 id renaming<br/>0 / 18 violations"]:::ok
-    M2["M2 hostile text<br/>40 templates × 18 = 720 runs<br/>0 decision changes · 468 flagged"]:::ok
+    M2["M2 hostile text<br/>62 templates × 18 = 1,116 runs<br/>0 decision changes · 1,032 flagged"]:::ok
     M4["M4 time shift (within regime)<br/>0 / 18"]:::ok
     M5["M5 monotone evidence<br/>0 / 90"]:::ok
     M6["M6 monotone exposure (SAR never switches off)<br/>0 / 18"]:::ok
@@ -656,7 +657,9 @@ token (exit 4), and the approval is signed into the ledger and written to the gr
 spec (no reference data needed), validates, gates, transforms, ingests into isolated folders,
 runs the pack and grades. Rehearsal on a renamed and reshaped variant: every required column
 mapped (card tuple by value quantiles, cents ×0.01, date + time → ts, 377 family columns);
-3/3 cases graded clean, with verdicts identical to the canonical run.
+3/3 cases graded clean, with verdicts identical to the canonical run. A harder variant
+(opaque file names, epoch timestamps, shuffled columns) on all 18 cases matches a same-data
+control 18/18 and grades 18/18 clean.
 """)
 
 # ------------------------------------------------------------------------ 13
@@ -726,7 +729,7 @@ flowchart LR
     C14["C14 Case management<br/>lifecycle · WATCH · handover"]:::human
   end
   subgraph G5["Defend the agent"]
-    C10["C10 Break the agent<br/>720 fuzz · ATK-* · provenance"]:::guard
+    C10["C10 Break the agent<br/>1,116 fuzz · ATK-* · provenance"]:::guard
   end
   subgraph G6["Messy and changing data"]
     C11["C11 Data quality detective<br/>taint → conformal widening"]:::core
@@ -755,8 +758,8 @@ the attested numbers, and the live demo steps.
 | 6 | Regulator's view | deep | proof + flip live + every tool response by hash + re-run; 18/18 attest-verify |
 | 7 | Containment planner | deep | 5.0× lift, $14.4M pre-empted, 0 innocent blocks |
 | 8 | Analyst in the loop | medium | 46 → 42 legit acted against after one round |
-| 9 | Speed and autonomy | byproduct | p95 ≈ 284 s with LLM prose, ≈ $0.001/case (cached) |
-| 10 | Break the agent | deep | 0/720 fuzz flips; 3 → 0 evasions; provenance assertion |
+| 9 | Speed and autonomy | implemented | p95 79 s (was 284 s); 18 alerts in 315 s on 4 workers; ≈ $0.003/case |
+| 10 | Break the agent | deep | 0/1,116 fuzz flips; 3 → 0 evasions; provenance assertion |
 | 11 | Data quality detective | medium | 490,613 txns without identity; 5/18 cases tainted; label conflict found |
 | 12 | Schema drift survival | medium | January run through the gate with approval |
 | 13 | Someone else's schema | medium | variant mapped and investigated, verdicts identical |
@@ -772,7 +775,7 @@ flowchart LR
   S3{"3:00 Case shape?"}:::core
   R["Ring: origin · lift · at-risk step-ups<br/>block set + customers touched<br/>ring replay slider"]:::tg
   L["Legit / ambiguous: conformal set + why<br/>harm avoided"]:::ok
-  H["Hostile text: spans flagged<br/>720 fuzz → 0 changes · tip-off diff 0 bytes"]:::guard
+  H["Hostile text: spans flagged<br/>1,116 fuzz → 0 changes · tip-off diff 0 bytes"]:::guard
   S4["4:00 One drill live<br/>kill graph → signed FAILED_DEPENDENCY<br/>or replayed approval → 409"]:::guard
   S0 --> S1 --> S2 --> S3
   S3 --> R & L & H
@@ -796,16 +799,16 @@ flowchart TB
   subgraph H["Harness"]
     H1["Drills 11 / 11 PASS"]:::ok
     H2["attest-verify 18 / 18"]:::ok
-    H3["Tests 122 pass · parity 9 / 9"]:::ok
+    H3["Tests 178 pass · parity 9 / 9"]:::ok
   end
   subgraph I["Innovation"]
     I1["Gate: legit acted against 70 → 5<br/>err k=1 0.36 vs k≥2 0.16"]:::core
     I2["Containment: 5.0× lift · $14.4M<br/>0 innocent blocks"]:::tg
-    I3["Fuzz: 0 / 720 · metamorphic 0 / 882"]:::eval
-    I4["Conformal: coverage 0.86 (0.90 nominal)"]:::core
+    I3["Fuzz: 0 / 1,116 · metamorphic 0 / 1,278"]:::eval
+    I4["Conformal: coverage 0.90 (0.90 nominal)"]:::core
   end
   subgraph D["Data"]
-    D1["650,938 txns · January loaded through the gate<br/>BYO variant: 3 / 3 clean, identical verdicts"]:::data
+    D1["650,938 txns · January loaded through the gate<br/>BYO variant b: 18 / 18 clean, identical to control"]:::data
   end
 """ + CLASSES, """
 Every number is generated by a script and stored in `eval/reports/`. The figures below are
@@ -815,15 +818,15 @@ regenerated into the README by `scripts/readme_numbers.py`.
 |---|---|---|
 | Official grader on the 18 | 18/18 clean, 0 hard, 0 policy, 0 warnings | `eval/reports/grade_official.md` |
 | Final verdicts | 10 legitimate · 7 fraud · 1 uncertain; 3 SARs; gate changed 1 (HHF-016) | `run_summary.md` |
-| Hostile text | 6/6 flagged; 0/720 fuzzed runs changed a decision | `metamorphic.md` |
+| Hostile text | 1,032/1,116 fuzzed runs flagged; 0 changed a decision | `metamorphic.md` |
 | Data quality | 5/18 tainted; 1 organiser label conflict | `data_quality.md` |
 | Proof gate (Oct holdout) | legit acted against 70 → 5; harmful error 0.36 (k=1) vs 0.16 (k≥2) | `proof_holdout.md` |
 | Containment backtest | agent arm 0.37 precision, 5.0× lift, $14.4M pre-empted, 0 innocent blocks | `containment_backtest.md` |
-| Conformal | Oct coverage 0.86 (fraud 0.81, legit 0.94) | `conformal.md` |
+| Conformal | Oct coverage 0.90 (fraud 0.89, legit 0.92); Nov–Dec 0.89 | `conformal.md` |
 | Drills | 11/11 pass | `drills.md` |
 | Attestations | 18/18 re-run and match on live TigerGraph | `attest_verify.md` |
 | Round 1 honesty | 17/20 correct; HHG-004 (legit) was blocked | `hhg_holdout.md` |
-| Latency / cost | p95 ≈ 284 s with LLM prose; ≈ $0.001 per case (prose cached) | `run_summary.md` |
+| Latency / cost | p95 79 s (was 284 s); ≈ $0.003 per case | `pipeline.md` |
 """)
 
 

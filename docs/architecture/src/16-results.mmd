@@ -12,16 +12,16 @@ flowchart TB
   subgraph H["Harness"]
     H1["Drills 11 / 11 PASS"]:::ok
     H2["attest-verify 18 / 18"]:::ok
-    H3["Tests 122 pass · parity 9 / 9"]:::ok
+    H3["Tests 178 pass · parity 9 / 9"]:::ok
   end
   subgraph I["Innovation"]
     I1["Gate: legit acted against 70 → 5<br/>err k=1 0.36 vs k≥2 0.16"]:::core
     I2["Containment: 5.0× lift · $14.4M<br/>0 innocent blocks"]:::tg
-    I3["Fuzz: 0 / 720 · metamorphic 0 / 882"]:::eval
-    I4["Conformal: coverage 0.86 (0.90 nominal)"]:::core
+    I3["Fuzz: 0 / 1,116 · metamorphic 0 / 1,278"]:::eval
+    I4["Conformal: coverage 0.90 (0.90 nominal)"]:::core
   end
   subgraph D["Data"]
-    D1["650,938 txns · January loaded through the gate<br/>BYO variant: 3 / 3 clean, identical verdicts"]:::data
+    D1["650,938 txns · January loaded through the gate<br/>BYO variant b: 18 / 18 clean, identical to control"]:::data
   end
 
 classDef tg fill:#FFE8D6,stroke:#F58220,stroke-width:2px,color:#1F2430;

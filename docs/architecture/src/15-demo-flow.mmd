@@ -11,7 +11,7 @@ flowchart LR
   S3{"3:00 Case shape?"}:::core
   R["Ring: origin · lift · at-risk step-ups<br/>block set + customers touched<br/>ring replay slider"]:::tg
   L["Legit / ambiguous: conformal set + why<br/>harm avoided"]:::ok
-  H["Hostile text: spans flagged<br/>720 fuzz → 0 changes · tip-off diff 0 bytes"]:::guard
+  H["Hostile text: spans flagged<br/>1,116 fuzz → 0 changes · tip-off diff 0 bytes"]:::guard
   S4["4:00 One drill live<br/>kill graph → signed FAILED_DEPENDENCY<br/>or replayed approval → 409"]:::guard
   S0 --> S1 --> S2 --> S3
   S3 --> R & L & H

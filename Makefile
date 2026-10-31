@@ -7,11 +7,14 @@ PY ?= python
 
 .PHONY: all setup ingest calibrate quick-calibrate cases backtest monitor ui test stage verify clean graph-install graph-algorithms audit \
         case twice replay diff drift facts final-graph proof conformal metamorphic attacks detectors \
-        containment quality feedback drills attest-verify canary pipeline tokens final
+        containment quality feedback drills attest-verify canary pipeline tokens final reproduce
 
 CASE ?= HHF-001
 
 all: ingest calibrate cases
+
+reproduce:         ## ONE command, clean clone -> graded answers (python reproduce.py --help)
+	$(PY) reproduce.py
 
 setup:
 	$(PY) -m pip install -r requirements.txt

@@ -36,6 +36,7 @@ switch ($Target) {
   "canary"    { python eval/canaries.py --case $Case }
   "pipeline"  { python benchmark/alert_pipeline.py --enqueue-pack --drain }
   "tokens"    { python scripts/make_tokens.py }
+  "reproduce" { python reproduce.py; exit $LASTEXITCODE }
   "byo"       { python ingest/byo.py --input $Data --name $Name --accept-mapping; exit $LASTEXITCODE }
   "byo-map"   { python ingest/byo.py --input $Data --name $Name --map-only }
   "grade"     { python eval/grade_official.py }
@@ -50,5 +51,5 @@ switch ($Target) {
   "graph-algorithms" { python graph/install.py --step algorithms }
   "audit"     { python eval/audit_answers.py }
   "all"       { & $PSCommandPath ingest; & $PSCommandPath calibrate; & $PSCommandPath cases; & $PSCommandPath audit }
-  default     { Write-Host "targets: setup ingest calibrate cases case twice replay diff drift facts final-graph proof conformal metamorphic attacks detectors containment quality feedback drills attest-verify canary pipeline tokens ui test audit all  (-Case HHF-007)" }
+  default     { Write-Host "targets: reproduce setup ingest calibrate cases case twice replay diff drift facts final-graph proof conformal metamorphic attacks detectors containment quality feedback drills attest-verify canary pipeline tokens ui test audit all  (-Case HHF-007)" }
 }

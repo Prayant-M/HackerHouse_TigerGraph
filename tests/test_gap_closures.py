@@ -89,6 +89,26 @@ def test_loaders_refuse_while_a_proposal_is_pending(tmp_path, monkeypatch):
     dg.require_open("test")
 
 
+def test_a_proposal_about_a_file_no_loader_reads_does_not_gate(tmp_path, monkeypatch):
+    import json
+
+    from fraudagent.governance import drift_gate as dg
+
+    monkeypatch.setattr(dg, "DRIFT_DIR", tmp_path)
+    (tmp_path / "DRIFT-v.json").write_text(json.dumps(
+        {"reports": [{"new": "transactions_variant.csv"}]}), encoding="utf-8")
+    assert dg.pending() == []
+    (tmp_path / "DRIFT-j.json").write_text(json.dumps(
+        {"reports": [{"new": "transactions_2017q1.csv"}]}), encoding="utf-8")
+    assert dg.pending() == ["DRIFT-j"]
+    # the same diff recomputed elsewhere gets a new id; approving it supersedes the old one
+    (tmp_path / "DRIFT-k.json").write_text(json.dumps(
+        {"created_at": "2026-11-01T00:00:00Z",
+         "reports": [{"new": "transactions_2017q1.csv"}]}), encoding="utf-8")
+    (tmp_path / "DRIFT-k.approved").write_text("{}", encoding="utf-8")
+    assert dg.pending() == []
+
+
 # -------------------------------------------------------------------- C13 ----
 def test_families_are_matched_by_size_whatever_the_prefix():
     import byo

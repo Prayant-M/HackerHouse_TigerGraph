@@ -883,7 +883,7 @@ class LocalGraphStore(GraphStore):
         visited: set[str] = set(frontier)
         for hop in range(1, max_hops + 1):
             next_frontier: set[str] = set()
-            for ent in frontier:
+            for ent in sorted(frontier):          # sets iterate in a per-process order
                 for cid in self.ds.entity_cases.get(ent, []):
                     if cid in seen:
                         continue
@@ -943,7 +943,7 @@ class LocalGraphStore(GraphStore):
 
         shared: dict[str, float] = {}
         shared_n: dict[str, int] = {}
-        for ent in entity_set:
+        for ent in sorted(entity_set):            # deterministic float sums and order
             w = weights[_kind(ent)]
             for cid in ds.entity_cases.get(ent, []):
                 shared[cid] = shared.get(cid, 0.0) + w
@@ -959,7 +959,7 @@ class LocalGraphStore(GraphStore):
         vec_index = ds.case_vector_pos
 
         fused: list[RecalledCase] = []
-        for cid in set(vec_scores) | set(shared):
+        for cid in sorted(set(vec_scores) | set(shared)):
             if cid not in by_id.index:
                 continue
             row = by_id.loc[cid]

@@ -29,7 +29,7 @@ flowchart LR
     C14["C14 Case management<br/>lifecycle · WATCH · handover"]:::human
   end
   subgraph G5["Defend the agent"]
-    C10["C10 Break the agent<br/>720 fuzz · ATK-* · provenance"]:::guard
+    C10["C10 Break the agent<br/>1,116 fuzz · ATK-* · provenance"]:::guard
   end
   subgraph G6["Messy and changing data"]
     C11["C11 Data quality detective<br/>taint → conformal widening"]:::core
@@ -68,8 +68,8 @@ the attested numbers, and the live demo steps.
 | 6 | Regulator's view | deep | proof + flip live + every tool response by hash + re-run; 18/18 attest-verify |
 | 7 | Containment planner | deep | 5.0× lift, $14.4M pre-empted, 0 innocent blocks |
 | 8 | Analyst in the loop | medium | 46 → 42 legit acted against after one round |
-| 9 | Speed and autonomy | byproduct | p95 ≈ 284 s with LLM prose, ≈ $0.001/case (cached) |
-| 10 | Break the agent | deep | 0/720 fuzz flips; 3 → 0 evasions; provenance assertion |
+| 9 | Speed and autonomy | implemented | p95 79 s (was 284 s); 18 alerts in 315 s on 4 workers; ≈ $0.003/case |
+| 10 | Break the agent | deep | 0/1,116 fuzz flips; 3 → 0 evasions; provenance assertion |
 | 11 | Data quality detective | medium | 490,613 txns without identity; 5/18 cases tainted; label conflict found |
 | 12 | Schema drift survival | medium | January run through the gate with approval |
 | 13 | Someone else's schema | medium | variant mapped and investigated, verdicts identical |

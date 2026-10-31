@@ -39,9 +39,10 @@ classDef eval fill:#E6FAF8,stroke:#0F9D8F,stroke-width:1.5px,color:#08332F;
 widens automatically when a case looks like nothing calibration has seen — the brief's warning
 that the bank's model has never seen January.
 
-**Measured** (`eval/reports/conformal.md`): October empirical coverage 0.86 overall
-(legit 0.94, fraud 0.81) against nominal 0.90. The fraud class under-covers under the
-month-to-month shift, and we say so. Mean set size 1.75, so the set is often {fraud, legit},
+**Measured** (`eval/reports/conformal.md`): October empirical coverage **0.90** overall
+(fraud 0.89, legit 0.92) against nominal 0.90, and 0.89 on Nov–Dec with the deployed fit. It
+was 0.86 (fraud 0.81) until we found a signal that cannot fire once the closed-case pool passes
+~93% fraud, and masked it. Mean set size 1.81, so the set is often {fraud, legit},
 but it only ever *widens a fraud verdict*; a legitimate verdict that cannot wrong anyone is
 reported and left alone.
 

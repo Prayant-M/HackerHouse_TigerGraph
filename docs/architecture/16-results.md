@@ -17,16 +17,16 @@ flowchart TB
   subgraph H["Harness"]
     H1["Drills 11 / 11 PASS"]:::ok
     H2["attest-verify 18 / 18"]:::ok
-    H3["Tests 122 pass · parity 9 / 9"]:::ok
+    H3["Tests 178 pass · parity 9 / 9"]:::ok
   end
   subgraph I["Innovation"]
     I1["Gate: legit acted against 70 → 5<br/>err k=1 0.36 vs k≥2 0.16"]:::core
     I2["Containment: 5.0× lift · $14.4M<br/>0 innocent blocks"]:::tg
-    I3["Fuzz: 0 / 720 · metamorphic 0 / 882"]:::eval
-    I4["Conformal: coverage 0.86 (0.90 nominal)"]:::core
+    I3["Fuzz: 0 / 1,116 · metamorphic 0 / 1,278"]:::eval
+    I4["Conformal: coverage 0.90 (0.90 nominal)"]:::core
   end
   subgraph D["Data"]
-    D1["650,938 txns · January loaded through the gate<br/>BYO variant: 3 / 3 clean, identical verdicts"]:::data
+    D1["650,938 txns · January loaded through the gate<br/>BYO variant b: 18 / 18 clean, identical to control"]:::data
   end
 
 classDef tg fill:#FFE8D6,stroke:#F58220,stroke-width:2px,color:#1F2430;
@@ -46,15 +46,15 @@ regenerated into the README by `scripts/readme_numbers.py`.
 |---|---|---|
 | Official grader on the 18 | 18/18 clean, 0 hard, 0 policy, 0 warnings | `eval/reports/grade_official.md` |
 | Final verdicts | 10 legitimate · 7 fraud · 1 uncertain; 3 SARs; gate changed 1 (HHF-016) | `run_summary.md` |
-| Hostile text | 6/6 flagged; 0/720 fuzzed runs changed a decision | `metamorphic.md` |
+| Hostile text | 1,032/1,116 fuzzed runs flagged; 0 changed a decision | `metamorphic.md` |
 | Data quality | 5/18 tainted; 1 organiser label conflict | `data_quality.md` |
 | Proof gate (Oct holdout) | legit acted against 70 → 5; harmful error 0.36 (k=1) vs 0.16 (k≥2) | `proof_holdout.md` |
 | Containment backtest | agent arm 0.37 precision, 5.0× lift, $14.4M pre-empted, 0 innocent blocks | `containment_backtest.md` |
-| Conformal | Oct coverage 0.86 (fraud 0.81, legit 0.94) | `conformal.md` |
+| Conformal | Oct coverage 0.90 (fraud 0.89, legit 0.92); Nov–Dec 0.89 | `conformal.md` |
 | Drills | 11/11 pass | `drills.md` |
 | Attestations | 18/18 re-run and match on live TigerGraph | `attest_verify.md` |
 | Round 1 honesty | 17/20 correct; HHG-004 (legit) was blocked | `hhg_holdout.md` |
-| Latency / cost | p95 ≈ 284 s with LLM prose; ≈ $0.001 per case (prose cached) | `run_summary.md` |
+| Latency / cost | p95 79 s (was 284 s); ≈ $0.003 per case | `pipeline.md` |
 
 ---
 [← index](README.md)

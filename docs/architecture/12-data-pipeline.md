@@ -59,7 +59,9 @@ token (exit 4), and the approval is signed into the ledger and written to the gr
 spec (no reference data needed), validates, gates, transforms, ingests into isolated folders,
 runs the pack and grades. Rehearsal on a renamed and reshaped variant: every required column
 mapped (card tuple by value quantiles, cents ×0.01, date + time → ts, 377 family columns);
-3/3 cases graded clean, with verdicts identical to the canonical run.
+3/3 cases graded clean, with verdicts identical to the canonical run. A harder variant
+(opaque file names, epoch timestamps, shuffled columns) on all 18 cases matches a same-data
+control 18/18 and grades 18/18 clean.
 
 ---
 [← index](README.md)
